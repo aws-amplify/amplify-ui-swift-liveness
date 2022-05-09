@@ -19,6 +19,9 @@ Amplify UI for SwiftUI is an open-source UI library with components that are end
 
 - [CONTRIBUTING.md](/CONTRIBUTING.md)
 
+## Security
+
+See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
 
 ## License
 
