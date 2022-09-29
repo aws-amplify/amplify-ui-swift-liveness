@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ComponentPreview<Component: View>: View {
   var component: Component
-  
+
   var body: some View {
     ForEach(values: ColorScheme.allCases) { scheme in
       ForEach(values: ContentSizeCategory.smallestAndLargest) { category in
@@ -34,7 +34,7 @@ extension ColorScheme {
 
 extension ContentSizeCategory {
   static let smallestAndLargest = [allCases.first!, allCases.last!]
-  
+
   var previewName: String {
     self == Self.smallestAndLargest.first ? "Small" : "Large"
   }

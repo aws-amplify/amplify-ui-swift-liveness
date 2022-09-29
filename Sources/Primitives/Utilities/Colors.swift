@@ -9,254 +9,254 @@ import UIKit
 import SwiftUI
 
 public extension Color {
-    static func dynamicColors(light: UIColor, dark: UIColor) -> Color {
-        Color(
-            UIColor(
-                dynamicProvider: { traitCollection in
-                    switch traitCollection.userInterfaceStyle {
-                    case .dark: return dark
-                    default: return light
-                    }
-                }
-            )
-        )
-    }
-    
-    internal static let amp = Colors.self
+  static func dynamicColors(light: UIColor, dark: UIColor) -> Color {
+    Color(
+      UIColor(
+        dynamicProvider: { traitCollection in
+          switch traitCollection.userInterfaceStyle {
+          case .dark: return dark
+          default: return light
+          }
+        }
+      )
+    )
+  }
+  
+  internal static let amp = Colors.self
 }
 
 extension UIColor {
-    convenience init(
-        hue: CGFloat,
-        saturation: CGFloat,
-        lightness: CGFloat,
-        opacity: CGFloat = 1
-    ) {
-        let hue = hue / 360
-        let s: CGFloat
-        let b = lightness + saturation * min(lightness, 1 - lightness)
-        if b == 0 { s = 0 }
-        else { s = 2 * (1 - lightness / b) }
-        self.init(
-            hue: hue,
-            saturation: s,
-            brightness: b,
-            alpha: opacity
-        )
-    }
+  convenience init(
+    hue: CGFloat,
+    saturation: CGFloat,
+    lightness: CGFloat,
+    opacity: CGFloat = 1
+  ) {
+    let hue = hue / 360
+    let s: CGFloat
+    let b = lightness + saturation * min(lightness, 1 - lightness)
+    if b == 0 { s = 0 }
+    else { s = 2 * (1 - lightness / b) }
+    self.init(
+      hue: hue,
+      saturation: s,
+      brightness: b,
+      alpha: opacity
+    )
+  }
 }
 
 struct Colors {
-    static let red10Light = UIColor.init(hue: 0, saturation: 0.75, lightness: 0.95)
-    static let red20Light = UIColor(hue: 0, saturation: 0.75, lightness: 0.85)
-    static let red40Light = UIColor(hue: 0, saturation: 0.75, lightness: 0.75)
-    static let red60Light = UIColor(hue: 0, saturation: 0.50, lightness: 0.50)
-    static let red80Light = UIColor(hue: 0, saturation: 0.95, lightness: 0.30)
-    static let red90Light = UIColor(hue: 0, saturation: 1, lightness: 0.20)
-    static let red100Light = UIColor(hue: 0, saturation: 1, lightness: 0.15)
-    static let orange10Light = UIColor(hue: 30, saturation: 0.75, lightness: 0.95)
-    static let orange20Light = UIColor(hue: 30, saturation: 0.75, lightness: 0.85)
-    static let orange40Light = UIColor(hue: 30, saturation: 0.75, lightness: 0.75)
-    static let orange60Light = UIColor(hue: 30, saturation: 0.50, lightness: 0.50)
-    static let orange80Light = UIColor(hue: 30, saturation: 0.95, lightness: 0.30)
-    static let orange90Light = UIColor(hue: 30, saturation: 1, lightness: 0.20)
-    static let orange100Light = UIColor(hue: 30, saturation: 1, lightness: 0.15)
-    static let yellow10Light = UIColor(hue: 60, saturation: 0.75, lightness: 0.95)
-    static let yellow20Light = UIColor(hue: 60, saturation: 0.75, lightness: 0.85)
-    static let yellow40Light = UIColor(hue: 60, saturation: 0.75, lightness: 0.75)
-    static let yellow60Light = UIColor(hue: 60, saturation: 0.50, lightness: 0.50)
-    static let yellow80Light = UIColor(hue: 60, saturation: 0.95, lightness: 0.30)
-    static let yellow90Light = UIColor(hue: 60, saturation: 1, lightness: 0.20)
-    static let yellow100Light = UIColor(hue: 60, saturation: 1, lightness: 0.15)
-    static let green10Light = UIColor(hue: 130, saturation: 0.60, lightness: 0.95)
-    static let green20Light = UIColor(hue: 130, saturation: 0.60, lightness: 0.90)
-    static let green40Light = UIColor(hue: 130, saturation: 0.44, lightness: 0.63)
-    static let green60Light = UIColor(hue: 130, saturation: 0.43, lightness: 0.46)
-    static let green80Light = UIColor(hue: 130, saturation: 0.33, lightness: 0.37)
-    static let green90Light = UIColor(hue: 130, saturation: 0.27, lightness: 0.29)
-    static let green100Light = UIColor(hue: 130, saturation: 0.22, lightness: 0.23)
-    static let teal10Light = UIColor(hue: 190, saturation: 0.75, lightness: 0.95)
-    static let teal20Light = UIColor(hue: 190, saturation: 0.75, lightness: 0.85)
-    static let teal40Light = UIColor(hue: 190, saturation: 0.70, lightness: 0.70)
-    static let teal60Light = UIColor(hue: 190, saturation: 0.50, lightness: 0.50)
-    static let teal80Light = UIColor(hue: 190, saturation: 0.95, lightness: 0.30)
-    static let teal90Light = UIColor(hue: 190, saturation: 1, lightness: 0.20)
-    static let teal100Light = UIColor(hue: 190, saturation: 1, lightness: 0.15)
-    static let blue10Light = UIColor(hue: 220, saturation: 0.95, lightness: 0.95)
-    static let blue20Light = UIColor(hue: 220, saturation: 0.85, lightness: 0.85)
-    static let blue40Light = UIColor(hue: 220, saturation: 0.70, lightness: 0.70)
-    static let blue60Light = UIColor(hue: 220, saturation: 0.50, lightness: 0.50)
-    static let blue80Light = UIColor(hue: 220, saturation: 0.95, lightness: 0.30)
-    static let blue90Light = UIColor(hue: 220, saturation: 1, lightness: 0.20)
-    static let blue100Light = UIColor(hue: 220, saturation: 1, lightness: 0.15)
-    static let purple10Light = UIColor(hue: 300, saturation: 0.95, lightness: 0.95)
-    static let purple20Light = UIColor(hue: 300, saturation: 0.85, lightness: 0.85)
-    static let purple40Light = UIColor(hue: 300, saturation: 0.70, lightness: 0.70)
-    static let purple60Light = UIColor(hue: 300, saturation: 0.50, lightness: 0.50)
-    static let purple80Light = UIColor(hue: 300, saturation: 0.95, lightness: 0.30)
-    static let purple90Light = UIColor(hue: 300, saturation: 1, lightness: 0.20)
-    static let purple100Light = UIColor(hue: 300, saturation: 1, lightness: 0.15)
-    static let pink10Light = UIColor(hue: 340, saturation: 0.95, lightness: 0.95)
-    static let pink20Light = UIColor(hue: 340, saturation: 0.90, lightness: 0.85)
-    static let pink40Light = UIColor(hue: 340, saturation: 0.70, lightness: 0.70)
-    static let pink60Light = UIColor(hue: 340, saturation: 0.50, lightness: 0.50)
-    static let pink80Light = UIColor(hue: 340, saturation: 0.95, lightness: 0.30)
-    static let pink90Light = UIColor(hue: 340, saturation: 1, lightness: 0.20)
-    static let pink100Light = UIColor(hue: 340, saturation: 1, lightness: 0.15)
-    static let neutral10Light = UIColor(hue: 210, saturation: 0.5, lightness: 0.98)
-    static let neutral20Light = UIColor(hue: 210, saturation: 0.5, lightness: 0.94)
-    static let neutral40Light = UIColor(hue: 210, saturation: 0.5, lightness: 0.87)
-    static let neutral60Light = UIColor(hue: 210, saturation: 0.8, lightness: 0.55)
-    static let neutral80Light = UIColor(hue: 210, saturation: 0.10, lightness: 0.40)
-    static let neutral90Light = UIColor(hue: 210, saturation: 0.25, lightness: 0.25)
-    static let neutral100Light = UIColor(hue: 210, saturation: 0.50, lightness: 0.10)
-    
-    
-    static let red10Dark = UIColor(hue: 0, saturation: 1, lightness: 0.15)
-    static let red20Dark = UIColor(hue: 0, saturation: 1, lightness: 0.20)
-    static let red40Dark = UIColor(hue: 0, saturation: 0.95, lightness: 0.30)
-    static let red80Dark = UIColor(hue: 0, saturation: 0.75, lightness: 0.75)
-    static let red90Dark = UIColor(hue: 0, saturation: 0.75, lightness: 0.85)
-    static let red100Dark = UIColor(hue: 0, saturation: 0.75, lightness: 0.95)
-    static let orange10Dark = UIColor(hue: 30, saturation: 1, lightness: 0.15)
-    static let orange20Dark = UIColor(hue: 30, saturation: 1, lightness: 0.20)
-    static let orange40Dark = UIColor(hue: 30, saturation: 0.95, lightness: 0.30)
-    static let orange80Dark = UIColor(hue: 30, saturation: 0.75, lightness: 0.75)
-    static let orange90Dark = UIColor(hue: 30, saturation: 0.75, lightness: 0.85)
-    static let orange100Dark = UIColor(hue: 30, saturation: 0.75, lightness: 0.95)
-    static let yellow10Dark = UIColor(hue: 60, saturation: 1, lightness: 0.15)
-    static let yellow20Dark = UIColor(hue: 60, saturation: 1, lightness: 0.20)
-    static let yellow40Dark = UIColor(hue: 60, saturation: 0.95, lightness: 0.30)
-    static let yellow80Dark = UIColor(hue: 60, saturation: 0.75, lightness: 0.75)
-    static let yellow90Dark = UIColor(hue: 60, saturation: 0.75, lightness: 0.85)
-    static let yellow100Dark = UIColor(hue: 60, saturation: 0.75, lightness: 0.95)
-    static let green10Dark = UIColor(hue: 130, saturation: 0.22, lightness: 0.23)
-    static let green20Dark = UIColor(hue: 130, saturation: 0.27, lightness: 0.29)
-    static let green40Dark = UIColor(hue: 130, saturation: 0.33, lightness: 0.37)
-    static let green80Dark = UIColor(hue: 130, saturation: 0.44, lightness: 0.63)
-    static let green90Dark = UIColor(hue: 130, saturation: 0.60, lightness: 0.90)
-    static let green100Dark = UIColor(hue: 130, saturation: 0.60, lightness: 0.95)
-    static let teal10Dark = UIColor(hue: 190, saturation: 1, lightness: 0.15)
-    static let teal20Dark = UIColor(hue: 190, saturation: 1, lightness: 0.20)
-    static let teal40Dark = UIColor(hue: 190, saturation: 0.95, lightness: 0.30)
-    static let teal80Dark = UIColor(hue: 190, saturation: 0.70, lightness: 0.70)
-    static let teal90Dark = UIColor(hue: 190, saturation: 0.75, lightness: 0.85)
-    static let teal100Dark = UIColor(hue: 190, saturation: 0.75, lightness: 0.95)
-    static let blue10Dark = UIColor(hue: 220, saturation: 1, lightness: 0.15)
-    static let blue20Dark = UIColor(hue: 220, saturation: 1, lightness: 0.20)
-    static let blue40Dark = UIColor(hue: 220, saturation: 0.95, lightness: 0.30)
-    static let blue80Dark = UIColor(hue: 220, saturation: 0.70, lightness: 0.70)
-    static let blue90Dark = UIColor(hue: 220, saturation: 0.85, lightness: 0.85)
-    static let blue100Dark = UIColor(hue: 220, saturation: 0.95, lightness: 0.95)
-    static let purple10Dark = UIColor(hue: 300, saturation: 1, lightness: 0.15)
-    static let purple20Dark = UIColor(hue: 300, saturation: 1, lightness: 0.20)
-    static let purple40Dark = UIColor(hue: 300, saturation: 0.95, lightness: 0.30)
-    static let purple80Dark = UIColor(hue: 300, saturation: 0.70, lightness: 0.70)
-    static let purple90Dark = UIColor(hue: 300, saturation: 0.85, lightness: 0.85)
-    static let purple100Dark = UIColor(hue: 300, saturation: 0.95, lightness: 0.95)
-    static let pink10Dark = UIColor(hue: 340, saturation: 1, lightness: 0.15)
-    static let pink20Dark = UIColor(hue: 340, saturation: 1, lightness: 0.20)
-    static let pink40Dark = UIColor(hue: 340, saturation: 0.95, lightness: 0.30)
-    static let pink80Dark = UIColor(hue: 340, saturation: 0.70, lightness: 0.70)
-    static let pink90Dark = UIColor(hue: 340, saturation: 0.90, lightness: 0.85)
-    static let pink100Dark = UIColor(hue: 340, saturation: 0.95, lightness: 0.95)
-    static let neutral10Dark = UIColor(hue: 210, saturation: 0.50, lightness: 0.10)
-    static let neutral20Dark = UIColor(hue: 210, saturation: 0.25, lightness: 0.25)
-    static let neutral40Dark = UIColor(hue: 210, saturation: 0.10, lightness: 0.40)
-    static let neutral80Dark = UIColor(hue: 210, saturation: 0.5, lightness: 0.87)
-    static let neutral90Dark = UIColor(hue: 210, saturation: 0.5, lightness: 0.94)
-    static let neutral100Dark = UIColor(hue: 210, saturation: 0.5, lightness: 0.98)
-
-    // --amplify-colors-(.*)-(.*)-(\d*): var\(--amplify-colors-(.*)-(\d*)\);
-    // static var $1$2$3: Color { $4$5 }
-    static var brandPrimary10: Color { .dynamicColors(light: teal10Light, dark: teal10Dark) }
-    static var brandPrimary20: Color { .dynamicColors(light: teal20Light, dark: teal20Dark) }
-    static var brandPrimary40: Color { .dynamicColors(light: teal40Light, dark: teal40Dark) }
-    static var brandPrimary60: Color { .dynamicColors(light: teal60Light, dark: teal80Dark) }
-    static var brandPrimary80: Color { .dynamicColors(light: teal80Light, dark: teal80Dark) }
-    static var brandPrimary90: Color { .dynamicColors(light: teal90Light, dark: teal90Dark) }
-    static var brandPrimary100: Color { .dynamicColors(light: teal100Light, dark: teal100Dark) }
-    static var brandSecondary10: Color { .dynamicColors(light: purple10Light, dark: purple10Dark) }
-    static var brandSecondary20: Color { .dynamicColors(light: purple20Light, dark: purple20Dark) }
-    static var brandSecondary40: Color { .dynamicColors(light: purple40Light, dark: purple40Dark) }
-    static var brandSecondary60: Color { .dynamicColors(light: purple60Light, dark: purple80Dark) }
-    static var brandSecondary80: Color { .dynamicColors(light: purple80Light, dark: purple80Dark) }
-    static var brandSecondary90: Color { .dynamicColors(light: purple90Light, dark: purple90Dark) }
-    static var brandSecondary100: Color { .dynamicColors(light: purple100Light, dark: purple100Dark) }
-
-    static var fontPrimary: Color { .dynamicColors(light: neutral100Light, dark: neutral100Dark) }
-    static var fontSecondary: Color {
-        .dynamicColors(light: neutral90Light, dark: neutral100Dark)
-    }
-    static var fontTertiary: Color {
-        .dynamicColors(light: neutral80Light, dark: neutral90Dark)
-    }
-    static var fontDisabled: Color {
-        .dynamicColors(light: neutral60Light, dark: neutral80Dark)
-    }
-    
-    static var fontInteractive: Color { brandPrimary80 }
-    static var fontHover: Color { brandPrimary90 }
-    static var fontFocus: Color { brandPrimary100 }
-    static var fontActive: Color { brandPrimary100 }
-    static var fontInverse: Color {
-        .dynamicColors(light: .white, dark: neutral10Dark)
-    }
-    
-    static var fontInfo: Color { .dynamicColors(light: blue90Light, dark: blue90Dark) }
-    static var fontWarning: Color { .dynamicColors(light: orange90Light, dark: orange90Dark) }
-    static var fontError: Color { .dynamicColors(light: red90Light, dark: red90Dark) }
-    static var fontSuccess: Color { .dynamicColors(light: green90Light, dark: green90Dark) }
-    
-    static var backgroundPrimary: Color {
-        .dynamicColors(light: .white, dark: neutral10Dark)
-    }
-    static var backgroundSecondary: Color {
-        .dynamicColors(light: neutral10Light, dark: neutral20Dark)
-    }
-    static var backgroundTertiary: Color {
-        .dynamicColors(light: neutral20Light, dark: neutral40Dark)
-    }
-    
-    static var backgroundQuaternary: Color { .dynamicColors(light: neutral60Light, dark: neutral80Dark) }
-    static var backgroundDisabled: Color { backgroundTertiary }
-    
-
-    
-    static var backgroundInfo: Color { .dynamicColors(light: blue20Light, dark: blue20Dark) }
-    static var backgroundWarning: Color { .dynamicColors(light: orange20Light, dark: orange20Dark) }
-    static var backgroundError: Color { .dynamicColors(light: red20Light, dark: red20Dark) }
-    static var backgroundSuccess: Color { .dynamicColors(light: green20Light, dark: green20Dark) }
-    static var borderPrimary: Color {
-        .dynamicColors(light: neutral60Light, dark: neutral80Dark)
-    }
-    static var borderSecondary: Color {
-        .dynamicColors(light: neutral40Light, dark: neutral40Dark)
-    }
-    
-    static var borderTertiary: Color {
-        .dynamicColors(light: neutral20Light, dark: neutral20Dark)
-    }
-    
-    static var borderDisabled: Color { borderTertiary }
-    static var borderPressed: Color { brandPrimary100 }
-    static var borderFocus: Color { brandPrimary100 }
-    static var borderError: Color { .dynamicColors(light: red80Light, dark: red80Dark) }
-    
-    static let shadowPrimaryLight = Color(hue: 210, saturation: 0.50, lightness: 0.25)
-    static let shadowSecondaryLight = Color(hue: 210, saturation: 0.50, lightness: 0.15)
-    static let shadowTertiaryLight = Color(hue: 210, saturation: 0.50, lightness: 0.05)
+  static let red10Light = UIColor.init(hue: 0, saturation: 0.75, lightness: 0.95)
+  static let red20Light = UIColor(hue: 0, saturation: 0.75, lightness: 0.85)
+  static let red40Light = UIColor(hue: 0, saturation: 0.75, lightness: 0.75)
+  static let red60Light = UIColor(hue: 0, saturation: 0.50, lightness: 0.50)
+  static let red80Light = UIColor(hue: 0, saturation: 0.95, lightness: 0.30)
+  static let red90Light = UIColor(hue: 0, saturation: 1, lightness: 0.20)
+  static let red100Light = UIColor(hue: 0, saturation: 1, lightness: 0.15)
+  static let orange10Light = UIColor(hue: 30, saturation: 0.75, lightness: 0.95)
+  static let orange20Light = UIColor(hue: 30, saturation: 0.75, lightness: 0.85)
+  static let orange40Light = UIColor(hue: 30, saturation: 0.75, lightness: 0.75)
+  static let orange60Light = UIColor(hue: 30, saturation: 0.50, lightness: 0.50)
+  static let orange80Light = UIColor(hue: 30, saturation: 0.95, lightness: 0.30)
+  static let orange90Light = UIColor(hue: 30, saturation: 1, lightness: 0.20)
+  static let orange100Light = UIColor(hue: 30, saturation: 1, lightness: 0.15)
+  static let yellow10Light = UIColor(hue: 60, saturation: 0.75, lightness: 0.95)
+  static let yellow20Light = UIColor(hue: 60, saturation: 0.75, lightness: 0.85)
+  static let yellow40Light = UIColor(hue: 60, saturation: 0.75, lightness: 0.75)
+  static let yellow60Light = UIColor(hue: 60, saturation: 0.50, lightness: 0.50)
+  static let yellow80Light = UIColor(hue: 60, saturation: 0.95, lightness: 0.30)
+  static let yellow90Light = UIColor(hue: 60, saturation: 1, lightness: 0.20)
+  static let yellow100Light = UIColor(hue: 60, saturation: 1, lightness: 0.15)
+  static let green10Light = UIColor(hue: 130, saturation: 0.60, lightness: 0.95)
+  static let green20Light = UIColor(hue: 130, saturation: 0.60, lightness: 0.90)
+  static let green40Light = UIColor(hue: 130, saturation: 0.44, lightness: 0.63)
+  static let green60Light = UIColor(hue: 130, saturation: 0.43, lightness: 0.46)
+  static let green80Light = UIColor(hue: 130, saturation: 0.33, lightness: 0.37)
+  static let green90Light = UIColor(hue: 130, saturation: 0.27, lightness: 0.29)
+  static let green100Light = UIColor(hue: 130, saturation: 0.22, lightness: 0.23)
+  static let teal10Light = UIColor(hue: 190, saturation: 0.75, lightness: 0.95)
+  static let teal20Light = UIColor(hue: 190, saturation: 0.75, lightness: 0.85)
+  static let teal40Light = UIColor(hue: 190, saturation: 0.70, lightness: 0.70)
+  static let teal60Light = UIColor(hue: 190, saturation: 0.50, lightness: 0.50)
+  static let teal80Light = UIColor(hue: 190, saturation: 0.95, lightness: 0.30)
+  static let teal90Light = UIColor(hue: 190, saturation: 1, lightness: 0.20)
+  static let teal100Light = UIColor(hue: 190, saturation: 1, lightness: 0.15)
+  static let blue10Light = UIColor(hue: 220, saturation: 0.95, lightness: 0.95)
+  static let blue20Light = UIColor(hue: 220, saturation: 0.85, lightness: 0.85)
+  static let blue40Light = UIColor(hue: 220, saturation: 0.70, lightness: 0.70)
+  static let blue60Light = UIColor(hue: 220, saturation: 0.50, lightness: 0.50)
+  static let blue80Light = UIColor(hue: 220, saturation: 0.95, lightness: 0.30)
+  static let blue90Light = UIColor(hue: 220, saturation: 1, lightness: 0.20)
+  static let blue100Light = UIColor(hue: 220, saturation: 1, lightness: 0.15)
+  static let purple10Light = UIColor(hue: 300, saturation: 0.95, lightness: 0.95)
+  static let purple20Light = UIColor(hue: 300, saturation: 0.85, lightness: 0.85)
+  static let purple40Light = UIColor(hue: 300, saturation: 0.70, lightness: 0.70)
+  static let purple60Light = UIColor(hue: 300, saturation: 0.50, lightness: 0.50)
+  static let purple80Light = UIColor(hue: 300, saturation: 0.95, lightness: 0.30)
+  static let purple90Light = UIColor(hue: 300, saturation: 1, lightness: 0.20)
+  static let purple100Light = UIColor(hue: 300, saturation: 1, lightness: 0.15)
+  static let pink10Light = UIColor(hue: 340, saturation: 0.95, lightness: 0.95)
+  static let pink20Light = UIColor(hue: 340, saturation: 0.90, lightness: 0.85)
+  static let pink40Light = UIColor(hue: 340, saturation: 0.70, lightness: 0.70)
+  static let pink60Light = UIColor(hue: 340, saturation: 0.50, lightness: 0.50)
+  static let pink80Light = UIColor(hue: 340, saturation: 0.95, lightness: 0.30)
+  static let pink90Light = UIColor(hue: 340, saturation: 1, lightness: 0.20)
+  static let pink100Light = UIColor(hue: 340, saturation: 1, lightness: 0.15)
+  static let neutral10Light = UIColor(hue: 210, saturation: 0.5, lightness: 0.98)
+  static let neutral20Light = UIColor(hue: 210, saturation: 0.5, lightness: 0.94)
+  static let neutral40Light = UIColor(hue: 210, saturation: 0.5, lightness: 0.87)
+  static let neutral60Light = UIColor(hue: 210, saturation: 0.8, lightness: 0.55)
+  static let neutral80Light = UIColor(hue: 210, saturation: 0.10, lightness: 0.40)
+  static let neutral90Light = UIColor(hue: 210, saturation: 0.25, lightness: 0.25)
+  static let neutral100Light = UIColor(hue: 210, saturation: 0.50, lightness: 0.10)
+  
+  
+  static let red10Dark = UIColor(hue: 0, saturation: 1, lightness: 0.15)
+  static let red20Dark = UIColor(hue: 0, saturation: 1, lightness: 0.20)
+  static let red40Dark = UIColor(hue: 0, saturation: 0.95, lightness: 0.30)
+  static let red80Dark = UIColor(hue: 0, saturation: 0.75, lightness: 0.75)
+  static let red90Dark = UIColor(hue: 0, saturation: 0.75, lightness: 0.85)
+  static let red100Dark = UIColor(hue: 0, saturation: 0.75, lightness: 0.95)
+  static let orange10Dark = UIColor(hue: 30, saturation: 1, lightness: 0.15)
+  static let orange20Dark = UIColor(hue: 30, saturation: 1, lightness: 0.20)
+  static let orange40Dark = UIColor(hue: 30, saturation: 0.95, lightness: 0.30)
+  static let orange80Dark = UIColor(hue: 30, saturation: 0.75, lightness: 0.75)
+  static let orange90Dark = UIColor(hue: 30, saturation: 0.75, lightness: 0.85)
+  static let orange100Dark = UIColor(hue: 30, saturation: 0.75, lightness: 0.95)
+  static let yellow10Dark = UIColor(hue: 60, saturation: 1, lightness: 0.15)
+  static let yellow20Dark = UIColor(hue: 60, saturation: 1, lightness: 0.20)
+  static let yellow40Dark = UIColor(hue: 60, saturation: 0.95, lightness: 0.30)
+  static let yellow80Dark = UIColor(hue: 60, saturation: 0.75, lightness: 0.75)
+  static let yellow90Dark = UIColor(hue: 60, saturation: 0.75, lightness: 0.85)
+  static let yellow100Dark = UIColor(hue: 60, saturation: 0.75, lightness: 0.95)
+  static let green10Dark = UIColor(hue: 130, saturation: 0.22, lightness: 0.23)
+  static let green20Dark = UIColor(hue: 130, saturation: 0.27, lightness: 0.29)
+  static let green40Dark = UIColor(hue: 130, saturation: 0.33, lightness: 0.37)
+  static let green80Dark = UIColor(hue: 130, saturation: 0.44, lightness: 0.63)
+  static let green90Dark = UIColor(hue: 130, saturation: 0.60, lightness: 0.90)
+  static let green100Dark = UIColor(hue: 130, saturation: 0.60, lightness: 0.95)
+  static let teal10Dark = UIColor(hue: 190, saturation: 1, lightness: 0.15)
+  static let teal20Dark = UIColor(hue: 190, saturation: 1, lightness: 0.20)
+  static let teal40Dark = UIColor(hue: 190, saturation: 0.95, lightness: 0.30)
+  static let teal80Dark = UIColor(hue: 190, saturation: 0.70, lightness: 0.70)
+  static let teal90Dark = UIColor(hue: 190, saturation: 0.75, lightness: 0.85)
+  static let teal100Dark = UIColor(hue: 190, saturation: 0.75, lightness: 0.95)
+  static let blue10Dark = UIColor(hue: 220, saturation: 1, lightness: 0.15)
+  static let blue20Dark = UIColor(hue: 220, saturation: 1, lightness: 0.20)
+  static let blue40Dark = UIColor(hue: 220, saturation: 0.95, lightness: 0.30)
+  static let blue80Dark = UIColor(hue: 220, saturation: 0.70, lightness: 0.70)
+  static let blue90Dark = UIColor(hue: 220, saturation: 0.85, lightness: 0.85)
+  static let blue100Dark = UIColor(hue: 220, saturation: 0.95, lightness: 0.95)
+  static let purple10Dark = UIColor(hue: 300, saturation: 1, lightness: 0.15)
+  static let purple20Dark = UIColor(hue: 300, saturation: 1, lightness: 0.20)
+  static let purple40Dark = UIColor(hue: 300, saturation: 0.95, lightness: 0.30)
+  static let purple80Dark = UIColor(hue: 300, saturation: 0.70, lightness: 0.70)
+  static let purple90Dark = UIColor(hue: 300, saturation: 0.85, lightness: 0.85)
+  static let purple100Dark = UIColor(hue: 300, saturation: 0.95, lightness: 0.95)
+  static let pink10Dark = UIColor(hue: 340, saturation: 1, lightness: 0.15)
+  static let pink20Dark = UIColor(hue: 340, saturation: 1, lightness: 0.20)
+  static let pink40Dark = UIColor(hue: 340, saturation: 0.95, lightness: 0.30)
+  static let pink80Dark = UIColor(hue: 340, saturation: 0.70, lightness: 0.70)
+  static let pink90Dark = UIColor(hue: 340, saturation: 0.90, lightness: 0.85)
+  static let pink100Dark = UIColor(hue: 340, saturation: 0.95, lightness: 0.95)
+  static let neutral10Dark = UIColor(hue: 210, saturation: 0.50, lightness: 0.10)
+  static let neutral20Dark = UIColor(hue: 210, saturation: 0.25, lightness: 0.25)
+  static let neutral40Dark = UIColor(hue: 210, saturation: 0.10, lightness: 0.40)
+  static let neutral80Dark = UIColor(hue: 210, saturation: 0.5, lightness: 0.87)
+  static let neutral90Dark = UIColor(hue: 210, saturation: 0.5, lightness: 0.94)
+  static let neutral100Dark = UIColor(hue: 210, saturation: 0.5, lightness: 0.98)
+  
+  // --amplify-colors-(.*)-(.*)-(\d*): var\(--amplify-colors-(.*)-(\d*)\);
+  // static var $1$2$3: Color { $4$5 }
+  static var brandPrimary10: Color { .dynamicColors(light: teal10Light, dark: teal10Dark) }
+  static var brandPrimary20: Color { .dynamicColors(light: teal20Light, dark: teal20Dark) }
+  static var brandPrimary40: Color { .dynamicColors(light: teal40Light, dark: teal40Dark) }
+  static var brandPrimary60: Color { .dynamicColors(light: teal60Light, dark: teal80Dark) }
+  static var brandPrimary80: Color { .dynamicColors(light: teal80Light, dark: teal80Dark) }
+  static var brandPrimary90: Color { .dynamicColors(light: teal90Light, dark: teal90Dark) }
+  static var brandPrimary100: Color { .dynamicColors(light: teal100Light, dark: teal100Dark) }
+  static var brandSecondary10: Color { .dynamicColors(light: purple10Light, dark: purple10Dark) }
+  static var brandSecondary20: Color { .dynamicColors(light: purple20Light, dark: purple20Dark) }
+  static var brandSecondary40: Color { .dynamicColors(light: purple40Light, dark: purple40Dark) }
+  static var brandSecondary60: Color { .dynamicColors(light: purple60Light, dark: purple80Dark) }
+  static var brandSecondary80: Color { .dynamicColors(light: purple80Light, dark: purple80Dark) }
+  static var brandSecondary90: Color { .dynamicColors(light: purple90Light, dark: purple90Dark) }
+  static var brandSecondary100: Color { .dynamicColors(light: purple100Light, dark: purple100Dark) }
+  
+  static var fontPrimary: Color { .dynamicColors(light: neutral100Light, dark: neutral100Dark) }
+  static var fontSecondary: Color {
+    .dynamicColors(light: neutral90Light, dark: neutral100Dark)
+  }
+  static var fontTertiary: Color {
+    .dynamicColors(light: neutral80Light, dark: neutral90Dark)
+  }
+  static var fontDisabled: Color {
+    .dynamicColors(light: neutral60Light, dark: neutral80Dark)
+  }
+  
+  static var fontInteractive: Color { brandPrimary80 }
+  static var fontHover: Color { brandPrimary90 }
+  static var fontFocus: Color { brandPrimary100 }
+  static var fontActive: Color { brandPrimary100 }
+  static var fontInverse: Color {
+    .dynamicColors(light: .white, dark: neutral10Dark)
+  }
+  
+  static var fontInfo: Color { .dynamicColors(light: blue90Light, dark: blue90Dark) }
+  static var fontWarning: Color { .dynamicColors(light: orange90Light, dark: orange90Dark) }
+  static var fontError: Color { .dynamicColors(light: red90Light, dark: red90Dark) }
+  static var fontSuccess: Color { .dynamicColors(light: green90Light, dark: green90Dark) }
+  
+  static var backgroundPrimary: Color {
+    .dynamicColors(light: .white, dark: neutral10Dark)
+  }
+  static var backgroundSecondary: Color {
+    .dynamicColors(light: neutral10Light, dark: neutral20Dark)
+  }
+  static var backgroundTertiary: Color {
+    .dynamicColors(light: neutral20Light, dark: neutral40Dark)
+  }
+  
+  static var backgroundQuaternary: Color { .dynamicColors(light: neutral60Light, dark: neutral80Dark) }
+  static var backgroundDisabled: Color { backgroundTertiary }
+  
+  
+  
+  static var backgroundInfo: Color { .dynamicColors(light: blue20Light, dark: blue20Dark) }
+  static var backgroundWarning: Color { .dynamicColors(light: orange20Light, dark: orange20Dark) }
+  static var backgroundError: Color { .dynamicColors(light: red20Light, dark: red20Dark) }
+  static var backgroundSuccess: Color { .dynamicColors(light: green20Light, dark: green20Dark) }
+  static var borderPrimary: Color {
+    .dynamicColors(light: neutral60Light, dark: neutral80Dark)
+  }
+  static var borderSecondary: Color {
+    .dynamicColors(light: neutral40Light, dark: neutral40Dark)
+  }
+  
+  static var borderTertiary: Color {
+    .dynamicColors(light: neutral20Light, dark: neutral20Dark)
+  }
+  
+  static var borderDisabled: Color { borderTertiary }
+  static var borderPressed: Color { brandPrimary100 }
+  static var borderFocus: Color { brandPrimary100 }
+  static var borderError: Color { .dynamicColors(light: red80Light, dark: red80Dark) }
+  
+  static let shadowPrimaryLight = Color(hue: 210, saturation: 0.50, lightness: 0.25)
+  static let shadowSecondaryLight = Color(hue: 210, saturation: 0.50, lightness: 0.15)
+  static let shadowTertiaryLight = Color(hue: 210, saturation: 0.50, lightness: 0.05)
 }
 
 extension Color {
-    init(hue: CGFloat, saturation: CGFloat, lightness: CGFloat) {
-        self.init(UIColor(hue: hue, saturation: saturation, lightness: lightness))
-    }
+  init(hue: CGFloat, saturation: CGFloat, lightness: CGFloat) {
+    self.init(UIColor(hue: hue, saturation: saturation, lightness: lightness))
+  }
 }
 
 /*
  
-
+ 
  --amplify-font-sizes-xxxs: 0.375rem;
  --amplify-font-sizes-xxs: 0.5rem;
  --amplify-font-sizes-xs: 0.75rem;
@@ -333,10 +333,10 @@ extension Color {
  --amplify-transforms-slide-x-medium: translateX(1em);
  --amplify-transforms-slide-x-large: translateX(2em);
  }
-
+ 
  @media (prefers-color-scheme: dark) {
-           [data-amplify-theme="amplify-docs"][data-amplify-color-mode="system"] {
-
+ [data-amplify-theme="amplify-docs"][data-amplify-color-mode="system"] {
+ 
  --amplify-colors-font-primary: var(--amplify-colors-white);
  static var fontsecondary: Color { neutral100 }
  static var fonttertiary: Color { neutral90 }
@@ -357,8 +357,8 @@ extension Color {
  --amplify-colors-overlay-80: hsla(0, 0%, 100%, 0.8);
  --amplify-colors-overlay-90: hsla(0, 0%, 100%, 0.9);
  }
-         }
-
+ }
+ 
  [data-amplify-theme="amplify-docs"][data-amplify-color-mode="dark"] {
  --amplify-colors-red-10: hsl(0, 100%, 15%);
  --amplify-colors-red-20: hsl(0, 100%, 20%);
@@ -434,7 +434,7 @@ extension Color {
  --amplify-colors-overlay-80: hsla(0, 0%, 100%, 0.8);
  --amplify-colors-overlay-90: hsla(0, 0%, 100%, 0.9);
  }
-
+ 
  [data-amplify-theme-override="classic"] [data-amplify-theme="amplify-docs"] {
  --amplify-colors-brand-primary-10: var(--amplify-colors-blue-10);
  --amplify-colors-brand-primary-20: var(--amplify-colors-blue-20);
@@ -458,7 +458,7 @@ extension Color {
  --amplify-radii-large: 4px;
  --amplify-radii-xl: 6px;
  }
-
+ 
  [data-amplify-theme-override="terminal"] [data-amplify-theme="amplify-docs"] {
  --amplify-colors-green-10: #C7EFCA;
  --amplify-colors-green-20: #9AE2A1;
@@ -504,5 +504,5 @@ extension Color {
  --amplify-border-widths-medium: 4px;
  --amplify-border-widths-large: 8px;
  }
-
+ 
  */
