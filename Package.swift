@@ -21,7 +21,11 @@ let package = Package(
                 .product(name: "AWSPluginsCore", package: "amplify-swift-staging"),
                 .product(name: "AWSCognitoAuthPlugin", package: "amplify-swift-staging"),
                 .product(name: "AWSPredictionsPlugin", package: "amplify-swift-staging")
-            ]),
+            ],
+            resources: [
+                .process("Resources/Base.lproj")
+            ]
+        ),
         .testTarget(
             name: "FaceLivenessTests",
             dependencies: ["FaceLiveness"]),
