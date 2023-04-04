@@ -14,5 +14,5 @@ struct LivenessCaptureSessionError: Error, Equatable {
     static let cameraUnavailable = Self(code: 2)
     static let captureSessionUnavailable = Self(code: 3)
     static let captureSessionInputUnavailable = Self(code: 5)
-    static let captureSessionOutputUnavailable = Self(code: 5)
+    static let captureSessionOutputUnavailable = Self(code: 6)
 }
