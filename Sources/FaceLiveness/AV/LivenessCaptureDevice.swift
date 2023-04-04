@@ -19,25 +19,24 @@ struct LivenessCaptureDevice {
         avCaptureDevice
     }
 
-    func configure() {
-        if (try? avCaptureDevice.lockForConfiguration()) != nil {
-            let fps = CMTimeScale(fps)
-            let frameDuration = CMTime(value: 1, timescale: fps)
-            avCaptureDevice.activeVideoMinFrameDuration = frameDuration
-            avCaptureDevice.activeVideoMaxFrameDuration = frameDuration
-            if avCaptureDevice.isExposureModeSupported(exposure) {
-                avCaptureDevice.exposureMode = exposure
-            }
+    func configure() throws {
+        try avCaptureDevice.lockForConfiguration()
+        defer { avCaptureDevice.unlockForConfiguration() }
 
-            if avCaptureDevice.isFocusModeSupported(focus) {
-                avCaptureDevice.focusMode = focus
-            }
+        let fps = CMTimeScale(fps)
+        let frameDuration = CMTime(value: 1, timescale: fps)
+        avCaptureDevice.activeVideoMinFrameDuration = frameDuration
+        avCaptureDevice.activeVideoMaxFrameDuration = frameDuration
+        if avCaptureDevice.isExposureModeSupported(exposure) {
+            avCaptureDevice.exposureMode = exposure
+        }
 
-            if avCaptureDevice.isWhiteBalanceModeSupported(whiteBalance) {
-                avCaptureDevice.whiteBalanceMode = whiteBalance
-            }
+        if avCaptureDevice.isFocusModeSupported(focus) {
+            avCaptureDevice.focusMode = focus
+        }
 
-            avCaptureDevice.unlockForConfiguration()
+        if avCaptureDevice.isWhiteBalanceModeSupported(whiteBalance) {
+            avCaptureDevice.whiteBalanceMode = whiteBalance
         }
     }
 }

@@ -36,7 +36,7 @@ final class LivenessCaptureSession {
         let videoOutput = AVCaptureVideoDataOutput()
         try setupOutput(videoOutput, for: captureSession)
 
-        captureDevice.configure()
+        try captureDevice.configure()
 
         DispatchQueue.global().async {
             captureSession.startRunning()
