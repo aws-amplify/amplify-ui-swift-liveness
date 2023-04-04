@@ -5,6 +5,7 @@ import PackageDescription
 
 let package = Package(
     name: "AmplifyUILiveness",
+    defaultLocalization: "en",
     platforms: [.iOS(.v14)],
     products: [
         .library(
