@@ -71,7 +71,8 @@ struct GetReadyPageView: View {
     }
 
     private func goToSettingsAppPage() {
-        let settingsAppURL = URL(string: UIApplication.openSettingsURLString)!
+        guard let settingsAppURL = URL(string: UIApplication.openSettingsURLString)
+        else { return }
         UIApplication.shared.open(settingsAppURL, options: [:])
     }
 
