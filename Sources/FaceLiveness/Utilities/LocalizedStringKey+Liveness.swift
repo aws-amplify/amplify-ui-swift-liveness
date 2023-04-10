@@ -68,6 +68,10 @@ extension LocalizedStringKey {
         "amplify_ui_liveness_get_ready_begin_check"
     )
 
+    static let get_ready_legal_consent = LocalizedStringKey(
+        "amplify_ui_liveness_get_ready_legal_consent"
+    )
+
     /// en = "REC"
     static let challenge_recording_indicator_label = LocalizedStringKey(
         "amplify_ui_liveness_challenge_recording_indicator_label"
@@ -147,5 +151,4 @@ extension LocalizedStringKey {
     static let close_button_a11y = LocalizedStringKey(
         "amplify_ui_liveness_close_button_a11y"
     )
-
 }

@@ -48,6 +48,12 @@ struct GetReadyPageView: View {
                         .padding(.bottom)
 
                     steps()
+                        .padding(.bottom)
+
+                    Text(.get_ready_legal_consent, bundle: .module)
+                        .foregroundColor(.init(UIColor.secondaryLabel))
+                        .font(.system(size: 11))
+                        .frame(alignment: .leading)
                 }
                 .padding()
             }
