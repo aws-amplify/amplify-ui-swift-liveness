@@ -18,6 +18,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     @Published var isRecording = false
     @Published var livenessState: LivenessStateMachine
 
+    weak var livenessViewControllerDelegate: FaceLivenessViewControllerPresenter?
     let captureSession: LivenessCaptureSession
     var closeButtonAction: () -> Void
     let videoChunker: VideoChunker
@@ -25,24 +26,15 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     var livenessService: LivenessService!
     let faceDetector: FaceDetector
     let faceInOvalMatching: FaceInOvalMatching
-
-    // moving day
-    weak var livenessViewControllerDelegate: FaceLivenessViewControllerPresenter?
-
     let challengeID: String = UUID().uuidString
     var colorSequences: [ColorSequence] = []
-
-//    var hasSentClientInfoEvent = false
     var hasSentFinalVideoEvent = false
-//    var hasCompletedInitialFaceDistanceCheck = false
     var hasSentFirstVideo = false
     var layerRectConverted: (CGRect) -> CGRect = { $0 }
     var sessionConfiguration: FaceLivenessSession.SessionConfiguration?
-
     var normalizeFace: (DetectedFace) -> DetectedFace = { $0 }
     var provideSingleFrame: ((UIImage) -> Void)?
     var cameraViewRect = CGRect.zero
-
     var ovalRect = CGRect.zero
     var faceGuideRect: CGRect!
     var initialClientEvent: InitialClientEvent?
@@ -222,7 +214,6 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         initialFace: CGRect,
         videoStartTime: UInt64
     ) {
-        log("SENDING CLIENT INFO EVENT")
         videoChunker.start()
 
         let initialFace = FaceDetection(
@@ -243,7 +234,6 @@ class FaceLivenessDetectionViewModel: ObservableObject {
                 .initialFaceDetected(event: _initialClientEvent),
                 eventDate: { .init() }
             )
-//            hasSentClientInfoEvent = true
         } catch {
             DispatchQueue.main.async {
                 self.livenessState.unrecoverableStateEncountered(.unknown)

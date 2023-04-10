@@ -13,42 +13,6 @@ import AVFoundation
 import Amplify
 @_spi(PredictionsFaceLiveness) import AWSPredictionsPlugin
 
-enum CountdownDisplayState {
-    case waitingToDisplay
-    case displaying
-    case finishedDisplaying
-}
-
-enum DisplayState {
-    case awaitingLivenessSession
-    case displayingGetReadyView
-    case displayingLiveness
-}
-
-enum InstructionState {
-    case none
-    case display(text: String)
-}
-
-func log(_ value: Any, _ label: String = "", file: String = #fileID, function: String = #function, line: Int = #line) {
-    print(">> [\(file):\(line)] [\(function)] [\(label)] \(value)")
-}
-
-fileprivate func map(detectionCompletion: @escaping (Result<Void, FaceLivenessDetectionError>) -> Void) -> ((Result<Void, FaceLivenessSessionError>) -> Void) {
-    { result in
-        switch result {
-        case .success:
-            detectionCompletion(.success(()))
-        case .failure(.invalidRegion):
-            detectionCompletion(.failure(.invalidRegion))
-        case .failure(.accessDenied):
-            detectionCompletion(.failure(.accessDenied))
-        default:
-            detectionCompletion(.failure(.unknown))
-        }
-    }
-}
-
 public struct FaceLivenessDetectionView: View {
     @StateObject var viewModel: FaceLivenessDetectionViewModel
     @Binding var isPresented: Bool
@@ -83,28 +47,21 @@ public struct FaceLivenessDetectionView: View {
         }
 
         let faceDetector = try! FaceDetectorShortRange.Model()
-        log(faceDetector, "faceDetector")
-
         let faceInOvalStateMatching = FaceInOvalMatching(
             instructor: Instructor()
         )
-        log(faceInOvalStateMatching, "faceInOvalStateMatching")
 
         let videoChunker = VideoChunker(
             assetWriter: LivenessAVAssetWriter(),
             assetWriterDelegate: VideoChunker.AssetWriterDelegate(),
             assetWriterInput: LivenessAVAssetWriterInput()
         )
-        log(videoChunker, "videoChunker")
-
 
         let avCpatureDevice = AVCaptureDevice.DiscoverySession(
             deviceTypes: [.builtInWideAngleCamera],
             mediaType: .video,
             position: .front
-        ).devices.first! // TODO: Handle gracefully
-
-        log(avCpatureDevice, "avCpatureDevice")
+        ).devices.first
 
         let captureSession = LivenessCaptureSession(
             captureDevice: .init(avCaptureDevice: avCpatureDevice),
@@ -113,7 +70,6 @@ public struct FaceLivenessDetectionView: View {
                 videoChunker: videoChunker
             )
         )
-        log(captureSession, "captureSession")
 
         self._viewModel = StateObject(
             wrappedValue: .init(
@@ -137,7 +93,10 @@ public struct FaceLivenessDetectionView: View {
                             let session = try await sessionTask.value
                             viewModel.livenessService = session
                             viewModel.registerServiceEvents()
-                            self.displayState = .displayingGetReadyView
+
+                            self.displayState = disableStartView
+                            ? .displayingLiveness
+                            : .displayingGetReadyView
                         } catch {
                             throw FaceLivenessDetectionError.accessDenied
                         }
@@ -159,6 +118,11 @@ public struct FaceLivenessDetectionView: View {
                     )
                 }
             )
+            .onAppear {
+                DispatchQueue.main.async {
+                    UIScreen.main.brightness = 1.0
+                }
+            }
             .onReceive(viewModel.$livenessState) { output in
                 switch output.state {
                 case .completed:
@@ -223,36 +187,34 @@ public struct FaceLivenessDetectionView: View {
     }
 }
 
-//struct RekognitionLivenessCredentialsProvider: LivenessCredentialsProvider {
-//    let accessKey: String
-//    let secretKey: String
-//    let sessionToken: String
-//
-//    init(credentialsProvider: CredentialsProvider) {
-//        self.accessKey = ""
-//        self.secretKey = ""
-//        self.sessionToken = ""
-//    }
-//}
+enum CountdownDisplayState {
+    case waitingToDisplay
+    case displaying
+    case finishedDisplaying
+}
 
-//extension LivenessCredentialsProvider where Self == MockLivenessCredentialsProvider {
-//    static var mock: Self {
-//        .init(
-//            accessKey: "AKIDEXAMPLE",
-//            secretKey: "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY",
-//            sessionToken: "example"
-//        )
-//    }
-//}
-//
-//struct MockLivenessCredentialsProvider: LivenessCredentialsProvider {
-//    let accessKey: String
-//    let secretKey: String
-//    let sessionToken: String
-//
-//    init(accessKey: String, secretKey: String, sessionToken: String) {
-//        self.accessKey = accessKey
-//        self.secretKey = secretKey
-//        self.sessionToken = sessionToken
-//    }
-//}
+enum DisplayState {
+    case awaitingLivenessSession
+    case displayingGetReadyView
+    case displayingLiveness
+}
+
+enum InstructionState {
+    case none
+    case display(text: String)
+}
+
+fileprivate func map(detectionCompletion: @escaping (Result<Void, FaceLivenessDetectionError>) -> Void) -> ((Result<Void, FaceLivenessSessionError>) -> Void) {
+    { result in
+        switch result {
+        case .success:
+            detectionCompletion(.success(()))
+        case .failure(.invalidRegion):
+            detectionCompletion(.failure(.invalidRegion))
+        case .failure(.accessDenied):
+            detectionCompletion(.failure(.accessDenied))
+        default:
+            detectionCompletion(.failure(.unknown))
+        }
+    }
+}

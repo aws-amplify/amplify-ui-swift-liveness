@@ -20,10 +20,11 @@ final class LivenessCaptureSession {
     }
 
     func startSession(frame: CGRect) throws -> AVCaptureVideoPreviewLayer {
-        log("starting session")
-        let camera = captureDevice.avCaptureDevice
+        guard let camera = captureDevice.avCaptureDevice
+        else { throw LivenessCaptureSessionError.cameraUnavailable }
+
         let cameraInput = try AVCaptureDeviceInput(device: camera)
-        log(camera, "camera")
+
         teardownExistingSession(input: cameraInput)
         captureSession = AVCaptureSession()
 
@@ -47,12 +48,12 @@ final class LivenessCaptureSession {
             frame: frame,
             for: captureSession
         )
-        log(outputDelegate, "adding outputDelegate")
+
         videoOutput.setSampleBufferDelegate(
             outputDelegate,
             queue: captureQueue
         )
-        log("set outputDelegate")
+
         return previewLayer
     }
 
@@ -93,7 +94,6 @@ final class LivenessCaptureSession {
         }
 
         if captureSession.canAddOutput(output) {
-            log("added capture session output")
             captureSession.addOutput(output)
         } else {
             throw LivenessCaptureSessionError.captureSessionOutputUnavailable

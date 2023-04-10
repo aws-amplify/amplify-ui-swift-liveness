@@ -8,18 +8,19 @@
 import AVFoundation
 
 struct LivenessCaptureDevice {
-    let avCaptureDevice: AVCaptureDevice
+    let avCaptureDevice: AVCaptureDevice?
     var preset: AVCaptureSession.Preset = .vga640x480
     var fps: Double = 30
     var exposure: AVCaptureDevice.ExposureMode = .continuousAutoExposure
     var whiteBalance: AVCaptureDevice.WhiteBalanceMode = .continuousAutoWhiteBalance
     var focus: AVCaptureDevice.FocusMode = .continuousAutoFocus
 
-    func callAsFunction() -> AVCaptureDevice {
-        avCaptureDevice
-    }
+//    func callAsFunction() -> AVCaptureDevice {
+//        avCaptureDevice
+//    }
 
     func configure() throws {
+        guard let avCaptureDevice else { throw LivenessCaptureSessionError.cameraUnavailable }
         try avCaptureDevice.lockForConfiguration()
         defer { avCaptureDevice.unlockForConfiguration() }
 
@@ -38,6 +39,5 @@ struct LivenessCaptureDevice {
         if avCaptureDevice.isWhiteBalanceModeSupported(whiteBalance) {
             avCaptureDevice.whiteBalanceMode = whiteBalance
         }
-        log(avCaptureDevice, "configured capture device")
     }
 }

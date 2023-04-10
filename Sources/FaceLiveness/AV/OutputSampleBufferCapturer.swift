@@ -15,8 +15,6 @@ class OutputSampleBufferCapturer: NSObject, AVCaptureVideoDataOutputSampleBuffer
     init(faceDetector: FaceDetector, videoChunker: VideoChunker) {
         self.faceDetector = faceDetector
         self.videoChunker = videoChunker
-        log(faceDetector, "faceDetector")
-        log(videoChunker, "videoChunker")
     }
 
     func captureOutput(
