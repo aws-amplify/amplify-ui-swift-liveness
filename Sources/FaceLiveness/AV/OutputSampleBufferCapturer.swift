@@ -19,7 +19,7 @@ class OutputSampleBufferCapturer: NSObject, AVCaptureVideoDataOutputSampleBuffer
 
     func captureOutput(
         _ output: AVCaptureOutput,
-        didDrop sampleBuffer: CMSampleBuffer,
+        didOutput sampleBuffer: CMSampleBuffer,
         from connection: AVCaptureConnection
     ) {
         videoChunker.consume(sampleBuffer)

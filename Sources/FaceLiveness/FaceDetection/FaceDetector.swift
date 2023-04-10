@@ -9,4 +9,15 @@ import AVFoundation
 
 protocol FaceDetector {
     func detectFaces(from buffer: CVPixelBuffer)
+    func setResultHandler(detectionResultHandler: FaceDetectionResultHandler)
+}
+
+protocol FaceDetectionResultHandler: AnyObject {
+    func process(newResult: FaceDetectionResult)
+}
+
+enum FaceDetectionResult {
+    case noFace
+    case singleFace(DetectedFace)
+    case multipleFaces
 }

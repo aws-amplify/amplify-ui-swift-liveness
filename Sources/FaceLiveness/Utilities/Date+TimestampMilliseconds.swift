@@ -6,3 +6,9 @@
 //
 
 import Foundation
+
+extension Date {
+    var timestampMilliseconds: UInt64 {
+        UInt64(timeIntervalSince1970 * 1_000)
+    }
+}

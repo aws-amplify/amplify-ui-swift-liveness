@@ -9,8 +9,8 @@ import UIKit
 import AVFoundation
 
 final class LivenessCaptureSession {
+    let captureDevice: LivenessCaptureDevice
     private let captureQueue = DispatchQueue(label: "com.amazonaws.faceliveness.cameracapturequeue")
-    private let captureDevice: LivenessCaptureDevice
     private let outputDelegate: OutputSampleBufferCapturer
     private var captureSession: AVCaptureSession?
 
@@ -20,7 +20,9 @@ final class LivenessCaptureSession {
     }
 
     func startSession(frame: CGRect) throws -> AVCaptureVideoPreviewLayer {
-        let camera = captureDevice()
+        guard let camera = captureDevice.avCaptureDevice
+        else { throw LivenessCaptureSessionError.cameraUnavailable }
+
         let cameraInput = try AVCaptureDeviceInput(device: camera)
 
         teardownExistingSession(input: cameraInput)
@@ -55,11 +57,15 @@ final class LivenessCaptureSession {
         return previewLayer
     }
 
-    private func teardownExistingSession(input: AVCaptureDeviceInput) {
+    func stopRunning() {
         if captureSession?.isRunning == true {
             captureSession?.stopRunning()
-            captureSession?.removeInput(input)
         }
+    }
+
+    private func teardownExistingSession(input: AVCaptureDeviceInput) {
+        stopRunning()
+        captureSession?.removeInput(input)
     }
 
     private func setupInput(

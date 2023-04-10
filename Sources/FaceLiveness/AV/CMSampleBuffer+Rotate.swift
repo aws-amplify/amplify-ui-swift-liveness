@@ -14,7 +14,7 @@ extension CMSampleBuffer {
             return nil
         }
 
-        let cvPixelBufferPtr = UnsafeMutablePointer<CVPixelBuffer?>.allocate(capacity: 1)
+        var cvPixelBufferPtr: CVPixelBuffer?
 
         let error = CVPixelBufferCreate(
             kCFAllocatorDefault,
@@ -22,11 +22,11 @@ extension CMSampleBuffer {
             CVPixelBufferGetWidth(pixelBuffer),
             kCVPixelFormatType_420YpCbCr8BiPlanarFullRange,
             nil,
-            cvPixelBufferPtr
+            &cvPixelBufferPtr
         )
 
         guard error == kCVReturnSuccess,
-              let cvPixelBuffer = cvPixelBufferPtr.pointee
+              let cvPixelBuffer = cvPixelBufferPtr
         else {
             return nil
         }
@@ -37,7 +37,6 @@ extension CMSampleBuffer {
 
         let context = CIContext(options: nil)
         context.render(ciImage, to: cvPixelBuffer)
-
         return cvPixelBuffer
     }
 }

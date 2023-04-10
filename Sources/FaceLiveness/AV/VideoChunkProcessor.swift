@@ -7,6 +7,6 @@
 
 import Foundation
 
-protocol VideoSegmentProcessor {
+protocol VideoSegmentProcessor: AnyObject {
     func process(initalSegment: Data, currentSeparableSegment: Data)
 }
