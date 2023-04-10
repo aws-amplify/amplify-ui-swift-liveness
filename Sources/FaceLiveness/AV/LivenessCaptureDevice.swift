@@ -15,10 +15,6 @@ struct LivenessCaptureDevice {
     var whiteBalance: AVCaptureDevice.WhiteBalanceMode = .continuousAutoWhiteBalance
     var focus: AVCaptureDevice.FocusMode = .continuousAutoFocus
 
-//    func callAsFunction() -> AVCaptureDevice {
-//        avCaptureDevice
-//    }
-
     func configure() throws {
         guard let avCaptureDevice else { throw LivenessCaptureSessionError.cameraUnavailable }
         try avCaptureDevice.lockForConfiguration()
