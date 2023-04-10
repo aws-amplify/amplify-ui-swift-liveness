@@ -13,18 +13,19 @@ let package = Package(
             targets: ["FaceLiveness"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/aws-amplify/amplify-swift-staging", branch: "liveness.main")
+        .package(url: "https://github.com/aws-amplify/amplify-swift", from: "2.8.0")
     ],
     targets: [
         .target(
             name: "FaceLiveness",
             dependencies: [
-                .product(name: "AWSPluginsCore", package: "amplify-swift-staging"),
-                .product(name: "AWSCognitoAuthPlugin", package: "amplify-swift-staging"),
-                .product(name: "AWSPredictionsPlugin", package: "amplify-swift-staging")
+                .product(name: "AWSPluginsCore", package: "amplify-swift"),
+                .product(name: "AWSCognitoAuthPlugin", package: "amplify-swift"),
+                .product(name: "AWSPredictionsPlugin", package: "amplify-swift")
             ],
             resources: [
-                .process("Resources/Base.lproj")
+                .process("Resources/Base.lproj"),
+                .copy("Resources/face_detection_short_range.mlmodelc")
             ]
         ),
         .testTarget(

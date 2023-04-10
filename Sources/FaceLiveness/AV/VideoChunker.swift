@@ -12,7 +12,7 @@ import UIKit
 final class VideoChunker {
     var state = State.pending
     let assetWriter: AVAssetWriter
-    let assetWriterDelegate: AVAssetWriterDelegate
+    let assetWriterDelegate: AssetWriterDelegate
     let assetWriterInput: AVAssetWriterInput
     let pixelBufferAdaptor: AVAssetWriterInputPixelBufferAdaptor
     var startTimeSeconds: Double?
@@ -20,7 +20,7 @@ final class VideoChunker {
 
     init(
         assetWriter: AVAssetWriter,
-        assetWriterDelegate: AVAssetWriterDelegate,
+        assetWriterDelegate: AssetWriterDelegate,
         assetWriterInput: AVAssetWriterInput
     ) {
         self.assetWriter = assetWriter
@@ -38,8 +38,10 @@ final class VideoChunker {
         assetWriter.startSession(atSourceTime: .zero)
     }
 
-    func finish() {
+    func finish(singleFrame: @escaping (UIImage) -> Void) {
+        self.provideSingleFrame = singleFrame
         state = .awaitingSingleFrame
+
         // explicitly calling `endSession` is unnecessary
         assetWriter.finishWriting {}
     }

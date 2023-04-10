@@ -15,11 +15,13 @@ class OutputSampleBufferCapturer: NSObject, AVCaptureVideoDataOutputSampleBuffer
     init(faceDetector: FaceDetector, videoChunker: VideoChunker) {
         self.faceDetector = faceDetector
         self.videoChunker = videoChunker
+        log(faceDetector, "faceDetector")
+        log(videoChunker, "videoChunker")
     }
 
     func captureOutput(
         _ output: AVCaptureOutput,
-        didDrop sampleBuffer: CMSampleBuffer,
+        didOutput sampleBuffer: CMSampleBuffer,
         from connection: AVCaptureConnection
     ) {
         videoChunker.consume(sampleBuffer)

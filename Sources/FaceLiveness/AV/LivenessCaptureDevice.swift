@@ -38,5 +38,6 @@ struct LivenessCaptureDevice {
         if avCaptureDevice.isWhiteBalanceModeSupported(whiteBalance) {
             avCaptureDevice.whiteBalanceMode = whiteBalance
         }
+        log(avCaptureDevice, "configured capture device")
     }
 }

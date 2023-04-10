@@ -9,8 +9,8 @@ import UIKit
 import AVFoundation
 
 final class LivenessCaptureSession {
+    let captureDevice: LivenessCaptureDevice
     private let captureQueue = DispatchQueue(label: "com.amazonaws.faceliveness.cameracapturequeue")
-    private let captureDevice: LivenessCaptureDevice
     private let outputDelegate: OutputSampleBufferCapturer
     private var captureSession: AVCaptureSession?
 
@@ -20,9 +20,10 @@ final class LivenessCaptureSession {
     }
 
     func startSession(frame: CGRect) throws -> AVCaptureVideoPreviewLayer {
-        let camera = captureDevice()
+        log("starting session")
+        let camera = captureDevice.avCaptureDevice
         let cameraInput = try AVCaptureDeviceInput(device: camera)
-
+        log(camera, "camera")
         teardownExistingSession(input: cameraInput)
         captureSession = AVCaptureSession()
 
@@ -46,20 +47,24 @@ final class LivenessCaptureSession {
             frame: frame,
             for: captureSession
         )
-
+        log(outputDelegate, "adding outputDelegate")
         videoOutput.setSampleBufferDelegate(
             outputDelegate,
             queue: captureQueue
         )
-
+        log("set outputDelegate")
         return previewLayer
     }
 
-    private func teardownExistingSession(input: AVCaptureDeviceInput) {
+    func stopRunning() {
         if captureSession?.isRunning == true {
             captureSession?.stopRunning()
-            captureSession?.removeInput(input)
         }
+    }
+
+    private func teardownExistingSession(input: AVCaptureDeviceInput) {
+        stopRunning()
+        captureSession?.removeInput(input)
     }
 
     private func setupInput(
@@ -88,6 +93,7 @@ final class LivenessCaptureSession {
         }
 
         if captureSession.canAddOutput(output) {
+            log("added capture session output")
             captureSession.addOutput(output)
         } else {
             throw LivenessCaptureSessionError.captureSessionOutputUnavailable

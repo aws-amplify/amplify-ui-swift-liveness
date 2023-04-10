@@ -10,7 +10,7 @@ import AVFoundation
 extension VideoChunker {
     class AssetWriterDelegate: NSObject, AVAssetWriterDelegate {
         private var initialSegmentData: Data?
-        private var segmentProcessor: VideoSegmentProcessor?
+        private weak var segmentProcessor: VideoSegmentProcessor?
 
         func set(segmentProcessor: VideoSegmentProcessor) {
             self.segmentProcessor = segmentProcessor
