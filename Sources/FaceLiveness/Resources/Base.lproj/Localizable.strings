@@ -1,0 +1,39 @@
+//
+// Copyright Amazon.com Inc. or its affiliates.
+// All Rights Reserved.
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+
+"amplify_ui_liveness_get_ready_page_title" = "Liveness Check";
+"amplify_ui_liveness_get_ready_page_description" = "You will go through a face verification process to prove that you are a real person. Your screen's brightness will temporarily be set to 100% for highest accuracy.";
+"amplify_ui_liveness_get_ready_photosensitivity_title" = "Photosensitivity Warning";
+"amplify_ui_liveness_get_ready_photosensitivity_description" = "This check displays colored lights. Use caution if you are photosensitive.";
+"amplify_ui_liveness_get_ready_photosensitivity_icon_a11y" = "Photosensitivity Information";
+"amplify_ui_liveness_get_ready_photosensitivity_dialog_title" = "Photosensitivity warning";
+"amplify_ui_liveness_get_ready_photosensitivity_dialog_description" = "A small percentage of individuals may experience epileptic seizures when exposed to colored lights. Use caution if you, or anyone in your family, have an epileptic condition.";
+"amplify_ui_liveness_get_ready_steps_title" = "Follow the instructions to complete the check:";
+"amplify_ui_liveness_get_ready_face_not_covered" = "Make sure your face is not covered with sunglasses or a mask.";
+"amplify_ui_liveness_get_ready_lighting" = "Move to a well-lit place that is not in direct sunlight.";
+"amplify_ui_liveness_get_ready_fit_face" = "When an oval appears, fill the oval with your face within 7 seconds.";
+"amplify_ui_liveness_get_ready_begin_check" = "Begin Check";
+
+"amplify_ui_liveness_challenge_recording_indicator_label" = "REC";
+"amplify_ui_liveness_challenge_instruction_hold_face_during_countdown" = "Hold face position during countdown.";
+"amplify_ui_liveness_challenge_instruction_hold_face_during_freshness" = "Hold face in oval for colored lights.";
+"amplify_ui_liveness_challenge_instruction_move_face_bqck" = "Move back";
+"amplify_ui_liveness_challenge_instruction_move_face_closer" = "Move closer";
+"amplify_ui_liveness_challenge_instruction_move_face_in_front_of_camera" = "Move face in front of camera";
+"amplify_ui_liveness_challenge_instruction_multiple_faces_detected" = "Ensure only one face is in front of camera";
+"amplify_ui_liveness_challenge_instruction_hold_still" = "Hold still";
+
+"amplify_ui_liveness_challenge_connecting" = "Connecting...";
+"amplify_ui_liveness_challenge_verifying" = "Verifying";
+"amplify_ui_liveness_challenge_cancel_a11y" = "Cancel Challenge";
+
+"amplify_ui_liveness_camera_setting_alert_title" = "Change Your Camera Settings";
+"amplify_ui_liveness_camera_setting_alert_message" = "Allow camera permission in settings.";
+"amplify_ui_liveness_camera_setting_alert_update_setting_button_text" = "Update Setting";
+"amplify_ui_liveness_camera_setting_alert_not_now_button_text" = "Not Now";
+
+"amplify_ui_liveness_close_button_a11y" = "Close";
