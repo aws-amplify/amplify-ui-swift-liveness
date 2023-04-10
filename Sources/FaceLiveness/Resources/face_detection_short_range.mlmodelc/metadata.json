@@ -1,0 +1,86 @@
+[
+  {
+    "shortDescription" : "--",
+    "metadataOutputVersion" : "3.0",
+    "outputSchema" : [
+      {
+        "hasShapeFlexibility" : "0",
+        "isOptional" : "0",
+        "dataType" : "Float32",
+        "formattedType" : "MultiArray (Float32)",
+        "shortDescription" : "--",
+        "shape" : "[]",
+        "name" : "1477",
+        "type" : "MultiArray"
+      },
+      {
+        "hasShapeFlexibility" : "0",
+        "isOptional" : "0",
+        "dataType" : "Float32",
+        "formattedType" : "MultiArray (Float32)",
+        "shortDescription" : "--",
+        "shape" : "[]",
+        "name" : "1011",
+        "type" : "MultiArray"
+      }
+    ],
+    "version" : "--",
+    "modelParameters" : [
+
+    ],
+    "author" : "--",
+    "specificationVersion" : 4,
+    "storagePrecision" : "Float32",
+    "license" : "--",
+    "computePrecision" : "Float16",
+    "isUpdatable" : "0",
+    "availability" : {
+      "macOS" : "10.15",
+      "tvOS" : "13.0",
+      "watchOS" : "6.0",
+      "iOS" : "13.0",
+      "macCatalyst" : "13.0"
+    },
+    "modelType" : {
+      "name" : "MLModelType_neuralNetwork"
+    },
+    "inputSchema" : [
+      {
+        "height" : "128",
+        "colorspace" : "RGB",
+        "isOptional" : "0",
+        "width" : "128",
+        "isColor" : "1",
+        "formattedType" : "Image (Color 128 × 128)",
+        "hasSizeFlexibility" : "0",
+        "type" : "Image",
+        "shortDescription" : "--",
+        "name" : "image"
+      }
+    ],
+    "userDefinedMetadata" : {
+
+    },
+    "generatedClassName" : "face_detection_short_range",
+    "neuralNetworkLayerTypeHistogram" : {
+      "Convolution" : 37,
+      "ActivationSigmoid" : 1,
+      "ReshapeStatic" : 4,
+      "LoadConstantND" : 30,
+      "PaddingConstant" : 4,
+      "ConstantPad" : 11,
+      "Stack" : 1,
+      "PoolingMax" : 3,
+      "Squeeze" : 17,
+      "Transpose" : 4,
+      "SliceStatic" : 16,
+      "Add" : 32,
+      "ExpandDims" : 1,
+      "ConcatND" : 2,
+      "Multiply" : 36,
+      "ActivationReLU" : 17,
+      "SubtractBroadcastable" : 2
+    },
+    "method" : "predict"
+  }
+]
