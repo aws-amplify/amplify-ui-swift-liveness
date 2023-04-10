@@ -15,34 +15,22 @@ struct LivenessStateMachine {
         self.state = state
     }
 
-    mutating func checkIsFacePrepared() throws {
-        try transitionState(
-            validFromStates: .initial,
-            to: .pendingFacePreparedConfirmation(.pendingCheck)
-        )
+    mutating func checkIsFacePrepared() {
+        guard case .initial = state else { return }
+        state = .pendingFacePreparedConfirmation(.pendingCheck)
     }
 
-    mutating func faceNotPrepared(reason: FaceNotPreparedReason) throws {
-        switch state {
-        case .pendingFacePreparedConfirmation:
-            state = .pendingFacePreparedConfirmation(reason)
-        default:
-            throw StateError.invalidTransition(
-                from: state,
-                to: .pendingFacePreparedConfirmation(reason)
-            )
-        }
+    mutating func faceNotPrepared(reason: FaceNotPreparedReason) {
+        guard case .pendingFacePreparedConfirmation = state else { return }
+        state = .pendingFacePreparedConfirmation(reason)
     }
 
-    mutating func openSocket() throws {
+    mutating func openSocket() {
         switch state {
         case .pendingFacePreparedConfirmation, .countingDown:
             state = .socketOpened
         default:
-            throw StateError.invalidTransition(
-                from: state,
-                to: .socketOpened
-            )
+            break
         }
     }
 
@@ -68,27 +56,23 @@ struct LivenessStateMachine {
         state = .awaitingFaceInOvalMatch(reason, percentage)
     }
 
-    mutating func awaitingServerInfoEvent() throws {
-        try transitionState(
-            validFromStates: .socketOpened,
-            to: .awaitingServerInfoEvent
-        )
+    mutating func awaitingServerInfoEvent() {
+        guard case .socketOpened = state else { return }
+        state = .awaitingServerInfoEvent
     }
 
     mutating func receivedServerInfoEvent() throws {
-        try transitionState(
-            validFromStates: .awaitingServerInfoEvent,
-            to: .serverInfoEventReceived
-        )
+        guard case .awaitingServerInfoEvent = state else { return }
+        state = .serverInfoEventReceived
     }
 
     mutating func unrecoverableStateEncountered(_ error: LivenessError) {
         switch state {
         case .encounteredUnrecoverableError, .completed:
             return
-        default: break
+        default:
+            state = .encounteredUnrecoverableError(error)
         }
-        state = .encounteredUnrecoverableError(error)
     }
 
     mutating func beginRecording() {
@@ -99,11 +83,8 @@ struct LivenessStateMachine {
         state = .recording(ovalDisplayed: true)
     }
 
-    mutating func startCountdown() throws {
-        guard case .pendingFacePreparedConfirmation = state
-        else {
-            return
-        }
+    mutating func startCountdown() {
+        guard case .pendingFacePreparedConfirmation = state else { return }
         state = .countingDown
     }
 
@@ -123,10 +104,6 @@ struct LivenessStateMachine {
         state = .completed
     }
 
-    mutating func sentClientInformationEvent() {
-
-    }
-
     var shouldDisplayRecordingIcon: Bool {
         switch state {
         case .initial, .pendingFacePreparedConfirmation, .encounteredUnrecoverableError, .countingDown:
@@ -138,27 +115,19 @@ struct LivenessStateMachine {
     enum State: Equatable {
         case initial
         case pendingFacePreparedConfirmation(FaceNotPreparedReason)
-
         case socketOpened
-
         case awaitingServerInfoEvent
         case serverInfoEventReceived
-
         case countingDown
         case recording(ovalDisplayed: Bool)
-
         case awaitingFaceInOvalMatch(FaceNotPreparedReason, Double)
         case faceMatched
         case initialClientInfoEventSent
-
         case displayingFreshness
         case completedDisplayingFreshness
-
         case completed
-
         case awaitingDisconnectEvent
         case disconnectEventReceived
-
         case encounteredUnrecoverableError(LivenessError)
     }
 
@@ -175,77 +144,20 @@ struct LivenessStateMachine {
         case faceTooClose = "Move face farther away"
     }
 
-    private mutating func transitionState(validFromStates: State..., to newState: State) throws {
-        guard validFromStates.contains(state) else {
-            throw StateError.invalidTransition(from: state, to: newState)
-        }
-        state = newState
-    }
-
     struct LivenessError: Error, Equatable {
         let code: UInt8
-        let description: String
 
-        static let unknown = LivenessError(
-            code: 0,
-            description: "An unknown error was encountered"
-        )
-
-        static let missingVideoPermission = LivenessError(
-            code: 1,
-            description: "..."
-        )
-
-        static let errorWithUnderlyingOSFramework = LivenessError(
-            code: 2,
-            description: "..."
-        )
-
-        static let userCancelled = LivenessError(
-            code: 3,
-            description: "User cancelled"
-        )
-
-        static let timedOut = LivenessError(
-            code: 4,
-            description: "User cancelled"
-        )
-
-        static let couldNotOpenStream = LivenessError(
-            code: 5,
-            description: "Could not open stream"
-        )
-
-        static let socketClosed = LivenessError(
-            code: 6,
-            description: "Websocket connection closed unexpectedly"
-        )
-
-        static let invalidFaceMovementDuringCountdown = LivenessError(
-            code: 7,
-            description: ""
-        )
+        static let unknown = LivenessError(code: 0)
+        static let missingVideoPermission = LivenessError(code: 1)
+        static let errorWithUnderlyingOSFramework = LivenessError(code: 2)
+        static let userCancelled = LivenessError(code: 3)
+        static let timedOut = LivenessError(code: 4)
+        static let couldNotOpenStream = LivenessError(code: 5)
+        static let socketClosed = LivenessError(code: 6)
+        static let invalidFaceMovementDuringCountdown = LivenessError(code: 7)
 
         static func == (lhs: LivenessError, rhs: LivenessError) -> Bool {
             lhs.code == rhs.code
-        }
-    }
-
-    struct StateError: Swift.Error {
-        let code: UInt8
-        let fromState: State
-        let toState: State
-
-        var description: String {
-            "Invalid transition from: \(fromState) to: \(toState)"
-        }
-
-        static func invalidTransition(from: State, to: State) -> Self {
-            .init(
-                code: 1,
-                fromState: from,
-                toState: to
-            )
         }
     }
 }
