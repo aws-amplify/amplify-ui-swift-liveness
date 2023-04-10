@@ -13,7 +13,7 @@ import AVFoundation
 import Amplify
 @_spi(PredictionsFaceLiveness) import AWSPredictionsPlugin
 
-public struct FaceLivenessDetectionView: View {
+public struct FaceLivenessDetectorView: View {
     @StateObject var viewModel: FaceLivenessDetectionViewModel
     @Binding var isPresented: Bool
     @State var displayState: DisplayState = .awaitingLivenessSession

@@ -123,7 +123,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
             avLayer.frame = frame
             layerRectConverted = avLayer.layerRectConverted(fromMetadataOutputRect:)
             DispatchQueue.main.async {
-                try? self.livenessState.checkIsFacePrepared()
+                self.livenessState.checkIsFacePrepared()
             }
             return avLayer
         } catch {

@@ -19,7 +19,7 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
             switch livenessState.state {
             case .pendingFacePreparedConfirmation:
                 DispatchQueue.main.async {
-                    try? self.livenessState.faceNotPrepared(reason: .noFace)
+                    self.livenessState.faceNotPrepared(reason: .noFace)
                 }
                 return
             case .countingDown:
@@ -33,7 +33,7 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
         case .multipleFaces:
             if case .pendingFacePreparedConfirmation = livenessState.state {
                 DispatchQueue.main.async {
-                    try? self.livenessState.faceNotPrepared(reason: .multipleFaces)
+                    self.livenessState.faceNotPrepared(reason: .multipleFaces)
                 }
             }
         case .singleFace(let face):
@@ -44,13 +44,13 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
             case .pendingFacePreparedConfirmation:
                 if face.faceDistance <= initialFaceDistanceThreshold {
                     DispatchQueue.main.async {
-                        try? self.livenessState.startCountdown()
+                        self.livenessState.startCountdown()
                         self.initializeLivenessStream()
                     }
                     return
                 } else {
                     DispatchQueue.main.async {
-                        try? self.livenessState.faceNotPrepared(reason: .faceTooClose)
+                        self.livenessState.faceNotPrepared(reason: .faceTooClose)
                     }
                     return
                 }
