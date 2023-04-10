@@ -2,18 +2,16 @@
 
 ---
 
-# Amplify UI for SwiftUI
+# Amplify UI Liveness for SwiftUI
 
-[![GitHub](https://img.shields.io/github/license/aws-amplify/amplify-ui-swift)](LICENSE)
+[![GitHub](https://img.shields.io/github/license/aws-amplify/amplify-ui-swift-liveness)](LICENSE)
 [![Discord](https://img.shields.io/discord/308323056592486420?logo=discord)](https://discord.gg/jWVbPfC)
-[![Open Bugs](https://img.shields.io/github/issues/aws-amplify/amplify-ui-swift/bug?color=d73a4a&label=bugs)](https://github.com/aws-amplify/amplify-ui-swift/issues?q=is%3Aissue+is%3Aopen+label%3Abug)
-[![Feature Requests](https://img.shields.io/github/issues/aws-amplify/amplify-ui-swift/feature-request?color=ff9001&label=feature%20requests)](https://github.com/aws-amplify/amplify-ui-swift/issues?q=is%3Aissue+label%3Afeature-request+is%3Aopen)
+[![Open Bugs](https://img.shields.io/github/issues/aws-amplify/amplify-ui-swift-liveness/bug?color=d73a4a&label=bugs)](https://github.com/aws-amplify/amplify-ui-swift-liveness/issues?q=is%3Aissue+is%3Aopen+label%3Abug)
+[![Feature Requests](https://img.shields.io/github/issues/aws-amplify/amplify-ui-swift-liveness/feature-request?color=ff9001&label=feature%20requests)](https://github.com/aws-amplify/amplify-ui-swift-liveness/issues?q=is%3Aissue+label%3Afeature-request+is%3Aopen)
 
-Amplify UI for SwiftUI is an open-source UI library with components that are endlessly customizable, accessible, and can integrate into _any_ SwiftUI application. Amplify UI consists of:
+Amplify UI Liveness for SwiftUI provides a UI component (FaceLivenessDetector) that helps developers deter fraud and scams during face-based identity checks by validating that users are physically present in front of the camera at that moment, and not an imposter spoofing the user's face.
 
-1. Connected components that simplify complex cloud-connected workflows, like Authenticator.
-2. Primitive components that create consistency across Amplify UI and allow you to build complete applications that fit your brand, like Buttons and Badges.
-3. Theming capabilities that allow you to customize the appearance of Amplify UI to match your brand.
+More information on setting up and using the FaceLivenessDetector is in the [Amplify UI Face Liveness documentation](https://ui.docs.amplify.aws/swift/connected-components/liveness).
 
 ## Contributing
 
