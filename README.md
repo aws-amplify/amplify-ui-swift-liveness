@@ -11,6 +11,8 @@
 
 Amplify UI Liveness for SwiftUI provides a UI component (FaceLivenessDetector) that helps developers deter fraud and scams during face-based identity checks by validating that users are physically present in front of the camera at that moment, and not an imposter spoofing the user's face.
 
+https://user-images.githubusercontent.com/52051793/231226739-ff02345c-e1ca-4d2a-aeb4-569c5e56408f.mov
+
 More information on setting up and using the FaceLivenessDetector is in the [Amplify UI Face Liveness documentation](https://ui.docs.amplify.aws/swift/connected-components/liveness).
 
 ## Contributing
