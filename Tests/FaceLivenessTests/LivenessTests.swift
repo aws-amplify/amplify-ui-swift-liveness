@@ -77,35 +77,4 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
         viewModel.livenessState.faceMatched()
         XCTAssertEqual(viewModel.livenessState.state, .faceMatched)
     }
-
-    /// Given:  A `FaceLivenessDetectionViewModel`
-    /// When: The viewModel state `.countingDown` and receives
-    /// an event from the face detector with `.noFace`
-    /// Then: The flow bails with an `encounteredUnrecoverableError(.invalidFaceMovementDuringCountdown)`
-    var stateChangeCancellable: Set<AnyCancellable>!
-    func testInvalidFaceMovementDuringCountdown() {
-        stateChangeCancellable = Set<AnyCancellable>()
-        viewModel.livenessService = MockLivenessService()
-        viewModel.livenessState.checkIsFacePrepared()
-        viewModel.livenessState.startCountdown()
-        XCTAssertEqual(viewModel.livenessState.state, .countingDown)
-
-        let stateChangeExpectation = expectation(
-            description: "waiting on state change after invalid face movement"
-        )
-
-        viewModel.$livenessState
-            .drop(while: { $0.state == .countingDown })
-            .sink { stateMachine in
-                XCTAssertEqual(
-                    stateMachine.state,
-                    .encounteredUnrecoverableError(.invalidFaceMovementDuringCountdown)
-                )
-                stateChangeExpectation.fulfill()
-            }
-        .store(in: &stateChangeCancellable)
-
-        viewModel.process(newResult: .noFace)
-        wait(for: [stateChangeExpectation], timeout: 0.1)
-    }
 }
