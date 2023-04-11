@@ -16,19 +16,10 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
     func process(newResult: FaceDetectionResult) {
         switch newResult {
         case .noFace:
-            switch livenessState.state {
-            case .pendingFacePreparedConfirmation:
+            if case .pendingFacePreparedConfirmation = livenessState.state {
                 DispatchQueue.main.async {
                     self.livenessState.faceNotPrepared(reason: .noFace)
                 }
-                return
-            case .countingDown:
-                DispatchQueue.main.async {
-                    self.livenessState.unrecoverableStateEncountered(
-                        .invalidFaceMovementDuringCountdown
-                    )
-                }
-            default: return
             }
         case .multipleFaces:
             if case .pendingFacePreparedConfirmation = livenessState.state {

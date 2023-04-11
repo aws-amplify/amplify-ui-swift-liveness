@@ -17,6 +17,8 @@ struct OvalIllustrationExamples: View {
                     secondaryColor: .hex("#D6F5DB"),
                     illustration: { Image("illustration_face_good_fit", bundle: .module) }
                 )
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(Text(.get_ready_illustration_good_fit_a11y, bundle: .module))
 
                 OvalIllustrationView(
                     icon: .xmark(backgroundColor: .hex("#660000")),
@@ -25,6 +27,8 @@ struct OvalIllustrationExamples: View {
                     secondaryColor: .hex("#F5BCBC"),
                     illustration: { Image("illustration_face_too_far", bundle: .module) }
                 )
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(Text(.get_ready_illustration_too_far_a11y, bundle: .module))
 
                 Spacer()
         }

@@ -42,11 +42,16 @@ extension CountdownView {
 
         deinit { timerCancellable?.cancel() }
 
-        func timerInvoked() {
+        private func setAccessibilityValue() {
+            guard remaining >= 1 else { return }
             if remaining != initialDuration
                 && Int(floor(remaining)) != Int(floor(remaining - tickRate)) {
                 timerAccessibilityValue = String(Int(remaining))
             }
+        }
+
+        func timerInvoked() {
+            setAccessibilityValue()
             remaining -= tickRate
             percentage -= rate
             if remaining <= 0 {
