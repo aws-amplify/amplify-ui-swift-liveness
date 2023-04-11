@@ -35,6 +35,16 @@ struct CountdownInstructionContainerView: View {
                 text: .challenge_verifying,
                 backgroundColor: .livenessBackground
             )
+            .onAppear {
+                UIAccessibility.post(
+                    notification: .announcement,
+                    argument: NSLocalizedString(
+                        "amplify_ui_liveness_challenge_verifying",
+                        bundle: .module,
+                        comment: ""
+                    )
+                )
+            }
         default:
             EmptyView()
         }

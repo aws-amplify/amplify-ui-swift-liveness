@@ -178,7 +178,6 @@ public struct FaceLivenessDetectorView: View {
             requestCameraPermission()
         case .authorized:
             displayState = .displayingLiveness
-            UIScreen.main.brightness = 1.0
         case .restricted, .denied:
             alertCameraAccessNeeded()
         @unknown default:

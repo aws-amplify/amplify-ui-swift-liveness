@@ -28,6 +28,7 @@ struct GetReadyPageView: View {
                 VStack(alignment: .leading) {
                     Text(.get_ready_page_title, bundle: .module)
                         .font(.system(size: 34, weight: .semibold))
+                        .accessibilityAddTraits(.isHeader)
                         .padding(.bottom, 8)
 
                     Text(.get_ready_page_description, bundle: .module)
@@ -38,13 +39,15 @@ struct GetReadyPageView: View {
                         bodyText: .get_ready_photosensitivity_description,
                         popoverContent: { photosensitivityWarningPopoverContent }
                     )
-                        .padding(.bottom, 8)
+                    .accessibilityElement(children: .combine)
+                    .padding(.bottom, 8)
 
                     Text(.get_ready_steps_title, bundle: .module)
                         .fontWeight(.semibold)
                         .padding(.bottom, 16)
 
                     OvalIllustrationExamples()
+                        .accessibilityHidden(true)
                         .padding(.bottom)
 
                     steps()
@@ -124,8 +127,13 @@ struct GetReadyPageView: View {
             spacing: 16
         ) {
             step(number: 1, text: .get_ready_fit_face)
+                .accessibilityElement(children: .combine)
+
             step(number: 2, text: .get_ready_face_not_covered)
+                .accessibilityElement(children: .combine)
+
             step(number: 3, text: .get_ready_lighting)
+                .accessibilityElement(children: .combine)
         }
     }
 }

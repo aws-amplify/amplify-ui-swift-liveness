@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Combine
 
 struct InstructionContainerView: View {
     @ObservedObject var viewModel: FaceLivenessDetectionViewModel
@@ -19,6 +20,16 @@ struct InstructionContainerView: View {
                 textColor: .livenessPrimaryLabel,
                 font: .title
             )
+            .onAppear {
+                UIAccessibility.post(
+                    notification: .announcement,
+                    argument: NSLocalizedString(
+                        "amplify_ui_liveness_challenge_instruction_hold_still",
+                        bundle: .module,
+                        comment: ""
+                    )
+                )
+            }
 
         case .awaitingFaceInOvalMatch(.faceTooClose, _):
             InstructionView(
@@ -27,6 +38,16 @@ struct InstructionContainerView: View {
                 textColor: .livenessErrorLabel,
                 font: .title
             )
+            .onAppear {
+                UIAccessibility.post(
+                    notification: .announcement,
+                    argument: NSLocalizedString(
+                        "amplify_ui_liveness_challenge_instruction_move_face_back",
+                        bundle: .module,
+                        comment: ""
+                    )
+                )
+            }
 
         case .awaitingFaceInOvalMatch(let reason, let percentage):
             InstructionView(
@@ -51,6 +72,16 @@ struct InstructionContainerView: View {
                 textColor: .livenessPrimaryLabel,
                 font: .title
             )
+            .onAppear {
+                UIAccessibility.post(
+                    notification: .announcement,
+                    argument: NSLocalizedString(
+                        "amplify_ui_liveness_challenge_instruction_move_face_closer",
+                        bundle: .module,
+                        comment: ""
+                    )
+                )
+            }
 
             ProgressBarView(
                 emptyColor: .white,
