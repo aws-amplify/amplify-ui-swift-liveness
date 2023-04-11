@@ -38,11 +38,14 @@ struct CountdownView: View {
                 .animation(.linear, value: viewModel.percentage)
 
             Text(viewModel.formatted(remaining: viewModel.remaining))
-                .accessibilityValue(viewModel.formatted(remaining: viewModel.remaining))
+                .accessibilityHidden(true)
                 .font(.system(size: 24, weight: .semibold))
         }
         .onReceive(viewModel.timer) { _ in
             viewModel.timerInvoked()
+        }
+        .onReceive(viewModel.$timerAccessibilityValue) { value in
+            UIAccessibility.post(notification: .announcement, argument: value)
         }
     }
 }

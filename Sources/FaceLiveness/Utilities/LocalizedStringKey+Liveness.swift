@@ -68,6 +68,16 @@ extension LocalizedStringKey {
         "amplify_ui_liveness_get_ready_begin_check"
     )
 
+    /// en = "Illustration demonstrating good fit of face in oval."
+    static let get_ready_illustration_good_fit_a11y = LocalizedStringKey(
+        "amplify_ui_liveness_get_ready_illustration_good_fit_a11y"
+    )
+
+    /// en = "Illustration demonstrating face too far from screen."
+    static let get_ready_illustration_too_far_a11y = LocalizedStringKey(
+        "amplify_ui_liveness_get_ready_illustration_too_far_a11y"
+    )
+
     /// en = "REC"
     static let challenge_recording_indicator_label = LocalizedStringKey(
         "amplify_ui_liveness_challenge_recording_indicator_label"
@@ -85,7 +95,7 @@ extension LocalizedStringKey {
 
     /// en = "Move back"
     static let challenge_instruction_move_face_back = LocalizedStringKey(
-        "amplify_ui_liveness_challenge_instruction_move_face_bqck"
+        "amplify_ui_liveness_challenge_instruction_move_face_back"
     )
 
     /// en = "Move closer"
