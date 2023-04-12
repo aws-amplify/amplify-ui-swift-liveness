@@ -9,15 +9,23 @@ import Foundation
 @testable import FaceLiveness
 @_spi(PredictionsFaceLiveness) import AWSPredictionsPlugin
 
-class MockLivenessService: LivenessService {
+class MockLivenessService {
+
+    var interactions: [String] = []
+
     var onInitialClientEvent: (LivenessEvent<InitialClientEvent>, Date) -> Void = { _, _ in }
     var onFaceDetectionEvent: (LivenessEvent<FaceDetection>, Date) -> Void = { _, _ in }
     var onFinalClientEvent: (LivenessEvent<FinalClientEvent>, Date) -> Void = { _, _ in }
     var onFreshnessEvent: (LivenessEvent<FreshnessEvent>, Date) -> Void = { _, _ in }
     var onVideoEvent: (LivenessEvent<VideoEvent>, Date) -> Void = { _, _ in }
     var onInitializeLivenessStream: (String, String) -> Void = { _, _ in }
+}
+
+extension MockLivenessService: LivenessService {
 
     func send<T>(_ event: LivenessEvent<T>, eventDate: () -> Date) {
+        interactions.append(#function)
+
         switch event {
         case let initialClient as LivenessEvent<InitialClientEvent>:
             onInitialClientEvent(initialClient, eventDate())
@@ -36,15 +44,20 @@ class MockLivenessService: LivenessService {
     func initializeLivenessStream(
         withSessionID sessionID: String, userAgent: String
     ) throws {
+        interactions.append(#function)
         onInitializeLivenessStream(sessionID, userAgent)
     }
 
     func register(
         onComplete: @escaping (ServerDisconnection) -> Void
-    ) {}
+    ) {
+        interactions.append(#function)
+    }
 
     func register(
         listener: @escaping (FaceLivenessSession.SessionConfiguration) -> Void,
         on event: LivenessEventKind.Server
-    ) {}
+    ) {
+        interactions.append(#function)
+    }
 }

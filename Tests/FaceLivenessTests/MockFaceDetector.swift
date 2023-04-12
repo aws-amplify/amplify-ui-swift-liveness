@@ -9,8 +9,19 @@ import AVFoundation
 @testable import FaceLiveness
 @_spi(PredictionsFaceLiveness) import AWSPredictionsPlugin
 
-class MockFaceDetector: FaceDetector {
-    func detectFaces(from buffer: CVPixelBuffer) {}
-    func setResultHandler(detectionResultHandler: FaceLiveness.FaceDetectionResultHandler) {}
-    init() {}
+final class MockFaceDetector {
+    var interactions: [String] = []
+    var detectionResultHandler: FaceDetectionResultHandler = MockFaceDetectionResultHandler()
+}
+
+extension MockFaceDetector: FaceDetector {
+
+    func detectFaces(from buffer: CVPixelBuffer) {
+        interactions.append(#function)
+    }
+
+    func setResultHandler(detectionResultHandler: FaceDetectionResultHandler) {
+        interactions.append("\(#function) (\(type(of: detectionResultHandler)))")
+        self.detectionResultHandler = detectionResultHandler
+    }
 }

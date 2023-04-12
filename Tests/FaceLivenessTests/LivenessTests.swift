@@ -7,9 +7,12 @@ import Combine
 final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
     var videoChunker: VideoChunker!
     var viewModel: FaceLivenessDetectionViewModel!
+    var faceDetector: MockFaceDetector!
+    var livenessService: MockLivenessService!
 
     override func setUp() {
-        let faceDetector = MockFaceDetector()
+        faceDetector = MockFaceDetector()
+        livenessService = MockLivenessService()
         let videoChunker = VideoChunker(
             assetWriter: LivenessAVAssetWriter(),
             assetWriterDelegate: VideoChunker.AssetWriterDelegate(),
@@ -40,18 +43,32 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
     /// When: The viewModel is first initialized
     /// Then: The state is `.intitial`
     func testInitialState() {
-        viewModel.livenessService = MockLivenessService()
+        // This first call comes from the FaceLivenessDetectionViewModel's initializer
+        XCTAssertEqual(faceDetector.interactions, [
+            "setResultHandler(detectionResultHandler:) (FaceLivenessDetectionViewModel)"
+        ])
+        XCTAssertEqual(livenessService.interactions, [])
+
+        viewModel.livenessService = self.livenessService
         XCTAssertEqual(viewModel.livenessState.state, .initial)
+        XCTAssertEqual(faceDetector.interactions, [
+            "setResultHandler(detectionResultHandler:) (FaceLivenessDetectionViewModel)"
+        ])
+        XCTAssertEqual(livenessService.interactions, [])
     }
 
     /// Given:  A `FaceLivenessDetectionViewModel`
     /// When: The viewModel is processes the happy path events
     /// Then: The end state of this flow is `.faceMatched`
     func testHappyPathToMatchedFace() async throws {
-        viewModel.livenessService = MockLivenessService()
+        viewModel.livenessService = self.livenessService
 
         viewModel.livenessState.checkIsFacePrepared()
         XCTAssertEqual(viewModel.livenessState.state, .pendingFacePreparedConfirmation(.pendingCheck))
+        XCTAssertEqual(faceDetector.interactions, [
+            "setResultHandler(detectionResultHandler:) (FaceLivenessDetectionViewModel)"
+        ])
+        XCTAssertEqual(livenessService.interactions, [])
 
         viewModel.initializeLivenessStream()
         viewModel.process(newResult: .noFace)
@@ -76,5 +93,11 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
 
         viewModel.livenessState.faceMatched()
         XCTAssertEqual(viewModel.livenessState.state, .faceMatched)
+        XCTAssertEqual(faceDetector.interactions, [
+            "setResultHandler(detectionResultHandler:) (FaceLivenessDetectionViewModel)"
+        ])
+        XCTAssertEqual(livenessService.interactions, [
+            "initializeLivenessStream(withSessionID:userAgent:)"
+        ])
     }
 }
