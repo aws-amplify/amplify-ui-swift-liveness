@@ -20,7 +20,6 @@
 		906AB82829EA04B5007FFC81 /* ExampleLivenessViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 906AB82729EA04B5007FFC81 /* ExampleLivenessViewModel.swift */; };
 		906AB82A29EA0927007FFC81 /* StartSessionView+PresentationState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 906AB82929EA0927007FFC81 /* StartSessionView+PresentationState.swift */; };
 		906AB82C29EA0BFD007FFC81 /* StartSessionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 906AB82B29EA0BFD007FFC81 /* StartSessionViewModel.swift */; };
-		906AB82E29EA0D05007FFC81 /* RootViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 906AB82D29EA0D05007FFC81 /* RootViewModel.swift */; };
 		906AB83029EA0DC5007FFC81 /* LivenessResultContentView+Result.swift in Sources */ = {isa = PBXBuildFile; fileRef = 906AB82F29EA0DC5007FFC81 /* LivenessResultContentView+Result.swift */; };
 		9070FFA8285112B5009867D5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9070FFA7285112B5009867D5 /* Assets.xcassets */; };
 		9070FFAB285112B5009867D5 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9070FFAA285112B5009867D5 /* Preview Assets.xcassets */; };
@@ -70,7 +69,6 @@
 		906AB82729EA04B5007FFC81 /* ExampleLivenessViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleLivenessViewModel.swift; sourceTree = "<group>"; };
 		906AB82929EA0927007FFC81 /* StartSessionView+PresentationState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "StartSessionView+PresentationState.swift"; sourceTree = "<group>"; };
 		906AB82B29EA0BFD007FFC81 /* StartSessionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartSessionViewModel.swift; sourceTree = "<group>"; };
-		906AB82D29EA0D05007FFC81 /* RootViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootViewModel.swift; sourceTree = "<group>"; };
 		906AB82F29EA0DC5007FFC81 /* LivenessResultContentView+Result.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LivenessResultContentView+Result.swift"; sourceTree = "<group>"; };
 		9070FFA0285112B4009867D5 /* HostApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HostApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9070FFA7285112B5009867D5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -198,7 +196,6 @@
 		909308C8297DC4CA00F3CC6E /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				906AB82D29EA0D05007FFC81 /* RootViewModel.swift */,
 				904CC73C2996E650002E0753 /* RootView.swift */,
 				906AB82329E9F48C007FFC81 /* StartSessionView.swift */,
 				906AB82B29EA0BFD007FFC81 /* StartSessionViewModel.swift */,
@@ -388,7 +385,6 @@
 				90FDF2A5299BDF3E0002CE7D /* CreateSessionResponse.swift in Sources */,
 				909308D1297EE67100F3CC6E /* ExampleLivenessView.swift in Sources */,
 				909308C7297DC49C00F3CC6E /* LivenessResultContentView.swift in Sources */,
-				906AB82E29EA0D05007FFC81 /* RootViewModel.swift in Sources */,
 				906AB82629E9F554007FFC81 /* Color+DynamicColors.swift in Sources */,
 				90236C77299D6D41009FD1A7 /* HostAppApp.swift in Sources */,
 				909308CC297DC4E700F3CC6E /* Color+Hex.swift in Sources */,

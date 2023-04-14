@@ -9,18 +9,19 @@ import SwiftUI
 
 struct RootView: View {
     @EnvironmentObject var sceneDelegate: SceneDelegate
-    @StateObject var viewModel = RootViewModel()
+    @State var sessionID = ""
+    @State var isPresentingContainerView = false
 
     var body: some View {
-        if viewModel.isPresentingContainerView {
+        if isPresentingContainerView {
             ExampleLivenessView(
-                sessionID: viewModel.sessionID,
-                isPresented: $viewModel.isPresentingContainerView
+                sessionID: sessionID,
+                isPresented: $isPresentingContainerView
             )
         } else {
             StartSessionView(
-                sessionID: $viewModel.sessionID,
-                isPresentingContainerView: $viewModel.isPresentingContainerView
+                sessionID: $sessionID,
+                isPresentingContainerView: $isPresentingContainerView
             )
             .background(Color.dynamicColors(light: .white, dark: .secondarySystemBackground))
             .edgesIgnoringSafeArea(.all)
