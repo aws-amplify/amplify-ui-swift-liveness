@@ -39,6 +39,7 @@ public struct FaceLivenessDetectorView: View {
         self.sessionTask = Task {
             let session = try await AWSPredictionsPlugin.startFaceLivenessSession(
                 withID: sessionID,
+                credentialsProvider: credentialsProvider,
                 region: region,
                 options: .init(),
                 completion: map(detectionCompletion: onCompletion)
