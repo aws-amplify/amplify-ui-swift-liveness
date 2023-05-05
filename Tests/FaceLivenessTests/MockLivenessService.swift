@@ -19,6 +19,7 @@ class MockLivenessService {
     var onFreshnessEvent: (LivenessEvent<FreshnessEvent>, Date) -> Void = { _, _ in }
     var onVideoEvent: (LivenessEvent<VideoEvent>, Date) -> Void = { _, _ in }
     var onInitializeLivenessStream: (String, String) -> Void = { _, _ in }
+    var onServiceException: (FaceLivenessSessionError) -> Void = { _ in }
 }
 
 extension MockLivenessService: LivenessService {
