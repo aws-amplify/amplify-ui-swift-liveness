@@ -34,5 +34,5 @@ This sample app assumes that the session id is fetched from an API REST endpoint
 ```
 
 ## Running Sample App
-The sample app depends on a real device camera to capture videos.  Open the sample app in XCode and deploy the app onto a real device.
+The sample app depends on a real device camera to capture videos.  Open the sample app in Xcode and deploy the app onto a real device.
 
