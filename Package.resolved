@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/aws-amplify/amplify-swift",
       "state" : {
-        "branch" : "fix/liveness-errors",
-        "revision" : "7c6fbbe291ef3e2550cedcceb9e97db730ed75ef"
+        "revision" : "4241439bae1662134f0a73bd87c84f7384ffabb6",
+        "version" : "2.11.0"
       }
     },
     {
