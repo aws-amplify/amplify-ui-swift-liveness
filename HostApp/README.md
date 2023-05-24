@@ -89,7 +89,7 @@ Provide the responses shown after each of the following prompts.
    Upon completion, `amplifyconfiguration.json` should be updated to reference these provisioned backend resources.
 5. Follow the steps below to create an inline policy to enable authenticated app users to access Rekognition, which powers the FaceLivenessDetector.
    1. Go to AWS IAM console, then Roles
-   2. Select the newly created `unauthRole` for the project (`amplify-<project_name>-<env_name>-<id>-authRole`).
+   2. Select the newly created `authRole` for the project (`amplify-<project_name>-<env_name>-<id>-authRole`).
    3. Choose **Add Permissions**, then select **Create Inline Policy**, then choose **JSON** and paste the following:
 
     ```
@@ -273,15 +273,18 @@ amplify push
    4. Choose **Review Policy**
    5. Name the policy
    6. Choose **Create Policy**
-7. Your backend environment should now be setup with two REST api to get a Liveness session and a Liveness session result.
+7. Your backend environment should now be setup with two REST api to get a Liveness session and a Liveness session result
 
 ### Troubleshooting tips
 1. Ensure permissions are set appropriately
-    1. Depending on your use case, `rekognition:StartFaceLivenessSession` should be allowed for your auth role or unauth role in IAM 
+    1. Depending on your use case, `rekognition:StartFaceLivenessSession` should be allowed for your authenticated or guest user
+        * `amplify-<project_name>-<env_name>-<id>-authRole` for authenticated user
+        * `amplify-<project_name>-<env_name>-<id>-unauthRole` for unauthenticated user
     2. `rekognition:CreateFaceLivenessSession` should be allowed for the create session handler lambda role in IAM
     3. `rekognition:GetFaceLivenessSessionResults` should be allowed for the get result handler lambda role in IAM
+    4. Verify in AWS CloudWatch logs there are no `AccessDeniedException`.
 
-2. Ensure that your lambdas are deployed and starting.  Logs can be view in CloudWatch logs
+2. Ensure that your lambdas are deployed and starting.  Lambda logs are viewable in AWS CloudWatch
     1. In AWS Console, navigate to `AWS Amplify` Service
     2. Click to navigate to your Amplify App
     3. In the `Backend environments` tab, click on the `Functions` link to view all your lambda functions.  There should be two that you created and pushed via the Amplify CLI
