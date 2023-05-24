@@ -277,12 +277,12 @@ amplify push
 
 ### Troubleshooting tips
 1. Ensure permissions are set appropriately
-    1. Depending on your use case, `rekognition:StartFaceLivenessSession` should be allowed for your authenticated or guest user
-        * `amplify-<project_name>-<env_name>-<id>-authRole` for authenticated user
+    1. Depending on your use case, `rekognition:StartFaceLivenessSession` should be allowed for your authenticated or guest user configured in IAM
+        * `amplify-<project_name>-<env_name>-<id>-authRole` for authenticated user or if you are using Authenticator UI component.
         * `amplify-<project_name>-<env_name>-<id>-unauthRole` for unauthenticated user
     2. `rekognition:CreateFaceLivenessSession` should be allowed for the create session handler lambda role in IAM
     3. `rekognition:GetFaceLivenessSessionResults` should be allowed for the get result handler lambda role in IAM
-    4. Verify in AWS CloudWatch logs there are no `AccessDeniedException`.
+    4. Verify in AWS CloudWatch logs there are no `AccessDeniedException`
 
 2. Ensure that your lambdas are deployed and starting.  Lambda logs are viewable in AWS CloudWatch
     1. In AWS Console, navigate to `AWS Amplify` Service
