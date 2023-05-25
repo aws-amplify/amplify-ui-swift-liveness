@@ -1,0 +1,16 @@
+name: Run Unit Tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+      - name: Test FaceLiveness
+        run:  xcodebuild test -scheme AmplifyUILiveness -sdk 'iphonesimulator' -destination 'platform=iOS Simulator,name=iPhone 14,OS=latest' | xcpretty --simple --color --report junit && exit ${PIPESTATUS[0]}
