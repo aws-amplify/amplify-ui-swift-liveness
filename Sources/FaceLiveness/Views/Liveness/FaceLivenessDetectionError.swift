@@ -12,6 +12,12 @@ public struct FaceLivenessDetectionError: Error, Equatable {
     public let message: String
     public let recoverySuggestion: String
 
+    public static let unknown = FaceLivenessDetectionError(
+        code: 0,
+        message: "An unknown error occurred.",
+        recoverySuggestion: "Please open an issue...."
+    )
+
     public static let sessionNotFound = FaceLivenessDetectionError(
         code: 1,
         message: "Session not found.",
@@ -78,10 +84,42 @@ public struct FaceLivenessDetectionError: Error, Equatable {
         recoverySuggestion: "Confirm that you are using a valid `region` and try again."
     )
 
-    public static let unknown = FaceLivenessDetectionError(
+    public static let validation = FaceLivenessDetectionError(
         code: 12,
-        message: "An unknown error occurred.",
-        recoverySuggestion: "Please open an issue...."
+        message: "The input fails to satisfy the constraints specified by the service.",
+        recoverySuggestion: """
+        Potential reasons inlcude: video quality or size is invalid, video container format not supported,
+        video does not have enough information - no person detected in video, request couldn't be parsed or is invalid,
+        session has expired or is invalid, S3 bucket is invalid/in another AWS region, KMS Key is invalid."
+        """
+    )
+
+    public static let internalServer = FaceLivenessDetectionError(
+        code: 13,
+        message: "Unexpected error during processing of request.",
+        recoverySuggestion: ""
+    )
+
+    public static let throttling = FaceLivenessDetectionError(
+        code: 14,
+        message: "A request was denied due to request throttling.",
+        recoverySuggestion: """
+        Occurs when too many requests were made by a user (exceeding their service quota),
+        the service isn't able to scale, or a service-wide throttling was done to
+        recover from an operational event.
+        """
+    )
+
+    public static let serviceQuotaExceeded = FaceLivenessDetectionError(
+        code: 15,
+        message: "Occurs when a request would cause a service quota to be exceeded.",
+        recoverySuggestion: ""
+    )
+
+    public static let serviceUnavailable = FaceLivenessDetectionError(
+        code: 16,
+        message: "Service-wide throttling to recover from an operational event or service is not able to scale.",
+        recoverySuggestion: ""
     )
 
     public static func == (lhs: FaceLivenessDetectionError, rhs: FaceLivenessDetectionError) -> Bool {

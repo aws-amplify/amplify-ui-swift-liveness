@@ -78,7 +78,7 @@ public struct FaceLivenessDetectorView: View {
                 faceInOvalMatching: faceInOvalStateMatching,
                 captureSession: captureSession,
                 videoChunker: videoChunker,
-                closeButtonAction: {},
+                closeButtonAction: { onCompletion(.failure(.userCancelled)) },
                 sessionID: sessionID
             )
         )
@@ -213,6 +213,18 @@ fileprivate func map(detectionCompletion: @escaping (Result<Void, FaceLivenessDe
             detectionCompletion(.failure(.invalidRegion))
         case .failure(.accessDenied):
             detectionCompletion(.failure(.accessDenied))
+        case .failure(.validation):
+            detectionCompletion(.failure(.validation))
+        case .failure(.internalServer):
+            detectionCompletion(.failure(.internalServer))
+        case .failure(.throttling):
+            detectionCompletion(.failure(.throttling))
+        case .failure(.serviceQuotaExceeded):
+            detectionCompletion(.failure(.serviceQuotaExceeded))
+        case .failure(.serviceUnavailable):
+            detectionCompletion(.failure(.serviceUnavailable))
+        case .failure(.sessionNotFound):
+            detectionCompletion(.failure(.sessionNotFound))
         default:
             detectionCompletion(.failure(.unknown))
         }

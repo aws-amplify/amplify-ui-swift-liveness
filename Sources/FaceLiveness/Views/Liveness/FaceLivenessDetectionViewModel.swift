@@ -82,10 +82,10 @@ class FaceLivenessDetectionViewModel: ObservableObject {
 
     func registerServiceEvents() {
         livenessService.register(onComplete: { [weak self] reason in
+            self?.stopRecording()
+
             switch reason {
             case .disconnectionEvent:
-                self?.captureSession.stopRunning()
-
                 DispatchQueue.main.async {
                     self?.livenessState.complete()
                 }
