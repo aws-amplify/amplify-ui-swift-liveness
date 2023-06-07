@@ -8,18 +8,18 @@
 import UIKit
 import AVFoundation
 
-final class LivenessCaptureSession {
+class LivenessCaptureSession {
     let captureDevice: LivenessCaptureDevice
     private let captureQueue = DispatchQueue(label: "com.amazonaws.faceliveness.cameracapturequeue")
-    private let outputDelegate: OutputSampleBufferCapturer
-    private var captureSession: AVCaptureSession?
+    let outputDelegate: OutputSampleBufferCapturer
+    var captureSession: AVCaptureSession?
 
     init(captureDevice: LivenessCaptureDevice, outputDelegate: OutputSampleBufferCapturer) {
         self.captureDevice = captureDevice
         self.outputDelegate = outputDelegate
     }
 
-    func startSession(frame: CGRect) throws -> AVCaptureVideoPreviewLayer {
+    func startSession(frame: CGRect) throws -> CALayer {
         guard let camera = captureDevice.avCaptureDevice
         else { throw LivenessCaptureSessionError.cameraUnavailable }
 

@@ -117,11 +117,11 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         captureSession.stopRunning()
     }
 
-    func startCamera(withinFrame frame: CGRect) -> AVCaptureVideoPreviewLayer? {
+    func startCamera(withinFrame frame: CGRect) -> CALayer? {
         do {
             let avLayer = try captureSession.startSession(frame: frame)
-            avLayer.frame = frame
-            layerRectConverted = avLayer.layerRectConverted(fromMetadataOutputRect:)
+//            avLayer.frame = frame
+//            layerRectConverted = avLayer.layerRectConverted(fromMetadataOutputRect:)
             DispatchQueue.main.async {
                 self.livenessState.checkIsFacePrepared()
             }
