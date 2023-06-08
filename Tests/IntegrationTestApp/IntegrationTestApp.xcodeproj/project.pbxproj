@@ -31,7 +31,6 @@
 		733696892A31329A009448F0 /* LivenessIntegrationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 733696882A31329A009448F0 /* LivenessIntegrationUITests.swift */; };
 		735A62472A313B8F00837642 /* UIConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 735A62462A313B8E00837642 /* UIConstants.swift */; };
 		73B8F4202A2D7A27004215B5 /* IntegrationTestApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73B8F41F2A2D7A27004215B5 /* IntegrationTestApp.swift */; };
-		73B8F4222A2D7A27004215B5 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73B8F4212A2D7A27004215B5 /* ContentView.swift */; };
 		73B8F4242A2D7A28004215B5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 73B8F4232A2D7A28004215B5 /* Assets.xcassets */; };
 		73B8F4282A2D7A28004215B5 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 73B8F4272A2D7A28004215B5 /* Preview Assets.xcassets */; };
 		73F5DACB2A312594004CD4FC /* AWSAPIPlugin in Frameworks */ = {isa = PBXBuildFile; productRef = 73F5DACA2A312594004CD4FC /* AWSAPIPlugin */; };
@@ -77,7 +76,6 @@
 		735A62492A317F6000837642 /* amplify-ui-swift-liveness */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = "amplify-ui-swift-liveness"; path = ../..; sourceTree = "<group>"; };
 		73B8F41C2A2D7A27004215B5 /* IntegrationTestApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IntegrationTestApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		73B8F41F2A2D7A27004215B5 /* IntegrationTestApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegrationTestApp.swift; sourceTree = "<group>"; };
-		73B8F4212A2D7A27004215B5 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		73B8F4232A2D7A28004215B5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		73B8F4252A2D7A28004215B5 /* IntegrationTestApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = IntegrationTestApp.entitlements; sourceTree = "<group>"; };
 		73B8F4272A2D7A28004215B5 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
@@ -206,7 +204,6 @@
 				7336966B2A312F2D009448F0 /* Utilities */,
 				733696532A312F17009448F0 /* Views */,
 				73B8F41F2A2D7A27004215B5 /* IntegrationTestApp.swift */,
-				73B8F4212A2D7A27004215B5 /* ContentView.swift */,
 				73B8F4232A2D7A28004215B5 /* Assets.xcassets */,
 				732CF8512A318F7D004D0BE3 /* mock.mov */,
 				73B8F4252A2D7A28004215B5 /* IntegrationTestApp.entitlements */,
@@ -358,7 +355,6 @@
 				733696622A312F17009448F0 /* StartSessionView.swift in Sources */,
 				733696662A312F17009448F0 /* StartSessionViewModel.swift in Sources */,
 				732CF84E2A31871D004D0BE3 /* MockLivenessCaptureView.swift in Sources */,
-				73B8F4222A2D7A27004215B5 /* ContentView.swift in Sources */,
 				733696722A312F2D009448F0 /* Color+DynamicColors.swift in Sources */,
 				733696652A312F17009448F0 /* LivenessResultContentView+Result.swift in Sources */,
 				733696712A312F2D009448F0 /* LivenessResult.swift in Sources */,
