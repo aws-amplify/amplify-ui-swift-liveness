@@ -1,10 +1,14 @@
 //
-//  UIConstants.swift
-//  HostAppUITests
+// Copyright Amazon.com Inc. or its affiliates.
+// All Rights Reserved.
 //
-//  Created by Pham, Tuan on 6/1/23.
+// SPDX-License-Identifier: Apache-2.0
 //
+
 struct UIConstants {
+    static let appName = "IntegrationTestApp"
+    static let primaryButton = "Create Liveness Session"
+ 
     struct BeginCheck {
         static let primaryButton = "Begin Check"
         static let description = "You will go through a face verification process to prove that you are a real person. Your screen's brightness will temporarily be set to 100% for highest accuracy."

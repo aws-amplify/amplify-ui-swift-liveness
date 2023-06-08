@@ -83,6 +83,46 @@ public struct FaceLivenessDetectorView: View {
             )
         )
     }
+    
+    init(
+        sessionID: String,
+        credentialsProvider: AWSCredentialsProvider? = nil,
+        region: String,
+        disableStartView: Bool = false,
+        isPresented: Binding<Bool>,
+        onCompletion: @escaping (Result<Void, FaceLivenessDetectionError>) -> Void,
+        captureSession: LivenessCaptureSession
+    ) {
+        self.disableStartView = disableStartView
+        self._isPresented = isPresented
+        self.onCompletion = onCompletion
+
+        self.sessionTask = Task {
+            let session = try await AWSPredictionsPlugin.startFaceLivenessSession(
+                withID: sessionID,
+                credentialsProvider: credentialsProvider,
+                region: region,
+                options: .init(),
+                completion: map(detectionCompletion: onCompletion)
+            )
+            return session
+        }
+
+        let faceInOvalStateMatching = FaceInOvalMatching(
+            instructor: Instructor()
+        )
+
+        self._viewModel = StateObject(
+            wrappedValue: .init(
+                faceDetector: captureSession.outputDelegate.faceDetector,
+                faceInOvalMatching: faceInOvalStateMatching,
+                captureSession: captureSession,
+                videoChunker: captureSession.outputDelegate.videoChunker,
+                closeButtonAction: { onCompletion(.failure(.userCancelled)) },
+                sessionID: sessionID
+            )
+        )
+    }
 
     public var body: some View {
         switch displayState {
@@ -204,7 +244,7 @@ enum InstructionState {
     case display(text: String)
 }
 
-fileprivate func map(detectionCompletion: @escaping (Result<Void, FaceLivenessDetectionError>) -> Void) -> ((Result<Void, FaceLivenessSessionError>) -> Void) {
+private func map(detectionCompletion: @escaping (Result<Void, FaceLivenessDetectionError>) -> Void) -> ((Result<Void, FaceLivenessSessionError>) -> Void) {
     { result in
         switch result {
         case .success:

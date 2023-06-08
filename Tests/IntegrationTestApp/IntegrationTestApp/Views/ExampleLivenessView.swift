@@ -20,7 +20,7 @@ struct ExampleLivenessView: View {
     var body: some View {
         switch viewModel.presentationState {
         case .liveness:
-            FaceLivenessDetectorView(
+            FaceLivenessDetectorView.getMockFaceLivenessDetectorView(
                 sessionID: viewModel.sessionID,
                 region: "us-east-1",
                 isPresented:  Binding(

@@ -15,30 +15,17 @@ class CreateLivenessSessionUITests: XCTestCase {
         super.setUp()
         continueAfterFailure = false
         app = XCUIApplication()
-        app?.launchEnvironment.updateValue("YES", forKey: "UITesting")
-        app?.launchEnvironment.updateValue("mock1", forKey: "LivenessMockFileName")
-        app?.launchEnvironment.updateValue("mov", forKey: "UITesting")
         app?.launch()
       }
     
-    func testCreateLivenessSessionUI() throws {
-        XCTAssertEqual(app!.label, "Liveness")
-        XCTAssert(app!.buttons["Create Liveness Session"].exists)
-        XCTAssert(app!.buttons["Create Liveness Session"].isEnabled)
-        app?.buttons["Create Liveness Session"].tap()
-        Thread.sleep(forTimeInterval: 4)
-        XCTAssert(app!.buttons["Begin Check"].exists)
-        XCTAssertFalse(app!.buttons["Create Liveness Session"].exists)
-    }
-    
     func testBeginCheckUI() throws {
-        XCTAssertEqual(app!.label, "Liveness")
-        XCTAssert(app!.buttons["Create Liveness Session"].exists)
-        XCTAssert(app!.buttons["Create Liveness Session"].isEnabled)
-        app!.buttons["Create Liveness Session"].tap()
+        XCTAssertEqual(app!.label, UIConstants.appName)
+        XCTAssert(app!.buttons[UIConstants.primaryButton].exists)
+        XCTAssert(app!.buttons[UIConstants.primaryButton].isEnabled)
+        app!.buttons[UIConstants.primaryButton].tap()
         Thread.sleep(forTimeInterval: 2)
         XCTAssert(app!.buttons[UIConstants.BeginCheck.primaryButton].exists)
-        XCTAssertFalse(app!.buttons["Create Liveness Session"].exists)
+        XCTAssertFalse(app!.buttons[UIConstants.primaryButton].exists)
         let scrollViewsQuery = app!.scrollViews
         let elementsQuery = scrollViewsQuery.otherElements
         XCTAssert(elementsQuery.staticTexts[UIConstants.BeginCheck.description].exists)
@@ -47,13 +34,13 @@ class CreateLivenessSessionUITests: XCTestCase {
     }
     
     func testStartLivenessIntegration() throws {
-        XCTAssertEqual(app!.label, "Liveness")
-        XCTAssert(app!.buttons["Create Liveness Session"].exists)
-        XCTAssert(app!.buttons["Create Liveness Session"].isEnabled)
-        app?.buttons["Create Liveness Session"].tap()
+        XCTAssertEqual(app!.label, UIConstants.appName)
+        XCTAssert(app!.buttons[UIConstants.primaryButton].exists)
+        XCTAssert(app!.buttons[UIConstants.primaryButton].isEnabled)
+        app?.buttons[UIConstants.primaryButton].tap()
         Thread.sleep(forTimeInterval: 2)
         XCTAssert(app!.buttons[UIConstants.BeginCheck.primaryButton].exists)
-        XCTAssertFalse(app!.buttons["Create Liveness Session"].exists)
+        XCTAssertFalse(app!.buttons[UIConstants.primaryButton].exists)
         app!.buttons[UIConstants.BeginCheck.primaryButton].tap()
         Thread.sleep(forTimeInterval: 2)
         XCTAssert(app!.staticTexts[UIConstants.LivenessCheck.countdownInstruction].exists)

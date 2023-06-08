@@ -19,15 +19,6 @@
       }
     },
     {
-      "identity" : "amplify-ui-swift-liveness",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/aws-amplify/amplify-ui-swift-liveness",
-      "state" : {
-        "revision" : "42207fd456b23e03cd72243f982340cfa1d1c205",
-        "version" : "1.0.0"
-      }
-    },
-    {
       "identity" : "aws-appsync-realtime-client-ios",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/aws-amplify/aws-appsync-realtime-client-ios.git",
