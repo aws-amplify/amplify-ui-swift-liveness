@@ -9,7 +9,7 @@ import UIKit
 import AVFoundation
 @testable import FaceLiveness
 
-final private class MockLivenessCaptureSession: LivenessCaptureSession {
+final class MockLivenessCaptureSession: LivenessCaptureSession {
     private var videoRenderView: VideoRenderView?
     private var displayLink: CADisplayLink?
     private var playerItemOutput: AVPlayerItemVideoOutput?

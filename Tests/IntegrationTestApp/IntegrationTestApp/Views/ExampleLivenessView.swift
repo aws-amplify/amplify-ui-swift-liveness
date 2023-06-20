@@ -31,7 +31,7 @@ struct ExampleLivenessView: View {
                     switch result {
                     case .success:
                         withAnimation { viewModel.presentationState = .result }
-                    case .failure(.sessionNotFound), .failure(.cameraPermissionDenied), .failure(.accessDenied):
+                    case .failure(.sessionNotFound), .failure(.cameraPermissionDenied), .failure(.accessDenied), .failure(.validation):
                         viewModel.presentationState = .liveness
                         isPresented = false
                     case .failure(.userCancelled):
