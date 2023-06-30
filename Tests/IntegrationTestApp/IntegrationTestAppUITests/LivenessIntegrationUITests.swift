@@ -28,7 +28,7 @@ class CreateLivenessSessionUITests: XCTestCase {
         XCTAssertFalse(app!.buttons[UIConstants.primaryButton].exists)
         let scrollViewsQuery = app!.scrollViews
         let elementsQuery = scrollViewsQuery.otherElements
-        XCTAssert(elementsQuery.staticTexts[UIConstants.BeginCheck.description].exists)
+        XCTAssertEqual(elementsQuery.staticTexts.element(boundBy: 1).label, UIConstants.BeginCheck.description)
         XCTAssert(elementsQuery.buttons[UIConstants.BeginCheck.warning].exists)
         XCTAssert(elementsQuery.staticTexts[UIConstants.BeginCheck.instruction].exists)
     }
