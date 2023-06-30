@@ -13,7 +13,7 @@ import Amplify
 
 final class _LivenessViewController: UIViewController {
     let viewModel: FaceLivenessDetectionViewModel
-    var previewLayer: AVCaptureVideoPreviewLayer!
+    var previewLayer: CALayer!
 
     let faceShapeLayer = CAShapeLayer()
     var ovalExists = false
@@ -84,13 +84,6 @@ final class _LivenessViewController: UIViewController {
             self.view.layer.insertSublayer(avLayer, at: 0)
             self.view.layoutIfNeeded()
         }
-    }
-
-
-
-    func convert(rect: CGRect) -> CGRect {
-        let box = previewLayer.layerRectConverted(fromMetadataOutputRect: rect)
-        return box
     }
 
     var runningFreshness = false

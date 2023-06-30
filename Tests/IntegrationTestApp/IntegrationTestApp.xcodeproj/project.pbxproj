@@ -1,0 +1,687 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		732CF8492A3183F3004D0BE3 /* FaceLiveness in Frameworks */ = {isa = PBXBuildFile; productRef = 732CF8482A3183F3004D0BE3 /* FaceLiveness */; };
+		732CF84E2A31871D004D0BE3 /* MockLivenessCaptureSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 732CF84D2A31871D004D0BE3 /* MockLivenessCaptureSession.swift */; };
+		732CF8502A3187E0004D0BE3 /* FaceLivenessDetectorView+Mock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 732CF84F2A3187E0004D0BE3 /* FaceLivenessDetectorView+Mock.swift */; };
+		732CF8522A318F7D004D0BE3 /* mock.mov in Resources */ = {isa = PBXBuildFile; fileRef = 732CF8512A318F7D004D0BE3 /* mock.mov */; };
+		7336965E2A312F17009448F0 /* ExampleLivenessViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 733696542A312F17009448F0 /* ExampleLivenessViewModel.swift */; };
+		7336965F2A312F17009448F0 /* StartSessionView+PresentationState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 733696552A312F17009448F0 /* StartSessionView+PresentationState.swift */; };
+		733696602A312F17009448F0 /* LivenessResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 733696562A312F17009448F0 /* LivenessResultView.swift */; };
+		733696612A312F17009448F0 /* ExampleLivenessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 733696572A312F17009448F0 /* ExampleLivenessView.swift */; };
+		733696622A312F17009448F0 /* StartSessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 733696582A312F17009448F0 /* StartSessionView.swift */; };
+		733696632A312F17009448F0 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 733696592A312F17009448F0 /* RootView.swift */; };
+		733696642A312F17009448F0 /* LivenessCheckErrorContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7336965A2A312F17009448F0 /* LivenessCheckErrorContentView.swift */; };
+		733696652A312F17009448F0 /* LivenessResultContentView+Result.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7336965B2A312F17009448F0 /* LivenessResultContentView+Result.swift */; };
+		733696662A312F17009448F0 /* StartSessionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7336965C2A312F17009448F0 /* StartSessionViewModel.swift */; };
+		733696672A312F17009448F0 /* LivenessResultContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7336965D2A312F17009448F0 /* LivenessResultContentView.swift */; };
+		733696702A312F2D009448F0 /* CreateSessionResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 733696692A312F2D009448F0 /* CreateSessionResponse.swift */; };
+		733696712A312F2D009448F0 /* LivenessResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7336966A2A312F2D009448F0 /* LivenessResult.swift */; };
+		733696722A312F2D009448F0 /* Color+DynamicColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7336966C2A312F2D009448F0 /* Color+DynamicColors.swift */; };
+		733696732A312F2D009448F0 /* UIColor+Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7336966D2A312F2D009448F0 /* UIColor+Hex.swift */; };
+		733696742A312F2D009448F0 /* Color+Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7336966E2A312F2D009448F0 /* Color+Hex.swift */; };
+		733696752A312F2D009448F0 /* View+Background.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7336966F2A312F2D009448F0 /* View+Background.swift */; };
+		733696782A312FC3009448F0 /* amplifyconfiguration.json in Resources */ = {isa = PBXBuildFile; fileRef = 733696772A312FC3009448F0 /* amplifyconfiguration.json */; };
+		733696892A31329A009448F0 /* LivenessIntegrationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 733696882A31329A009448F0 /* LivenessIntegrationUITests.swift */; };
+		735A62472A313B8F00837642 /* UIConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 735A62462A313B8E00837642 /* UIConstants.swift */; };
+		73B8F4202A2D7A27004215B5 /* IntegrationTestApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73B8F41F2A2D7A27004215B5 /* IntegrationTestApp.swift */; };
+		73B8F4242A2D7A28004215B5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 73B8F4232A2D7A28004215B5 /* Assets.xcassets */; };
+		73B8F4282A2D7A28004215B5 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 73B8F4272A2D7A28004215B5 /* Preview Assets.xcassets */; };
+		73F5DACB2A312594004CD4FC /* AWSAPIPlugin in Frameworks */ = {isa = PBXBuildFile; productRef = 73F5DACA2A312594004CD4FC /* AWSAPIPlugin */; };
+		73F5DACD2A312594004CD4FC /* AWSCognitoAuthPlugin in Frameworks */ = {isa = PBXBuildFile; productRef = 73F5DACC2A312594004CD4FC /* AWSCognitoAuthPlugin */; };
+		73F5DACF2A312594004CD4FC /* AWSPluginsCore in Frameworks */ = {isa = PBXBuildFile; productRef = 73F5DACE2A312594004CD4FC /* AWSPluginsCore */; };
+		73F5DAD12A312594004CD4FC /* Amplify in Frameworks */ = {isa = PBXBuildFile; productRef = 73F5DAD02A312594004CD4FC /* Amplify */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		733696832A313278009448F0 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 73B8F4142A2D7A27004215B5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 73B8F41B2A2D7A27004215B5;
+			remoteInfo = IntegrationTestApp;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		732CF84D2A31871D004D0BE3 /* MockLivenessCaptureSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockLivenessCaptureSession.swift; sourceTree = "<group>"; };
+		732CF84F2A3187E0004D0BE3 /* FaceLivenessDetectorView+Mock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FaceLivenessDetectorView+Mock.swift"; sourceTree = "<group>"; };
+		732CF8512A318F7D004D0BE3 /* mock.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = mock.mov; sourceTree = "<group>"; };
+		733696542A312F17009448F0 /* ExampleLivenessViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExampleLivenessViewModel.swift; sourceTree = "<group>"; };
+		733696552A312F17009448F0 /* StartSessionView+PresentationState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "StartSessionView+PresentationState.swift"; sourceTree = "<group>"; };
+		733696562A312F17009448F0 /* LivenessResultView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LivenessResultView.swift; sourceTree = "<group>"; };
+		733696572A312F17009448F0 /* ExampleLivenessView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExampleLivenessView.swift; sourceTree = "<group>"; };
+		733696582A312F17009448F0 /* StartSessionView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StartSessionView.swift; sourceTree = "<group>"; };
+		733696592A312F17009448F0 /* RootView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		7336965A2A312F17009448F0 /* LivenessCheckErrorContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LivenessCheckErrorContentView.swift; sourceTree = "<group>"; };
+		7336965B2A312F17009448F0 /* LivenessResultContentView+Result.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "LivenessResultContentView+Result.swift"; sourceTree = "<group>"; };
+		7336965C2A312F17009448F0 /* StartSessionViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StartSessionViewModel.swift; sourceTree = "<group>"; };
+		7336965D2A312F17009448F0 /* LivenessResultContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LivenessResultContentView.swift; sourceTree = "<group>"; };
+		733696692A312F2D009448F0 /* CreateSessionResponse.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CreateSessionResponse.swift; sourceTree = "<group>"; };
+		7336966A2A312F2D009448F0 /* LivenessResult.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LivenessResult.swift; sourceTree = "<group>"; };
+		7336966C2A312F2D009448F0 /* Color+DynamicColors.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Color+DynamicColors.swift"; sourceTree = "<group>"; };
+		7336966D2A312F2D009448F0 /* UIColor+Hex.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIColor+Hex.swift"; sourceTree = "<group>"; };
+		7336966E2A312F2D009448F0 /* Color+Hex.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Color+Hex.swift"; sourceTree = "<group>"; };
+		7336966F2A312F2D009448F0 /* View+Background.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "View+Background.swift"; sourceTree = "<group>"; };
+		733696772A312FC3009448F0 /* amplifyconfiguration.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = amplifyconfiguration.json; sourceTree = SOURCE_ROOT; };
+		7336967D2A313278009448F0 /* IntegrationTestAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = IntegrationTestAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		733696882A31329A009448F0 /* LivenessIntegrationUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivenessIntegrationUITests.swift; sourceTree = "<group>"; };
+		735A62462A313B8E00837642 /* UIConstants.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIConstants.swift; sourceTree = "<group>"; };
+		735A62492A317F6000837642 /* amplify-ui-swift-liveness */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = "amplify-ui-swift-liveness"; path = ../..; sourceTree = "<group>"; };
+		73B8F41C2A2D7A27004215B5 /* IntegrationTestApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IntegrationTestApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		73B8F41F2A2D7A27004215B5 /* IntegrationTestApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegrationTestApp.swift; sourceTree = "<group>"; };
+		73B8F4232A2D7A28004215B5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		73B8F4252A2D7A28004215B5 /* IntegrationTestApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = IntegrationTestApp.entitlements; sourceTree = "<group>"; };
+		73B8F4272A2D7A28004215B5 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		7336967A2A313278009448F0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		73B8F4192A2D7A27004215B5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				73F5DACF2A312594004CD4FC /* AWSPluginsCore in Frameworks */,
+				73F5DAD12A312594004CD4FC /* Amplify in Frameworks */,
+				732CF8492A3183F3004D0BE3 /* FaceLiveness in Frameworks */,
+				73F5DACB2A312594004CD4FC /* AWSAPIPlugin in Frameworks */,
+				73F5DACD2A312594004CD4FC /* AWSCognitoAuthPlugin in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		732CF84A2A31866D004D0BE3 /* Extension */ = {
+			isa = PBXGroup;
+			children = (
+				732CF84D2A31871D004D0BE3 /* MockLivenessCaptureSession.swift */,
+				732CF84F2A3187E0004D0BE3 /* FaceLivenessDetectorView+Mock.swift */,
+			);
+			path = Extension;
+			sourceTree = "<group>";
+		};
+		733696532A312F17009448F0 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				733696542A312F17009448F0 /* ExampleLivenessViewModel.swift */,
+				733696552A312F17009448F0 /* StartSessionView+PresentationState.swift */,
+				733696562A312F17009448F0 /* LivenessResultView.swift */,
+				733696572A312F17009448F0 /* ExampleLivenessView.swift */,
+				733696582A312F17009448F0 /* StartSessionView.swift */,
+				733696592A312F17009448F0 /* RootView.swift */,
+				7336965A2A312F17009448F0 /* LivenessCheckErrorContentView.swift */,
+				7336965B2A312F17009448F0 /* LivenessResultContentView+Result.swift */,
+				7336965C2A312F17009448F0 /* StartSessionViewModel.swift */,
+				7336965D2A312F17009448F0 /* LivenessResultContentView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		733696682A312F2D009448F0 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				733696692A312F2D009448F0 /* CreateSessionResponse.swift */,
+				7336966A2A312F2D009448F0 /* LivenessResult.swift */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
+		7336966B2A312F2D009448F0 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				7336966C2A312F2D009448F0 /* Color+DynamicColors.swift */,
+				7336966D2A312F2D009448F0 /* UIColor+Hex.swift */,
+				7336966E2A312F2D009448F0 /* Color+Hex.swift */,
+				7336966F2A312F2D009448F0 /* View+Background.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		733696762A312F7C009448F0 /* AmplifyConfig */ = {
+			isa = PBXGroup;
+			children = (
+				733696772A312FC3009448F0 /* amplifyconfiguration.json */,
+			);
+			path = AmplifyConfig;
+			sourceTree = "<group>";
+		};
+		7336967E2A313278009448F0 /* IntegrationTestAppUITests */ = {
+			isa = PBXGroup;
+			children = (
+				735A62462A313B8E00837642 /* UIConstants.swift */,
+				733696882A31329A009448F0 /* LivenessIntegrationUITests.swift */,
+			);
+			path = IntegrationTestAppUITests;
+			sourceTree = "<group>";
+		};
+		735A62482A317F6000837642 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				735A62492A317F6000837642 /* amplify-ui-swift-liveness */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		73B8F4132A2D7A27004215B5 = {
+			isa = PBXGroup;
+			children = (
+				735A62482A317F6000837642 /* Packages */,
+				73B8F41E2A2D7A27004215B5 /* IntegrationTestApp */,
+				7336967E2A313278009448F0 /* IntegrationTestAppUITests */,
+				73B8F41D2A2D7A27004215B5 /* Products */,
+				73F5DAC82A31252E004CD4FC /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		73B8F41D2A2D7A27004215B5 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				73B8F41C2A2D7A27004215B5 /* IntegrationTestApp.app */,
+				7336967D2A313278009448F0 /* IntegrationTestAppUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		73B8F41E2A2D7A27004215B5 /* IntegrationTestApp */ = {
+			isa = PBXGroup;
+			children = (
+				732CF84A2A31866D004D0BE3 /* Extension */,
+				733696762A312F7C009448F0 /* AmplifyConfig */,
+				733696682A312F2D009448F0 /* Model */,
+				7336966B2A312F2D009448F0 /* Utilities */,
+				733696532A312F17009448F0 /* Views */,
+				73B8F41F2A2D7A27004215B5 /* IntegrationTestApp.swift */,
+				73B8F4232A2D7A28004215B5 /* Assets.xcassets */,
+				732CF8512A318F7D004D0BE3 /* mock.mov */,
+				73B8F4252A2D7A28004215B5 /* IntegrationTestApp.entitlements */,
+				73B8F4262A2D7A28004215B5 /* Preview Content */,
+			);
+			path = IntegrationTestApp;
+			sourceTree = "<group>";
+		};
+		73B8F4262A2D7A28004215B5 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				73B8F4272A2D7A28004215B5 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		73F5DAC82A31252E004CD4FC /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		7336967C2A313278009448F0 /* IntegrationTestAppUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 733696852A313278009448F0 /* Build configuration list for PBXNativeTarget "IntegrationTestAppUITests" */;
+			buildPhases = (
+				733696792A313278009448F0 /* Sources */,
+				7336967A2A313278009448F0 /* Frameworks */,
+				7336967B2A313278009448F0 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				733696842A313278009448F0 /* PBXTargetDependency */,
+			);
+			name = IntegrationTestAppUITests;
+			productName = IntegrationTestAppUITests;
+			productReference = 7336967D2A313278009448F0 /* IntegrationTestAppUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		73B8F41B2A2D7A27004215B5 /* IntegrationTestApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 73B8F42B2A2D7A28004215B5 /* Build configuration list for PBXNativeTarget "IntegrationTestApp" */;
+			buildPhases = (
+				73B8F4182A2D7A27004215B5 /* Sources */,
+				73B8F4192A2D7A27004215B5 /* Frameworks */,
+				73B8F41A2A2D7A27004215B5 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = IntegrationTestApp;
+			packageProductDependencies = (
+				73F5DACA2A312594004CD4FC /* AWSAPIPlugin */,
+				73F5DACC2A312594004CD4FC /* AWSCognitoAuthPlugin */,
+				73F5DACE2A312594004CD4FC /* AWSPluginsCore */,
+				73F5DAD02A312594004CD4FC /* Amplify */,
+				732CF8482A3183F3004D0BE3 /* FaceLiveness */,
+			);
+			productName = IntegrationTestApp;
+			productReference = 73B8F41C2A2D7A27004215B5 /* IntegrationTestApp.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		73B8F4142A2D7A27004215B5 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1430;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					7336967C2A313278009448F0 = {
+						CreatedOnToolsVersion = 14.3;
+						TestTargetID = 73B8F41B2A2D7A27004215B5;
+					};
+					73B8F41B2A2D7A27004215B5 = {
+						CreatedOnToolsVersion = 14.3;
+					};
+				};
+			};
+			buildConfigurationList = 73B8F4172A2D7A27004215B5 /* Build configuration list for PBXProject "IntegrationTestApp" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 73B8F4132A2D7A27004215B5;
+			packageReferences = (
+				73F5DAC92A312594004CD4FC /* XCRemoteSwiftPackageReference "amplify-swift" */,
+			);
+			productRefGroup = 73B8F41D2A2D7A27004215B5 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				73B8F41B2A2D7A27004215B5 /* IntegrationTestApp */,
+				7336967C2A313278009448F0 /* IntegrationTestAppUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		7336967B2A313278009448F0 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		73B8F41A2A2D7A27004215B5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				732CF8522A318F7D004D0BE3 /* mock.mov in Resources */,
+				73B8F4282A2D7A28004215B5 /* Preview Assets.xcassets in Resources */,
+				733696782A312FC3009448F0 /* amplifyconfiguration.json in Resources */,
+				73B8F4242A2D7A28004215B5 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		733696792A313278009448F0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				733696892A31329A009448F0 /* LivenessIntegrationUITests.swift in Sources */,
+				735A62472A313B8F00837642 /* UIConstants.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		73B8F4182A2D7A27004215B5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				733696742A312F2D009448F0 /* Color+Hex.swift in Sources */,
+				733696642A312F17009448F0 /* LivenessCheckErrorContentView.swift in Sources */,
+				733696632A312F17009448F0 /* RootView.swift in Sources */,
+				7336965F2A312F17009448F0 /* StartSessionView+PresentationState.swift in Sources */,
+				733696622A312F17009448F0 /* StartSessionView.swift in Sources */,
+				733696662A312F17009448F0 /* StartSessionViewModel.swift in Sources */,
+				732CF84E2A31871D004D0BE3 /* MockLivenessCaptureSession.swift in Sources */,
+				733696722A312F2D009448F0 /* Color+DynamicColors.swift in Sources */,
+				733696652A312F17009448F0 /* LivenessResultContentView+Result.swift in Sources */,
+				733696712A312F2D009448F0 /* LivenessResult.swift in Sources */,
+				733696732A312F2D009448F0 /* UIColor+Hex.swift in Sources */,
+				73B8F4202A2D7A27004215B5 /* IntegrationTestApp.swift in Sources */,
+				733696752A312F2D009448F0 /* View+Background.swift in Sources */,
+				733696672A312F17009448F0 /* LivenessResultContentView.swift in Sources */,
+				733696702A312F2D009448F0 /* CreateSessionResponse.swift in Sources */,
+				733696602A312F17009448F0 /* LivenessResultView.swift in Sources */,
+				733696612A312F17009448F0 /* ExampleLivenessView.swift in Sources */,
+				732CF8502A3187E0004D0BE3 /* FaceLivenessDetectorView+Mock.swift in Sources */,
+				7336965E2A312F17009448F0 /* ExampleLivenessViewModel.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		733696842A313278009448F0 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 73B8F41B2A2D7A27004215B5 /* IntegrationTestApp */;
+			targetProxy = 733696832A313278009448F0 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		733696862A313278009448F0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = D8BB58X7QJ;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.3;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.amazon.liveness.IntegrationTestAppUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = IntegrationTestApp;
+			};
+			name = Debug;
+		};
+		733696872A313278009448F0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = D8BB58X7QJ;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.3;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.amazon.liveness.IntegrationTestAppUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = IntegrationTestApp;
+			};
+			name = Release;
+		};
+		73B8F4292A2D7A28004215B5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		73B8F42A2A2D7A28004215B5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+		73B8F42C2A2D7A28004215B5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = IntegrationTestApp/IntegrationTestApp.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"IntegrationTestApp/Preview Content\"";
+				DEVELOPMENT_TEAM = D8BB58X7QJ;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Liveness requires access to device camera.";
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 13.3;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.amazon.amplify.liveness.IntegrationTestApp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		73B8F42D2A2D7A28004215B5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = IntegrationTestApp/IntegrationTestApp.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"IntegrationTestApp/Preview Content\"";
+				DEVELOPMENT_TEAM = D8BB58X7QJ;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_TESTABILITY = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Liveness requires access to device camera.";
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 13.3;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.amazon.amplify.liveness.IntegrationTestApp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		733696852A313278009448F0 /* Build configuration list for PBXNativeTarget "IntegrationTestAppUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				733696862A313278009448F0 /* Debug */,
+				733696872A313278009448F0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		73B8F4172A2D7A27004215B5 /* Build configuration list for PBXProject "IntegrationTestApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				73B8F4292A2D7A28004215B5 /* Debug */,
+				73B8F42A2A2D7A28004215B5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		73B8F42B2A2D7A28004215B5 /* Build configuration list for PBXNativeTarget "IntegrationTestApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				73B8F42C2A2D7A28004215B5 /* Debug */,
+				73B8F42D2A2D7A28004215B5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		73F5DAC92A312594004CD4FC /* XCRemoteSwiftPackageReference "amplify-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/aws-amplify/amplify-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		732CF8482A3183F3004D0BE3 /* FaceLiveness */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FaceLiveness;
+		};
+		73F5DACA2A312594004CD4FC /* AWSAPIPlugin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 73F5DAC92A312594004CD4FC /* XCRemoteSwiftPackageReference "amplify-swift" */;
+			productName = AWSAPIPlugin;
+		};
+		73F5DACC2A312594004CD4FC /* AWSCognitoAuthPlugin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 73F5DAC92A312594004CD4FC /* XCRemoteSwiftPackageReference "amplify-swift" */;
+			productName = AWSCognitoAuthPlugin;
+		};
+		73F5DACE2A312594004CD4FC /* AWSPluginsCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 73F5DAC92A312594004CD4FC /* XCRemoteSwiftPackageReference "amplify-swift" */;
+			productName = AWSPluginsCore;
+		};
+		73F5DAD02A312594004CD4FC /* Amplify */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 73F5DAC92A312594004CD4FC /* XCRemoteSwiftPackageReference "amplify-swift" */;
+			productName = Amplify;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 73B8F4142A2D7A27004215B5 /* Project object */;
+}

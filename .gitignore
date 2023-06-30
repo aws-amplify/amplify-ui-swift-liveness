@@ -13,7 +13,6 @@ HostApp/dist/
 HostApp/node_modules/
 HostApp/generated-src/
 HostApp/aws-exports.js
-HostApp/.gitignore
 HostApp/awsconfiguration.json
 HostApp/amplifyconfiguration.json
 HostApp/amplifyconfiguration.dart
@@ -22,3 +21,18 @@ HostApp/amplify-gradle-config.json
 HostApp/amplifytools.xcconfig
 HostApp/.secret-*
 HostApp/**.sample
+Tests/IntegrationTestApp/amplify/
+Tests/IntegrationTestApp/build/
+Tests/IntegrationTestApp/dist/
+Tests/IntegrationTestApp/node_modules/
+Tests/IntegrationTestApp/generated-src/
+Tests/IntegrationTestApp/aws-exports.js
+Tests/IntegrationTestApp/awsconfiguration.json
+Tests/IntegrationTestApp/amplifyconfiguration.json
+Tests/IntegrationTestApp/amplifyconfiguration.dart
+Tests/IntegrationTestApp/amplify-build-config.json
+Tests/IntegrationTestApp/amplify-gradle-config.json
+Tests/IntegrationTestApp/amplifytools.xcconfig
+Tests/IntegrationTestApp/.secret-*
+Tests/IntegrationTestApp/**.sample
+Tests/IntegrationTestApp/*.xcodeproj
