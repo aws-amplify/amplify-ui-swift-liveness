@@ -42,12 +42,6 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
                             self.livenessState.beginRecording()
                         }
                     return
-                } else if face.faceDistance >= preparedFaceDistanceThreshold {
-                    DispatchQueue.main.async {
-                        self.livenessState.unrecoverableStateEncountered(
-                            .invalidFaceMovementDuringCountdown
-                        )
-                    }
                 } else {
                     DispatchQueue.main.async {
                         self.livenessState.faceNotPrepared(reason: .faceTooClose)
