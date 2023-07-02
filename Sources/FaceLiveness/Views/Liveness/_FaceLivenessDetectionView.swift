@@ -50,14 +50,6 @@ struct _FaceLivenessDetectionView<VideoView: View>: View {
                     )
 
                     Spacer()
-
-                    CountdownInstructionContainerView(
-                        viewModel: viewModel,
-                        onCountdownComplete: {
-                            viewModel.livenessState.beginRecording()
-                        }
-                    )
-                    .padding(.bottom)
                 }
                 .padding([.leading, .trailing])
                 .aspectRatio(3/4, contentMode: .fit)

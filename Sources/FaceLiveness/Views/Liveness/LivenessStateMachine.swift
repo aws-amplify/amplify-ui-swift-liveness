@@ -25,15 +25,6 @@ struct LivenessStateMachine {
         state = .pendingFacePreparedConfirmation(reason)
     }
 
-    mutating func openSocket() {
-        switch state {
-        case .pendingFacePreparedConfirmation, .countingDown:
-            state = .socketOpened
-        default:
-            break
-        }
-    }
-
     mutating func awaitingFaceMatch(with instruction: Instructor.Instruction, nearnessPercentage: Double) {
         let reason: FaceNotPreparedReason
         let percentage: Double
@@ -56,16 +47,11 @@ struct LivenessStateMachine {
         state = .awaitingFaceInOvalMatch(reason, percentage)
     }
 
-    mutating func awaitingServerInfoEvent() {
-        guard case .socketOpened = state else { return }
-        state = .awaitingServerInfoEvent
+    mutating func awaitingRecording() {
+        guard case .pendingFacePreparedConfirmation = state else { return }
+        state = .waitForRecording
     }
-
-    mutating func receivedServerInfoEvent() throws {
-        guard case .awaitingServerInfoEvent = state else { return }
-        state = .serverInfoEventReceived
-    }
-
+    
     mutating func unrecoverableStateEncountered(_ error: LivenessError) {
         switch state {
         case .encounteredUnrecoverableError, .completed:
@@ -81,11 +67,6 @@ struct LivenessStateMachine {
 
     mutating func ovalDisplayed() {
         state = .recording(ovalDisplayed: true)
-    }
-
-    mutating func startCountdown() {
-        guard case .pendingFacePreparedConfirmation = state else { return }
-        state = .countingDown
     }
 
     mutating func faceMatched() {
@@ -106,7 +87,7 @@ struct LivenessStateMachine {
 
     var shouldDisplayRecordingIcon: Bool {
         switch state {
-        case .initial, .pendingFacePreparedConfirmation, .encounteredUnrecoverableError, .countingDown:
+        case .initial, .pendingFacePreparedConfirmation, .encounteredUnrecoverableError:
             return false
         default: return true
         }
@@ -115,10 +96,6 @@ struct LivenessStateMachine {
     enum State: Equatable {
         case initial
         case pendingFacePreparedConfirmation(FaceNotPreparedReason)
-        case socketOpened
-        case awaitingServerInfoEvent
-        case serverInfoEventReceived
-        case countingDown
         case recording(ovalDisplayed: Bool)
         case awaitingFaceInOvalMatch(FaceNotPreparedReason, Double)
         case faceMatched
@@ -129,6 +106,7 @@ struct LivenessStateMachine {
         case awaitingDisconnectEvent
         case disconnectEventReceived
         case encounteredUnrecoverableError(LivenessError)
+        case waitForRecording
     }
 
     enum FaceNotPreparedReason: String, Equatable {
