@@ -10,7 +10,7 @@ import Amplify
 
 struct OvalIllustrationView<Illustration: View>: View {
     let icon: OvalIllustrationIconView
-    let text: String
+    let text: () -> Text
     let primaryColor: Color
     let secondaryColor: Color
     let illustration: () -> Illustration
@@ -22,7 +22,7 @@ struct OvalIllustrationView<Illustration: View>: View {
                     illustration()
                         .border(primaryColor, width: 0.8)
 
-                    Text(text)
+                    text()
                         .bold()
                         .foregroundColor(primaryColor)
                         .padding(4)

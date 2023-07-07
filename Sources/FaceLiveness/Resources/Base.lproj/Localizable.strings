@@ -17,6 +17,8 @@
 "amplify_ui_liveness_get_ready_lighting" = "Move to a well-lit place that is not in direct sunlight.";
 "amplify_ui_liveness_get_ready_fit_face" = "When an oval appears, fill the oval with your face within 7 seconds.";
 "amplify_ui_liveness_get_ready_begin_check" = "Begin Check";
+"amplify_ui_liveness_get_ready_good_fit_example" = "Good fit";
+"amplify_ui_liveness_get_ready_too_far_example" = "Too far";
 
 "amplify_ui_liveness_challenge_recording_indicator_label" = "REC";
 "amplify_ui_liveness_challenge_instruction_hold_face_during_countdown" = "Hold face position during countdown.";

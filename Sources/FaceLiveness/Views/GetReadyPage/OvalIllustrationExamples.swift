@@ -12,7 +12,7 @@ struct OvalIllustrationExamples: View {
         HStack(spacing: 16) {
                 OvalIllustrationView(
                     icon: .checkmark(backgroundColor: .hex("#365E3D")),
-                    text: "Good fit",
+                    text: { Text(.get_ready_good_fit_example, bundle: .module) },
                     primaryColor: .hex("#365E3D"),
                     secondaryColor: .hex("#D6F5DB"),
                     illustration: { Image("illustration_face_good_fit", bundle: .module) }
@@ -22,7 +22,7 @@ struct OvalIllustrationExamples: View {
 
                 OvalIllustrationView(
                     icon: .xmark(backgroundColor: .hex("#660000")),
-                    text: "Too far",
+                    text: { Text(.get_ready_too_far_example, bundle: .module) },
                     primaryColor: .hex("#660000"),
                     secondaryColor: .hex("#F5BCBC"),
                     illustration: { Image("illustration_face_too_far", bundle: .module) }
