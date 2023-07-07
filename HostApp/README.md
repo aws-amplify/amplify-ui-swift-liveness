@@ -10,6 +10,8 @@ More information on setting up and using the FaceLivenessDetector is in the [Amp
 
 ## Running the App
 
+Prerequisite: The host app requires backend resources to be configured with Amplify Auth category for authentication and Amplify API for starting/creating Liveness sessions.
+
 1. Install Xcode version 12.0 or higher
 2. clone the Amplify UI Swift Liveness repository:
 ```

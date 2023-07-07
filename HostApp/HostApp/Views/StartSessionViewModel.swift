@@ -19,10 +19,15 @@ class StartSessionViewModel: ObservableObject {
     func setup() {
         Task { @MainActor in
             presentationState = .loading
-            let session = try await Amplify.Auth.fetchAuthSession()
-            presentationState = session.isSignedIn
-            ? .signedIn(action: signOut)
-            : .signedOut(action: signIn)
+            do {
+                let session = try await Amplify.Auth.fetchAuthSession()
+                presentationState = session.isSignedIn
+                ? .signedIn(action: signOut)
+                : .signedOut(action: signIn)
+            } catch {
+                print("Error fetching auth session", error)
+            }
+
         }
     }
 
@@ -50,12 +55,15 @@ class StartSessionViewModel: ObservableObject {
     func signIn() {
         Task { @MainActor in
             presentationState = .loading
-            let signInResult = try await Amplify.Auth.signInWithWebUI(
-                presentationAnchor: window
-            )
-            if signInResult.isSignedIn {
-                presentationState = .signedIn(action: signOut)
+            do {
+                let signInResult = try await Amplify.Auth.signInWithWebUI(presentationAnchor: window)
+                if signInResult.isSignedIn {
+                    presentationState = .signedIn(action: signOut)
+                }
+            } catch {
+                print("Error signing in with web UI", error)
             }
+
         }
     }
 
