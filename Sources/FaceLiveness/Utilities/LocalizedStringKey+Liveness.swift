@@ -158,4 +158,14 @@ extension LocalizedStringKey {
         "amplify_ui_liveness_close_button_a11y"
     )
 
+    /// en = "Good fit"
+    static let get_ready_good_fit_example = LocalizedStringKey(
+        "amplify_ui_liveness_get_ready_good_fit_example"
+    )
+    
+    /// en = "Too far"
+    static let get_ready_too_far_example = LocalizedStringKey(
+        "amplify_ui_liveness_get_ready_too_far_example"
+    )
+    
 }
