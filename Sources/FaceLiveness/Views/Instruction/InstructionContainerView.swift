@@ -91,6 +91,11 @@ struct InstructionContainerView: View {
                 percentage: 0.2
             )
             .frame(width: 200, height: 30)
+        case .pendingFacePreparedConfirmation(let reason):
+            InstructionView(
+                text: .init(reason.rawValue),
+                backgroundColor: .livenessBackground
+            )
         case .completedDisplayingFreshness:
             InstructionView(
                 text: .challenge_verifying,
