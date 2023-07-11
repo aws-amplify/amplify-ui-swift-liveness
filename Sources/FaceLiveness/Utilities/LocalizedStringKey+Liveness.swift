@@ -83,11 +83,6 @@ extension LocalizedStringKey {
         "amplify_ui_liveness_challenge_recording_indicator_label"
     )
 
-    /// en = "Hold face position during countdown."
-    static let challenge_instruction_hold_face_during_countdown = LocalizedStringKey(
-        "amplify_ui_liveness_challenge_instruction_hold_face_during_countdown"
-    )
-
     /// en = "Hold face in oval for colored lights."
     static let challenge_instruction_hold_face_during_freshness = LocalizedStringKey(
         "amplify_ui_liveness_challenge_instruction_hold_face_during_freshness"

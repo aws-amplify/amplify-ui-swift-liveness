@@ -10,7 +10,6 @@ import SwiftUI
 @_spi(PredictionsFaceLiveness) import AWSPredictionsPlugin
 
 fileprivate let initialFaceDistanceThreshold: CGFloat = 0.32
-fileprivate let countdownFaceDistanceThreshold: CGFloat = 0.37
 
 extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
     func process(newResult: FaceDetectionResult) {
@@ -34,24 +33,19 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
             switch livenessState.state {
             case .pendingFacePreparedConfirmation:
                 if face.faceDistance <= initialFaceDistanceThreshold {
-                    DispatchQueue.main.async {
-                        self.livenessState.startCountdown()
-                        self.initializeLivenessStream()
-                    }
+                        DispatchQueue.main.async {
+                            self.livenessState.awaitingRecording()
+                            self.initializeLivenessStream()
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                            self.livenessState.beginRecording()
+                        }
                     return
                 } else {
                     DispatchQueue.main.async {
                         self.livenessState.faceNotPrepared(reason: .faceTooClose)
                     }
                     return
-                }
-            case .countingDown:
-                if face.faceDistance >= countdownFaceDistanceThreshold {
-                    DispatchQueue.main.async {
-                        self.livenessState.unrecoverableStateEncountered(
-                            .invalidFaceMovementDuringCountdown
-                        )
-                    }
                 }
             case .recording(ovalDisplayed: false):
                 drawOval()
