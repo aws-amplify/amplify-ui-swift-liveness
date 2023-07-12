@@ -167,7 +167,6 @@ public struct FaceLivenessDetectorView: View {
             .onReceive(viewModel.$livenessState) { output in
                 switch output.state {
                 case .completed:
-                    viewModel.livenessService.closeSocket(with: .normalClosure)
                     isPresented = false
                     onCompletion(.success(()))
                 case .encounteredUnrecoverableError(let error):
