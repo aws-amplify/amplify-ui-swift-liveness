@@ -33,6 +33,7 @@ final class VideoChunker {
     }
 
     func start() {
+        guard state == .pending else { return }
         state = .writing
         assetWriter.startWriting()
         assetWriter.startSession(atSourceTime: .zero)
