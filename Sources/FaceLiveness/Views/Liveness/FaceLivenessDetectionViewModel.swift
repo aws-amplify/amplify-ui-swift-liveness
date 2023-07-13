@@ -134,8 +134,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         }
     }
 
-
-    func drawOval() {
+    func drawOval(onComplete: @escaping () -> Void) {
         guard livenessState.state == .recording(ovalDisplayed: false),
               let ovalParameters = sessionConfiguration?.ovalMatchChallenge.oval
         else { return }
@@ -158,6 +157,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         livenessViewControllerDelegate?.drawOvalInCanvas(normalizedOvalRect)
         DispatchQueue.main.async {
             self.livenessState.ovalDisplayed()
+            onComplete()
         }
         ovalRect = normalizedOvalRect
     }
@@ -212,6 +212,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         initialFace: CGRect,
         videoStartTime: UInt64
     ) {
+        guard initialClientEvent == nil else { return }
         videoChunker.start()
 
         let initialFace = FaceDetection(
