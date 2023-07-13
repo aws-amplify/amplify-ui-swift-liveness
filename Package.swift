@@ -13,7 +13,7 @@ let package = Package(
             targets: ["FaceLiveness"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/aws-amplify/amplify-swift", branch: "fix/expose-session-closure-liveness")
+        .package(url: "https://github.com/aws-amplify/amplify-swift", branch: "main") //2.14.1
     ],
     targets: [
         .target(
