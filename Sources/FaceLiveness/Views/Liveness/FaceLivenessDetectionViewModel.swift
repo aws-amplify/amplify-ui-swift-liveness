@@ -157,6 +157,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         livenessViewControllerDelegate?.drawOvalInCanvas(normalizedOvalRect)
         DispatchQueue.main.async {
             self.livenessState.ovalDisplayed()
+            onComplete()
         }
         ovalRect = normalizedOvalRect
     }
