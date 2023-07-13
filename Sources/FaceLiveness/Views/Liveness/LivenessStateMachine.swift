@@ -6,26 +6,34 @@
 //
 
 import Foundation
+import Amplify
 @_spi(PredictionsFaceLiveness) import AWSPredictionsPlugin
 
 struct LivenessStateMachine {
     private(set) var state: State
+    private let log = Amplify.Logging.logger(forCategory: "LivenessStateMachine")
 
     init(state: LivenessStateMachine.State) {
         self.state = state
     }
 
     mutating func checkIsFacePrepared() {
+        log.verbose(#function)
         guard case .initial = state else { return }
         state = .pendingFacePreparedConfirmation(.pendingCheck)
     }
 
     mutating func faceNotPrepared(reason: FaceNotPreparedReason) {
+        log.verbose("\(#function) - reason: \(reason)")
         guard case .pendingFacePreparedConfirmation = state else { return }
         state = .pendingFacePreparedConfirmation(reason)
     }
 
-    mutating func awaitingFaceMatch(with instruction: Instructor.Instruction, nearnessPercentage: Double) {
+    mutating func awaitingFaceMatch(
+        with instruction: Instructor.Instruction,
+        nearnessPercentage: Double
+    ) {
+        log.verbose("\(#function) - instruction: \(instruction)")
         let reason: FaceNotPreparedReason
         let percentage: Double
         switch instruction {
@@ -48,11 +56,13 @@ struct LivenessStateMachine {
     }
 
     mutating func awaitingRecording() {
+        log.verbose(#function)
         guard case .pendingFacePreparedConfirmation = state else { return }
         state = .waitForRecording
     }
     
     mutating func unrecoverableStateEncountered(_ error: LivenessError) {
+        log.verbose("\(#function) error: \(error)")
         switch state {
         case .encounteredUnrecoverableError, .completed:
             return
@@ -62,26 +72,32 @@ struct LivenessStateMachine {
     }
 
     mutating func beginRecording() {
+        log.verbose(#function)
         state = .recording(ovalDisplayed: false)
     }
 
     mutating func ovalDisplayed() {
+        log.verbose(#function)
         state = .recording(ovalDisplayed: true)
     }
 
     mutating func faceMatched() {
+        log.verbose(#function)
         state = .faceMatched
     }
 
     mutating func completedDisplayingFreshness() {
+        log.verbose(#function)
         state = .completedDisplayingFreshness
     }
 
     mutating func displayingFreshness() {
+        log.verbose(#function)
         state = .displayingFreshness
     }
 
     mutating func complete() {
+        log.verbose(#function)
         state = .completed
     }
 

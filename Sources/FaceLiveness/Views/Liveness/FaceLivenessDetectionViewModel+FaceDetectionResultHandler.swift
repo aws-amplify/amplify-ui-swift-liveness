@@ -15,14 +15,16 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
     func process(newResult: FaceDetectionResult) {
         switch newResult {
         case .noFace:
+            log.verbose("no face visible")
             if case .pendingFacePreparedConfirmation = livenessState.state {
-                DispatchQueue.main.async {
+                Task {
                     self.livenessState.faceNotPrepared(reason: .noFace)
                 }
             }
         case .multipleFaces:
+            log.verbose("multiple faces visible")
             if case .pendingFacePreparedConfirmation = livenessState.state {
-                DispatchQueue.main.async {
+                Task {
                     self.livenessState.faceNotPrepared(reason: .multipleFaces)
                 }
             }
@@ -33,7 +35,7 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
             switch livenessState.state {
             case .pendingFacePreparedConfirmation:
                 if face.faceDistance <= initialFaceDistanceThreshold {
-                        DispatchQueue.main.async {
+                        Task {
                             self.livenessState.awaitingRecording()
                             self.initializeLivenessStream()
                         }
@@ -42,7 +44,7 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
                         }
                     return
                 } else {
-                    DispatchQueue.main.async {
+                    Task {
                         self.livenessState.faceNotPrepared(reason: .faceTooClose)
                     }
                     return
@@ -84,13 +86,15 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
     }
 
     func handleNoMatch(instruction: Instructor.Instruction, percentage: Double) {
-        self.livenessState.awaitingFaceMatch(with: instruction, nearnessPercentage: percentage)
-        noMatchCount += 1
-        if noMatchCount >= 210 {
-            self.livenessState
-                .unrecoverableStateEncountered(.timedOut)
-            self.captureSession.stopRunning()
-            return
+        Task {
+            self.livenessState.awaitingFaceMatch(with: instruction, nearnessPercentage: percentage)
+            noMatchCount += 1
+            if noMatchCount >= 210 {
+                self.livenessState
+                    .unrecoverableStateEncountered(.timedOut)
+                self.captureSession.stopRunning()
+                return
+            }
         }
     }
 
@@ -98,7 +102,7 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
         _ instruction: Instructor.Instruction,
         colorSequences: [FaceLivenessSession.DisplayColor]
     ) {
-        DispatchQueue.main.async {
+        Task {
             switch instruction {
             case .match:
                 self.livenessState.faceMatched()

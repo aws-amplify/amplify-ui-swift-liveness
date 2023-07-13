@@ -30,7 +30,7 @@ public struct FaceLivenessDetectorView: View {
         region: String,
         disableStartView: Bool = false,
         isPresented: Binding<Bool>,
-        onCompletion: @escaping (Result<Void, FaceLivenessDetectionError>) -> Void
+        onCompletion: @Sendable @escaping (Result<Void, FaceLivenessDetectionError>) -> Void
     ) {
         self.disableStartView = disableStartView
         self._isPresented = isPresented

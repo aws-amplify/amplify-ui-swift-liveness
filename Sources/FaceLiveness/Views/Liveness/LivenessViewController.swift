@@ -11,6 +11,7 @@ import Vision
 import Amplify
 @_spi(PredictionsFaceLiveness) import AWSPredictionsPlugin
 
+@MainActor
 final class _LivenessViewController: UIViewController {
     let viewModel: FaceLivenessDetectionViewModel
     var previewLayer: CALayer!
@@ -29,11 +30,13 @@ final class _LivenessViewController: UIViewController {
         super.init(nibName: nil, bundle: nil)
         viewModel.livenessViewControllerDelegate = self
 
-
         viewModel.normalizeFace = { [weak self] face in
             guard let self = self else { return face }
+
             return DispatchQueue.main.sync {
-                face.normalize(width: self.view.frame.width, height: self.view.frame.width / 3 * 4)
+                face.normalize(
+                    width: self.view.frame.width, height: self.view.frame.width / 3 * 4
+                )
             }
         }
     }
@@ -105,7 +108,7 @@ final class _LivenessViewController: UIViewController {
 
 extension _LivenessViewController: FaceLivenessViewControllerPresenter {
     func displaySingleFrame(uiImage: UIImage) {
-        DispatchQueue.main.async {
+        Task {
             let imageView = UIImageView(image: uiImage)
             imageView.frame = self.previewLayer.frame
             self.view.addSubview(imageView)
@@ -116,7 +119,7 @@ extension _LivenessViewController: FaceLivenessViewControllerPresenter {
 
     func displayFreshness(colorSequences: [FaceLivenessSession.DisplayColor]) {
         self.ovalView?.setNeedsDisplay()
-        DispatchQueue.main.async {
+        Task {
             self.viewModel.livenessState.displayingFreshness()
         }
         self.freshness.showColorSequences(
@@ -129,17 +132,18 @@ extension _LivenessViewController: FaceLivenessViewControllerPresenter {
             },
             onComplete: { [weak self] in
                 guard let self else { return }
-                self.freshnessView.removeFromSuperview()
-
-                self.viewModel.handleFreshnessComplete(
-                    faceGuide: self.faceGuideRect!
-                )
+                Task { @MainActor in
+                    self.freshnessView.removeFromSuperview()
+                    self.viewModel.handleFreshnessComplete(
+                        faceGuide: self.faceGuideRect!
+                    )
+                }
             }
         )
     }
 
     func drawOvalInCanvas(_ ovalRect: CGRect) {
-        DispatchQueue.main.async {
+        Task {
             self.faceGuideRect = ovalRect
 
             let ovalView = OvalView(

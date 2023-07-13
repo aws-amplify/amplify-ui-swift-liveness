@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 import AVFoundation
+import Amplify
 @_spi(PredictionsFaceLiveness) import AWSPredictionsPlugin
 
 fileprivate let videoSize: CGSize = .init(width: 480, height: 640)
@@ -40,6 +41,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     var initialClientEvent: InitialClientEvent?
     var faceMatchedTimestamp: UInt64?
     var noMatchCount = 0
+    let log = Amplify.Logging.logger(forCategory: "AmplifyUISwiftLiveness")
 
     init(
         faceDetector: FaceDetector,
@@ -60,7 +62,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
 
         self.closeButtonAction = { [weak self] in
             guard let self else { return }
-            DispatchQueue.main.async {
+            Task {
                 self.stopRecording()
                 self.livenessState.unrecoverableStateEncountered(.userCancelled)
             }
@@ -82,50 +84,53 @@ class FaceLivenessDetectionViewModel: ObservableObject {
 
     func registerServiceEvents() {
         livenessService.register(onComplete: { [weak self] reason in
-            self?.stopRecording()
+            guard let self else { return }
+            self.stopRecording()
 
             switch reason {
             case .disconnectionEvent:
-                DispatchQueue.main.async {
-                    self?.livenessState.complete()
-                }
+                Task { self.livenessState.complete() }
+                self.log.info("Received disconnect event - liveness flow complete")
             case .unexpectedClosure:
-                DispatchQueue.main.async {
-                    self?.livenessState
-                        .unrecoverableStateEncountered(.socketClosed)
+                Task {
+                    self.livenessState
+                    .unrecoverableStateEncountered(.socketClosed)
                 }
+                self.log.error("Encountered unexpected socket connection closure")
             }
         })
 
         livenessService.register(
-            listener: { [weak self] _sessionConfiguration in
-                self?.sessionConfiguration = _sessionConfiguration
+            listener: { [weak self] sessionConfiguration in
+                self?.sessionConfiguration = sessionConfiguration
             },
             on: .challenge
         )
     }
 
     @objc func willResignActive(_ notification: Notification) {
-        DispatchQueue.main.async {
+        Task {
             self.stopRecording()
             self.livenessState.unrecoverableStateEncountered(.socketClosed)
         }
     }
 
-
     func stopRecording() {
+        log.verbose("completed recording")
         captureSession.stopRunning()
     }
 
     func startCamera(withinFrame frame: CGRect) -> CALayer? {
+        log.verbose("starting camera within frame: \(frame)")
         do {
             let avLayer = try captureSession.startSession(frame: frame)
-            DispatchQueue.main.async {
+            Task {
                 self.livenessState.checkIsFacePrepared()
             }
             return avLayer
         } catch {
-            DispatchQueue.main.async {
+            log.error("Camera session failed to start - unable to continue")
+            Task {
                 self.livenessState.unrecoverableStateEncountered(
                     self.generateLivenessError(from: error)
                 )
@@ -135,6 +140,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     }
 
     func drawOval(onComplete: @escaping () -> Void) {
+        log.verbose("drawing oval on screen")
         guard livenessState.state == .recording(ovalDisplayed: false),
               let ovalParameters = sessionConfiguration?.ovalMatchChallenge.oval
         else { return }
@@ -155,21 +161,25 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         )
 
         livenessViewControllerDelegate?.drawOvalInCanvas(normalizedOvalRect)
-        DispatchQueue.main.async {
+        self.log.verbose("oval displayed on screen")
+        Task {
             self.livenessState.ovalDisplayed()
+            onComplete()
         }
         ovalRect = normalizedOvalRect
     }
 
 
     func initializeLivenessStream() {
+        log.verbose("initialized liveness stream")
         do {
             try livenessService.initializeLivenessStream(
                 withSessionID: sessionID,
                 userAgent: UserAgentValues.standard().userAgentString
             )
         } catch {
-            DispatchQueue.main.async {
+            log.error("unable to create connection with liveness service. \(error)")
+            Task {
                 self.livenessState.unrecoverableStateEncountered(.couldNotOpenStream)
             }
         }
@@ -178,6 +188,8 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     func sendColorDisplayedEvent(
         _ event: Freshness.ColorEvent
     ) {
+        log.verbose("sending color displayed event for color: \(event.currentColor.rgb)")
+
         let freshnessEvent = FreshnessEvent(
             challengeID: challengeID,
             color: event.currentColor.rgb._values,
@@ -192,7 +204,8 @@ class FaceLivenessDetectionViewModel: ObservableObject {
                 eventDate: { .init() }
             )
         } catch {
-            DispatchQueue.main.async {
+            log.error("encountered error sending color event: \(error)")
+            Task {
                 self.livenessState.unrecoverableStateEncountered(.unknown)
             }
         }
@@ -211,7 +224,9 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         initialFace: CGRect,
         videoStartTime: UInt64
     ) {
+        log.verbose(#function)
         guard initialClientEvent == nil else { return }
+        log.verbose("starting video chunking")
         videoChunker.start()
 
         let initialFace = FaceDetection(
@@ -227,13 +242,15 @@ class FaceLivenessDetectionViewModel: ObservableObject {
 
         initialClientEvent = _initialClientEvent
 
+        log.verbose("sending initial face detected event")
         do {
             try livenessService.send(
                 .initialFaceDetected(event: _initialClientEvent),
                 eventDate: { .init() }
             )
         } catch {
-            DispatchQueue.main.async {
+            log.error("encountered error sending initial face detected event: \(error)")
+            Task {
                 self.livenessState.unrecoverableStateEncountered(.unknown)
             }
         }
@@ -259,20 +276,23 @@ class FaceLivenessDetectionViewModel: ObservableObject {
             videoEnd: Date().timestampMilliseconds
         )
 
+        log.verbose("sending final client event: \(finalClientEvent)")
         do {
             try livenessService.send(
                 .final(event: finalClientEvent),
                 eventDate: { .init() }
             )
 
+            log.verbose("sent final client event - sending empty video event")
             sendVideoEvent(
                 data: .init(),
                 videoEventTime: Date().timestampMilliseconds
             )
+            log.verbose("sent empty video event")
             hasSentFinalVideoEvent = true
 
         } catch {
-            DispatchQueue.main.async {
+            Task {
                 self.livenessState.unrecoverableStateEncountered(.unknown)
             }
         }
@@ -280,6 +300,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
 
     func sendVideoEvent(data: Data, videoEventTime: UInt64, n: UInt8 = 1) {
         guard !hasSentFinalVideoEvent else { return }
+        log.verbose("sending video event of size: \(data.count) and timestamp: \(videoEventTime)")
         let eventDate = Date()
         let timestamp = eventDate.timestampMilliseconds
 
@@ -291,13 +312,15 @@ class FaceLivenessDetectionViewModel: ObservableObject {
                 eventDate: { eventDate }
             )
         } catch {
-            DispatchQueue.main.async {
+            log.error("encountered error sending video event: \(error)")
+            Task {
                 self.livenessState.unrecoverableStateEncountered(.unknown)
             }
         }
     }
 
     func sendFinalVideoChunk(data: Data, videoEventTime: UInt64) {
+        log.verbose("Sending final video chunk")
         sendVideoEvent(data: data, videoEventTime: videoEventTime)
         sendFinalEvent(
             targetFaceRect: faceGuideRect,
@@ -305,13 +328,17 @@ class FaceLivenessDetectionViewModel: ObservableObject {
             faceMatchedEnd: Date().timestampMilliseconds
         )
 
-        videoChunker.finish { [weak livenessViewControllerDelegate] image in
-            livenessViewControllerDelegate?.displaySingleFrame(uiImage: image)
+        videoChunker.finish { [weak livenessViewControllerDelegate, log] image in
+            log.verbose("Video chunker finished")
+            Task {
+                livenessViewControllerDelegate?.displaySingleFrame(uiImage: image)
+            }
         }
     }
 
     func handleFreshnessComplete(faceGuide: CGRect) {
-        DispatchQueue.main.async {
+        log.verbose("completed color display")
+        Task {
             self.livenessState.completedDisplayingFreshness()
             self.faceGuideRect = faceGuide
         }
@@ -330,7 +357,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
                 eventDate: { eventDate }
             )
         } catch {
-            DispatchQueue.main.async {
+            Task {
                 self.livenessState.unrecoverableStateEncountered(.unknown)
             }
         }
