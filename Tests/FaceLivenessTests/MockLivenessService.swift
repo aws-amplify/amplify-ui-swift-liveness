@@ -20,6 +20,7 @@ class MockLivenessService {
     var onVideoEvent: (LivenessEvent<VideoEvent>, Date) -> Void = { _, _ in }
     var onInitializeLivenessStream: (String, String) -> Void = { _, _ in }
     var onServiceException: (FaceLivenessSessionError) -> Void = { _ in }
+    var onCloseSocket: (URLSessionWebSocketTask.CloseCode) -> Void = { _ in }
 }
 
 extension MockLivenessService: LivenessService {
@@ -60,5 +61,10 @@ extension MockLivenessService: LivenessService {
         on event: LivenessEventKind.Server
     ) {
         interactions.append(#function)
+    }
+
+    func closeSocket(with code: URLSessionWebSocketTask.CloseCode) {
+        interactions.append(#function)
+        onCloseSocket(code)
     }
 }
