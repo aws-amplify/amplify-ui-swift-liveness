@@ -42,7 +42,7 @@ struct StartSessionView: View {
             Spacer()
             HStack {
                 Spacer()
-                Text("v0.1.16")
+                Text("v1.1.0")
                     .font(.callout)
                     .padding()
             }

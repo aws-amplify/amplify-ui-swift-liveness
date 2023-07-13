@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import FaceLiveness
 
 struct LivenessCheckErrorContentView: View {
     let name: String
@@ -50,6 +51,10 @@ extension LivenessCheckErrorContentView {
         name: "Check failed during countdown",
         description: "Avoid moving closer during countdown and ensure only one face is in front of camera."
     )
+
+    static func detectionError(_ error: FaceLivenessDetectionError) -> Self {
+        .init(name: error.message, description: error.recoverySuggestion)
+    }
 }
 
 struct LivenessCheckErrorContentView_Previews: PreviewProvider {

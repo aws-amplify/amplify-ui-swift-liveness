@@ -28,23 +28,19 @@ struct ExampleLivenessView: View {
                     set: { _ in }
                 ),
                 onCompletion: { result in
-                    switch result {
-                    case .success:
-                        withAnimation { viewModel.presentationState = .result }
-                    case .failure(.sessionNotFound), .failure(.cameraPermissionDenied), .failure(.accessDenied):
-                        viewModel.presentationState = .liveness
-                        isPresented = false
-                    case .failure(.userCancelled):
-                        viewModel.presentationState = .liveness
-                        isPresented = false
-                    case .failure(.sessionTimedOut):
-                        viewModel.presentationState = .error(.sessionTimedOut)
-                    case .failure(.socketClosed):
-                        viewModel.presentationState = .error(.socketClosed)
-                    case .failure(.countdownNoFace), .failure(.countdownFaceTooClose), .failure(.countdownMultipleFaces):
-                        viewModel.presentationState = .error(.countdownFaceTooClose)
-                    default:
-                        viewModel.presentationState = .liveness
+                    Task { @MainActor in
+                        switch result {
+                        case .success:
+                            withAnimation { viewModel.presentationState = .result }
+                        case .failure(.sessionNotFound),
+                                .failure(.cameraPermissionDenied),
+                                .failure(.accessDenied),
+                                .failure(.userCancelled):
+                            viewModel.presentationState = .liveness
+                            isPresented = false
+                        case .failure(let error):
+                            viewModel.presentationState = .error(error)
+                        }
                     }
                 }
             )
@@ -71,7 +67,7 @@ struct ExampleLivenessView: View {
                     case .countdownNoFace, .countdownFaceTooClose, .countdownMultipleFaces:
                         LivenessCheckErrorContentView.failedDuringCountdown
                     default:
-                        LivenessCheckErrorContentView.unexpected
+                        LivenessCheckErrorContentView.detectionError(detectionError)
                     }
                 }
             )
