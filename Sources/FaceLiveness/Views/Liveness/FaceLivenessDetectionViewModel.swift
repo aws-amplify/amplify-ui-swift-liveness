@@ -39,8 +39,8 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     var faceGuideRect: CGRect!
     var initialClientEvent: InitialClientEvent?
     var faceMatchedTimestamp: UInt64?
-    var noMatchCount = 0
-
+    var noMatchStartTime: Date?
+    
     init(
         faceDetector: FaceDetector,
         faceInOvalMatching: FaceInOvalMatching,
