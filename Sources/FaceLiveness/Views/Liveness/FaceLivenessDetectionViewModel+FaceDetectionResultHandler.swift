@@ -84,7 +84,7 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
     }
 
     private let noMatchTimeoutInterval: TimeInterval = 7
-    
+
     func handleNoMatch(instruction: Instructor.Instruction, percentage: Double) {
         self.livenessState.awaitingFaceMatch(with: instruction, nearnessPercentage: percentage)
         if noMatchStartTime == nil {
