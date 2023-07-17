@@ -38,6 +38,13 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
         self.videoChunker = videoChunker
         self.viewModel = viewModel
     }
+    
+    override func tearDown() {
+        self.faceDetector = nil
+        self.livenessService = nil
+        self.videoChunker = nil
+        self.viewModel = nil
+    }
 
     /// Given:  A `FaceLivenessDetectionViewModel`
     /// When: The viewModel is first initialized
@@ -113,7 +120,7 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
             "setResultHandler(detectionResultHandler:) (FaceLivenessDetectionViewModel)"
         ])
         XCTAssertEqual(livenessService.interactions, [])
-        
+
         let boundingBox = CGRect(x: 0.26788579725878847, y: 0.40317180752754211, width: 0.45549795395626447, height: 0.34162446856498718)
         let leftEye = CGPoint(x: 0.61124476128552629, y: 0.4918237030506134)
         let rightEye = CGPoint(x: 0.38036393762719456, y: 0.48050540685653687)
@@ -130,5 +137,21 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
         XCTAssertEqual(livenessService.interactions, [
             "initializeLivenessStream(withSessionID:userAgent:)"
         ])
+    }
+    
+    /// Given:  A `FaceLivenessDetectionViewModel`
+    /// When: The viewModel handles a no match event over a duration of 7 seconds
+    /// Then: The end state is `.encounteredUnrecoverableError(.timedOut)`
+    func testNoMatchTimeoutCheck() async throws {
+        viewModel.livenessService = self.livenessService
+        self.viewModel.handleNoMatch(instruction: .tooFar(nearnessPercentage: 0.2), percentage: 0.2)
+        
+        XCTAssertNotEqual(self.viewModel.livenessState.state, .encounteredUnrecoverableError(.timedOut))
+        try await Task.sleep(seconds: 6)
+        self.viewModel.handleNoMatch(instruction: .tooFar(nearnessPercentage: 0.2), percentage: 0.2)
+        XCTAssertNotEqual(self.viewModel.livenessState.state,  .encounteredUnrecoverableError(.timedOut))
+        try await Task.sleep(seconds: 1)
+        self.viewModel.handleNoMatch(instruction: .tooFar(nearnessPercentage: 0.2), percentage: 0.2)
+        XCTAssertEqual(self.viewModel.livenessState.state,  .encounteredUnrecoverableError(.timedOut))
     }
 }
