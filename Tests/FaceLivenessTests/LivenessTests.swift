@@ -38,6 +38,13 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
         self.videoChunker = videoChunker
         self.viewModel = viewModel
     }
+    
+    override func tearDown() {
+        self.faceDetector = nil
+        self.livenessService = nil
+        self.videoChunker = nil
+        self.viewModel = nil
+    }
 
     /// Given:  A `FaceLivenessDetectionViewModel`
     /// When: The viewModel is first initialized
@@ -99,5 +106,21 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
         XCTAssertEqual(livenessService.interactions, [
             "initializeLivenessStream(withSessionID:userAgent:)"
         ])
+    }
+    
+    /// Given:  A `FaceLivenessDetectionViewModel`
+    /// When: The viewModel handles a no match event over a duration of 7 seconds
+    /// Then: The end state is `.encounteredUnrecoverableError(.timedOut)`
+    func testNoMatchTimeoutCheck() async throws {
+        viewModel.livenessService = self.livenessService
+        self.viewModel.handleNoMatch(instruction: .tooFar(nearnessPercentage: 0.2), percentage: 0.2)
+        
+        XCTAssertNotEqual(self.viewModel.livenessState.state, .encounteredUnrecoverableError(.timedOut))
+        try await Task.sleep(seconds: 6)
+        self.viewModel.handleNoMatch(instruction: .tooFar(nearnessPercentage: 0.2), percentage: 0.2)
+        XCTAssertNotEqual(self.viewModel.livenessState.state,  .encounteredUnrecoverableError(.timedOut))
+        try await Task.sleep(seconds: 1)
+        self.viewModel.handleNoMatch(instruction: .tooFar(nearnessPercentage: 0.2), percentage: 0.2)
+        XCTAssertEqual(self.viewModel.livenessState.state,  .encounteredUnrecoverableError(.timedOut))
     }
 }
