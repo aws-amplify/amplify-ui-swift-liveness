@@ -83,14 +83,13 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
         }
     }
 
-    private let noMatchTimeoutInterval: TimeInterval = 7
-
     func handleNoMatch(instruction: Instructor.Instruction, percentage: Double) {
+        let noMatchTimeoutInterval: TimeInterval = 7
         self.livenessState.awaitingFaceMatch(with: instruction, nearnessPercentage: percentage)
         if noMatchStartTime == nil {
             noMatchStartTime = Date()
         }
-        if let elapsedTime = -noMatchStartTime?.timeIntervalSinceNow, elapsedTime >= noMatchTimeoutInterval {
+        if let elapsedTime = noMatchStartTime?.timeIntervalSinceNow, abs(elapsedTime) >= noMatchTimeoutInterval {
             self.livenessState
                 .unrecoverableStateEncountered(.timedOut)
             self.captureSession.stopRunning()
