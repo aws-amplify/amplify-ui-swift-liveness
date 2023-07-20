@@ -57,7 +57,7 @@ struct UserAgentValues {
             swiftVersion: Swift().version(),
             unameMachine: Device.current.machine.replacingOccurrences(of: ",", with: "_"),
             locale: Locale.current.identifier,
-            lib: "lib/amplify-ui-swift-face-liveness/1.0.1",
+            lib: "lib/amplify-ui-swift-face-liveness/1.1.0",
             additionalMetadata: additionalMetadata
         )
     }
