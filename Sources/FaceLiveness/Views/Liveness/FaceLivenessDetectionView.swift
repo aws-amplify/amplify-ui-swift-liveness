@@ -170,7 +170,7 @@ public struct FaceLivenessDetectorView: View {
                     isPresented = false
                     onCompletion(.success(()))
                 case .encounteredUnrecoverableError(let error):
-                    viewModel.livenessService.closeSocket(with: .normalClosure)
+                    viewModel.livenessService.closeSocket(with: mapErrorToCloseCode(error))
                     isPresented = false
                     onCompletion(.failure(mapError(error)))
                 default:
@@ -184,12 +184,10 @@ public struct FaceLivenessDetectorView: View {
         switch livenessError {
         case .userCancelled:
             return .userCancelled
-        case .timedOut:
+        case .faceFitTimedOut, .nofaceFitTimedOut:
             return .sessionTimedOut
         case .socketClosed:
             return .socketClosed
-        case .invalidFaceMovementDuringCountdown:
-            return .countdownFaceTooClose
         default:
             return .cameraPermissionDenied
         }
@@ -226,12 +224,34 @@ public struct FaceLivenessDetectorView: View {
             break
         }
     }
-}
-
-enum CountdownDisplayState {
-    case waitingToDisplay
-    case displaying
-    case finishedDisplaying
+    
+    func mapErrorToCloseCode(_ livenessError: LivenessStateMachine.LivenessError) -> URLSessionWebSocketTask.CloseCode {
+        var closeCode: URLSessionWebSocketTask.CloseCode?
+        switch livenessError {
+        case .userCancelled:
+            closeCode = URLSessionWebSocketTask.CloseCode.ovalFitUserClosedSession
+        case .faceFitTimedOut:
+            closeCode = URLSessionWebSocketTask.CloseCode.ovalFitMatchTimeout
+        case .nofaceFitTimedOut:
+            closeCode = URLSessionWebSocketTask.CloseCode.ovalFitTimeOutNoFaceDetected
+        case .socketClosed:
+            closeCode = .normalClosure
+        case .missingVideoPermission:
+            closeCode = URLSessionWebSocketTask.CloseCode.missingVideoPermission
+        case .appResignation:
+            closeCode = URLSessionWebSocketTask.CloseCode.appClosure
+        case .unknown, .errorWithUnderlyingOSFramework, .couldNotOpenStream:
+            closeCode = URLSessionWebSocketTask.CloseCode.unexpectedRuntimeError
+        default:
+            closeCode = .normalClosure
+        }
+        
+        if let code = closeCode {
+            return code
+        } else {
+            return URLSessionWebSocketTask.CloseCode.normalClosure
+        }
+    }
 }
 
 enum DisplayState {
@@ -270,4 +290,13 @@ private func map(detectionCompletion: @escaping (Result<Void, FaceLivenessDetect
             detectionCompletion(.failure(.unknown))
         }
     }
+}
+
+extension URLSessionWebSocketTask.CloseCode {
+    static let ovalFitMatchTimeout = URLSessionWebSocketTask.CloseCode(rawValue: 5001)
+    static let ovalFitTimeOutNoFaceDetected = URLSessionWebSocketTask.CloseCode(rawValue: 5002)
+    static let ovalFitUserClosedSession = URLSessionWebSocketTask.CloseCode(rawValue: 5003)
+    static let appClosure = URLSessionWebSocketTask.CloseCode(rawValue: 5004)
+    static let unexpectedRuntimeError = URLSessionWebSocketTask.CloseCode(rawValue: 5005)
+    static let missingVideoPermission = URLSessionWebSocketTask.CloseCode(rawValue: 5006)
 }
