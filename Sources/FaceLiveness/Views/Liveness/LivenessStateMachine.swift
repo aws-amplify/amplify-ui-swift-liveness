@@ -137,5 +137,33 @@ struct LivenessStateMachine {
         static func == (lhs: LivenessError, rhs: LivenessError) -> Bool {
             lhs.code == rhs.code
         }
+        
+        var closeCode: URLSessionWebSocketTask.CloseCode {
+            switch self {
+            case .userCancelled:
+                return .ovalFitUserClosedSession ?? .normalClosure
+            case .timedOut:
+                return .ovalFitMatchTimeout ?? .normalClosure
+            case .socketClosed:
+                return .normalClosure
+            case .missingVideoPermission:
+                return .missingVideoPermission ?? .normalClosure
+            case .viewResignation:
+                return .viewClosure ?? .normalClosure
+            case .unknown, .errorWithUnderlyingOSFramework, .couldNotOpenStream:
+                return .unexpectedRuntimeError ?? .normalClosure
+            default:
+                return .normalClosure
+            }
+        }
     }
+}
+
+extension URLSessionWebSocketTask.CloseCode {
+    static let ovalFitMatchTimeout = URLSessionWebSocketTask.CloseCode(rawValue: 4001)
+    static let ovalFitTimeOutNoFaceDetected = URLSessionWebSocketTask.CloseCode(rawValue: 4002)
+    static let ovalFitUserClosedSession = URLSessionWebSocketTask.CloseCode(rawValue: 4003)
+    static let viewClosure = URLSessionWebSocketTask.CloseCode(rawValue: 4004)
+    static let unexpectedRuntimeError = URLSessionWebSocketTask.CloseCode(rawValue: 4005)
+    static let missingVideoPermission = URLSessionWebSocketTask.CloseCode(rawValue: 4006)
 }

@@ -170,7 +170,7 @@ public struct FaceLivenessDetectorView: View {
                     isPresented = false
                     onCompletion(.success(()))
                 case .encounteredUnrecoverableError(let error):
-                    viewModel.livenessService.closeSocket(with: mapErrorToCloseCode(error))
+                    viewModel.livenessService.closeSocket(with: error.closeCode)
                     isPresented = false
                     onCompletion(.failure(mapError(error)))
                 default:
@@ -224,32 +224,6 @@ public struct FaceLivenessDetectorView: View {
             break
         }
     }
-    
-    func mapErrorToCloseCode(_ livenessError: LivenessStateMachine.LivenessError) -> URLSessionWebSocketTask.CloseCode {
-        var closeCode: URLSessionWebSocketTask.CloseCode?
-        switch livenessError {
-        case .userCancelled:
-            closeCode = URLSessionWebSocketTask.CloseCode.ovalFitUserClosedSession
-        case .timedOut:
-            closeCode = URLSessionWebSocketTask.CloseCode.ovalFitMatchTimeout
-        case .socketClosed:
-            closeCode = .normalClosure
-        case .missingVideoPermission:
-            closeCode = URLSessionWebSocketTask.CloseCode.missingVideoPermission
-        case .viewResignation:
-            closeCode = URLSessionWebSocketTask.CloseCode.viewClosure
-        case .unknown, .errorWithUnderlyingOSFramework, .couldNotOpenStream:
-            closeCode = URLSessionWebSocketTask.CloseCode.unexpectedRuntimeError
-        default:
-            closeCode = .normalClosure
-        }
-        
-        if let code = closeCode {
-            return code
-        } else {
-            return URLSessionWebSocketTask.CloseCode.normalClosure
-        }
-    }
 }
 
 enum DisplayState {
@@ -288,13 +262,4 @@ private func map(detectionCompletion: @escaping (Result<Void, FaceLivenessDetect
             detectionCompletion(.failure(.unknown))
         }
     }
-}
-
-extension URLSessionWebSocketTask.CloseCode {
-    static let ovalFitMatchTimeout = URLSessionWebSocketTask.CloseCode(rawValue: 5001)
-    static let ovalFitTimeOutNoFaceDetected = URLSessionWebSocketTask.CloseCode(rawValue: 5002)
-    static let ovalFitUserClosedSession = URLSessionWebSocketTask.CloseCode(rawValue: 5003)
-    static let viewClosure = URLSessionWebSocketTask.CloseCode(rawValue: 5004)
-    static let unexpectedRuntimeError = URLSessionWebSocketTask.CloseCode(rawValue: 5005)
-    static let missingVideoPermission = URLSessionWebSocketTask.CloseCode(rawValue: 5006)
 }
