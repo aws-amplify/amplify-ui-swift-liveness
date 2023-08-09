@@ -140,18 +140,34 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
     }
     
     /// Given:  A `FaceLivenessDetectionViewModel`
-    /// When: The viewModel handles a no match event over a duration of 7 seconds
+    /// When: The viewModel handles a no fit event over a duration of 7 seconds
     /// Then: The end state is `.encounteredUnrecoverableError(.timedOut)`
-    func testNoMatchTimeoutCheck() async throws {
+    func testNoFitTimeoutCheck() async throws {
         viewModel.livenessService = self.livenessService
-        self.viewModel.handleNoMatch(instruction: .tooFar(nearnessPercentage: 0.2), percentage: 0.2)
+        self.viewModel.handleNoFaceFit(instruction: .tooFar(nearnessPercentage: 0.2), percentage: 0.2)
         
         XCTAssertNotEqual(self.viewModel.livenessState.state, .encounteredUnrecoverableError(.timedOut))
         try await Task.sleep(seconds: 6)
-        self.viewModel.handleNoMatch(instruction: .tooFar(nearnessPercentage: 0.2), percentage: 0.2)
+        self.viewModel.handleNoFaceFit(instruction: .tooFar(nearnessPercentage: 0.2), percentage: 0.2)
         XCTAssertNotEqual(self.viewModel.livenessState.state,  .encounteredUnrecoverableError(.timedOut))
         try await Task.sleep(seconds: 1)
-        self.viewModel.handleNoMatch(instruction: .tooFar(nearnessPercentage: 0.2), percentage: 0.2)
+        self.viewModel.handleNoFaceFit(instruction: .tooFar(nearnessPercentage: 0.2), percentage: 0.2)
+        XCTAssertEqual(self.viewModel.livenessState.state,  .encounteredUnrecoverableError(.timedOut))
+    }
+    
+    /// Given:  A `FaceLivenessDetectionViewModel`
+    /// When: The viewModel handles a no face detected event over a duration of 7 seconds
+    /// Then: The end state is `.encounteredUnrecoverableError(.timedOut)`
+    func testNoFaceDetectedTimeoutCheck() async throws {
+        viewModel.livenessService = self.livenessService
+        self.viewModel.handleNoFaceDetected()
+        
+        XCTAssertNotEqual(self.viewModel.livenessState.state, .encounteredUnrecoverableError(.timedOut))
+        try await Task.sleep(seconds: 6)
+        self.viewModel.handleNoFaceFit(instruction: .tooFar(nearnessPercentage: 0.2), percentage: 0.2)
+        XCTAssertNotEqual(self.viewModel.livenessState.state,  .encounteredUnrecoverableError(.timedOut))
+        try await Task.sleep(seconds: 1)
+        self.viewModel.handleNoFaceDetected()
         XCTAssertEqual(self.viewModel.livenessState.state,  .encounteredUnrecoverableError(.timedOut))
     }
 }
