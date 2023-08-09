@@ -108,7 +108,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     @objc func willResignActive(_ notification: Notification) {
         DispatchQueue.main.async {
             self.stopRecording()
-            self.livenessState.unrecoverableStateEncountered(.appResignation)
+            self.livenessState.unrecoverableStateEncountered(.viewResignation)
         }
     }
 

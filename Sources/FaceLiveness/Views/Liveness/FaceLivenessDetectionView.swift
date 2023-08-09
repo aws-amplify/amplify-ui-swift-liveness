@@ -184,7 +184,7 @@ public struct FaceLivenessDetectorView: View {
         switch livenessError {
         case .userCancelled:
             return .userCancelled
-        case .faceFitTimedOut, .nofaceFitTimedOut:
+        case .timedOut:
             return .sessionTimedOut
         case .socketClosed:
             return .socketClosed
@@ -230,16 +230,14 @@ public struct FaceLivenessDetectorView: View {
         switch livenessError {
         case .userCancelled:
             closeCode = URLSessionWebSocketTask.CloseCode.ovalFitUserClosedSession
-        case .faceFitTimedOut:
+        case .timedOut:
             closeCode = URLSessionWebSocketTask.CloseCode.ovalFitMatchTimeout
-        case .nofaceFitTimedOut:
-            closeCode = URLSessionWebSocketTask.CloseCode.ovalFitTimeOutNoFaceDetected
         case .socketClosed:
             closeCode = .normalClosure
         case .missingVideoPermission:
             closeCode = URLSessionWebSocketTask.CloseCode.missingVideoPermission
-        case .appResignation:
-            closeCode = URLSessionWebSocketTask.CloseCode.appClosure
+        case .viewResignation:
+            closeCode = URLSessionWebSocketTask.CloseCode.viewClosure
         case .unknown, .errorWithUnderlyingOSFramework, .couldNotOpenStream:
             closeCode = URLSessionWebSocketTask.CloseCode.unexpectedRuntimeError
         default:
@@ -296,7 +294,7 @@ extension URLSessionWebSocketTask.CloseCode {
     static let ovalFitMatchTimeout = URLSessionWebSocketTask.CloseCode(rawValue: 5001)
     static let ovalFitTimeOutNoFaceDetected = URLSessionWebSocketTask.CloseCode(rawValue: 5002)
     static let ovalFitUserClosedSession = URLSessionWebSocketTask.CloseCode(rawValue: 5003)
-    static let appClosure = URLSessionWebSocketTask.CloseCode(rawValue: 5004)
+    static let viewClosure = URLSessionWebSocketTask.CloseCode(rawValue: 5004)
     static let unexpectedRuntimeError = URLSessionWebSocketTask.CloseCode(rawValue: 5005)
     static let missingVideoPermission = URLSessionWebSocketTask.CloseCode(rawValue: 5006)
 }

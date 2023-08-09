@@ -129,11 +129,10 @@ struct LivenessStateMachine {
         static let missingVideoPermission = LivenessError(code: 1)
         static let errorWithUnderlyingOSFramework = LivenessError(code: 2)
         static let userCancelled = LivenessError(code: 3)
-        static let faceFitTimedOut = LivenessError(code: 4)
+        static let timedOut = LivenessError(code: 4)
         static let couldNotOpenStream = LivenessError(code: 5)
         static let socketClosed = LivenessError(code: 6)
-        static let appResignation = LivenessError(code: 7)
-        static let nofaceFitTimedOut = LivenessError(code: 8)
+        static let viewResignation = LivenessError(code: 8)
 
         static func == (lhs: LivenessError, rhs: LivenessError) -> Bool {
             lhs.code == rhs.code
