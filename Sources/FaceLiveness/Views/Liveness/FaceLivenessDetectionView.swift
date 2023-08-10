@@ -170,7 +170,8 @@ public struct FaceLivenessDetectorView: View {
                     isPresented = false
                     onCompletion(.success(()))
                 case .encounteredUnrecoverableError(let error):
-                    viewModel.livenessService.closeSocket(with: error.closeCode)
+                    let closeCode = error.webSocketCloseCode ?? .normalClosure
+                    viewModel.livenessService.closeSocket(with: closeCode)
                     isPresented = false
                     onCompletion(.failure(mapError(error)))
                 default:
