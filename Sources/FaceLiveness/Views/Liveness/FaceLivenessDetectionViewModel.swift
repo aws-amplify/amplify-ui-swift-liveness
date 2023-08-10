@@ -39,7 +39,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     var faceGuideRect: CGRect!
     var initialClientEvent: InitialClientEvent?
     var faceMatchedTimestamp: UInt64?
-    var noMatchStartTime: Date?
+    var noFitStartTime: Date?
     
     init(
         faceDetector: FaceDetector,
@@ -108,7 +108,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     @objc func willResignActive(_ notification: Notification) {
         DispatchQueue.main.async {
             self.stopRecording()
-            self.livenessState.unrecoverableStateEncountered(.socketClosed)
+            self.livenessState.unrecoverableStateEncountered(.viewResignation)
         }
     }
 

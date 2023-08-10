@@ -10,6 +10,7 @@ import SwiftUI
 @_spi(PredictionsFaceLiveness) import AWSPredictionsPlugin
 
 fileprivate let initialFaceDistanceThreshold: CGFloat = 0.32
+fileprivate let noFitTimeoutInterval: TimeInterval = 7
 
 extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
     func process(newResult: FaceDetectionResult) {
@@ -83,17 +84,26 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
         }
     }
 
-    func handleNoMatch(instruction: Instructor.Instruction, percentage: Double) {
-        let noMatchTimeoutInterval: TimeInterval = 7
+    func handleNoFaceFit(instruction: Instructor.Instruction, percentage: Double) {
         self.livenessState.awaitingFaceMatch(with: instruction, nearnessPercentage: percentage)
-        if noMatchStartTime == nil {
-            noMatchStartTime = Date()
+        if noFitStartTime == nil {
+            noFitStartTime = Date()
         }
-        if let elapsedTime = noMatchStartTime?.timeIntervalSinceNow, abs(elapsedTime) >= noMatchTimeoutInterval {
+        if let elapsedTime = noFitStartTime?.timeIntervalSinceNow, abs(elapsedTime) >= noFitTimeoutInterval {
             self.livenessState
                 .unrecoverableStateEncountered(.timedOut)
             self.captureSession.stopRunning()
-            return
+        }
+    }
+    
+    func handleNoFaceDetected() {
+        if noFitStartTime == nil {
+            noFitStartTime = Date()
+        }
+        if let elapsedTime = noFitStartTime?.timeIntervalSinceNow, abs(elapsedTime) >= noFitTimeoutInterval {
+            self.livenessState
+                .unrecoverableStateEncountered(.timedOut)
+            self.captureSession.stopRunning()
         }
     }
 
@@ -109,14 +119,15 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
                 self.livenessViewControllerDelegate?.displayFreshness(colorSequences: colorSequences)
                 let generator = UINotificationFeedbackGenerator()
                 generator.notificationOccurred(.success)
-                self.noMatchStartTime = nil
+                self.noFitStartTime = nil
 
             case .tooClose(_, let percentage),
                     .tooFar(_, let percentage),
                     .tooFarLeft(_, let percentage),
                     .tooFarRight(_, let percentage):
-                self.handleNoMatch(instruction: instruction, percentage: percentage)
-            default: break
+                self.handleNoFaceFit(instruction: instruction, percentage: percentage)
+            case .none:
+                self.handleNoFaceDetected()
             }
         }
     }
