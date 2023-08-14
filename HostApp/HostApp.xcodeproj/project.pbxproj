@@ -701,7 +701,7 @@
 			repositoryURL = "https://github.com/aws-amplify/amplify-ui-swift-liveness";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.0;
+				minimumVersion = 1.1.1;
 			};
 		};
 		9077AB3529E5D28900433155 /* XCRemoteSwiftPackageReference "amplify-swift" */ = {
