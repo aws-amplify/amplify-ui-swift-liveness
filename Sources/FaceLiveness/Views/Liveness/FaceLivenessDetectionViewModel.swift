@@ -43,8 +43,8 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     var noFitStartTime: Date?
     
     var noFitTimeoutInterval: TimeInterval {
-        if let serverProvidedTimeout = self.sessionConfiguration?.ovalMatchChallenge.oval.ovalFitTimeout {
-            return TimeInterval(serverProvidedTimeout/1_000)
+        if let sessionTimeoutMilliSec = self.sessionConfiguration?.ovalMatchChallenge.oval.ovalFitTimeout {
+            return TimeInterval(sessionTimeoutMilliSec/1_000)
         } else {
             return defaultNoFitTimeoutInterval
         }
