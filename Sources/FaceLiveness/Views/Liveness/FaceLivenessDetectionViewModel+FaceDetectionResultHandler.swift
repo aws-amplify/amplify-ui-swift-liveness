@@ -10,7 +10,6 @@ import SwiftUI
 @_spi(PredictionsFaceLiveness) import AWSPredictionsPlugin
 
 fileprivate let initialFaceDistanceThreshold: CGFloat = 0.32
-fileprivate let noFitTimeoutInterval: TimeInterval = 7
 
 extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
     func process(newResult: FaceDetectionResult) {
