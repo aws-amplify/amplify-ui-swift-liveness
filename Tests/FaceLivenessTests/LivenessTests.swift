@@ -140,7 +140,7 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
     }
     
     /// Given:  A `FaceLivenessDetectionViewModel`
-    /// When: The viewModel handles a no fit event over a duration of 7 seconds
+    /// When: The viewModel handles a no fit event over a client default time limit of 7 seconds
     /// Then: The end state is `.encounteredUnrecoverableError(.timedOut)`
     func testNoFitTimeoutCheck() async throws {
         viewModel.livenessService = self.livenessService
