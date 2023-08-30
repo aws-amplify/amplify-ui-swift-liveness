@@ -38,7 +38,7 @@ extension LivenessCheckErrorContentView {
 
     static let faceMatchTimeOut = LivenessCheckErrorContentView(
         name: "Time out",
-        description: "Face did not fill oval in time limit. Try again and completely fill the oval with face before the session time expires."
+        description: "Face did not fill oval in time limit. Try again and completely fill the oval with face in it."
     )
 
     static let sessionTimeOut = LivenessCheckErrorContentView(
