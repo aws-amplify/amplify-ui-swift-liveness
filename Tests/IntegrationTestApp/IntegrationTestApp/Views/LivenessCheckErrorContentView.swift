@@ -28,7 +28,7 @@ struct LivenessCheckErrorContentView: View {
 extension LivenessCheckErrorContentView {
     static let mock = LivenessCheckErrorContentView(
         name: "Time out",
-        description: "Face didn't fit inside oval in time limit. Try again and completely fill the oval with face before the session time expires."
+        description: "Face didn't fit inside oval in time limit. Try again and completely fill the oval with face in it."
     )
 
     static let unexpected = LivenessCheckErrorContentView(
