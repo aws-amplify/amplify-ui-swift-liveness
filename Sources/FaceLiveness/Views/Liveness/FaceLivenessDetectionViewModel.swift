@@ -11,6 +11,7 @@ import AVFoundation
 @_spi(PredictionsFaceLiveness) import AWSPredictionsPlugin
 
 fileprivate let videoSize: CGSize = .init(width: 480, height: 640)
+fileprivate let defaultNoFitTimeoutInterval: TimeInterval = 7
 
 @MainActor
 class FaceLivenessDetectionViewModel: ObservableObject {
@@ -39,7 +40,15 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     var faceGuideRect: CGRect!
     var initialClientEvent: InitialClientEvent?
     var faceMatchedTimestamp: UInt64?
-    var noMatchStartTime: Date?
+    var noFitStartTime: Date?
+    
+    var noFitTimeoutInterval: TimeInterval {
+        if let sessionTimeoutMilliSec = sessionConfiguration?.ovalMatchChallenge.oval.ovalFitTimeout {
+            return TimeInterval(sessionTimeoutMilliSec/1_000)
+        } else {
+            return defaultNoFitTimeoutInterval
+        }
+    }
     
     init(
         faceDetector: FaceDetector,
@@ -108,7 +117,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     @objc func willResignActive(_ notification: Notification) {
         DispatchQueue.main.async {
             self.stopRecording()
-            self.livenessState.unrecoverableStateEncountered(.socketClosed)
+            self.livenessState.unrecoverableStateEncountered(.viewResignation)
         }
     }
 

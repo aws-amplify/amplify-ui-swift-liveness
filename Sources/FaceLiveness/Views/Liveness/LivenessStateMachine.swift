@@ -124,18 +124,28 @@ struct LivenessStateMachine {
 
     struct LivenessError: Error, Equatable {
         let code: UInt8
-
-        static let unknown = LivenessError(code: 0)
-        static let missingVideoPermission = LivenessError(code: 1)
-        static let errorWithUnderlyingOSFramework = LivenessError(code: 2)
-        static let userCancelled = LivenessError(code: 3)
-        static let timedOut = LivenessError(code: 4)
-        static let couldNotOpenStream = LivenessError(code: 5)
-        static let socketClosed = LivenessError(code: 6)
-        static let invalidFaceMovementDuringCountdown = LivenessError(code: 7)
+        let webSocketCloseCode: URLSessionWebSocketTask.CloseCode?
+        
+        static let unknown = LivenessError(code: 0, webSocketCloseCode: .unexpectedRuntimeError)
+        static let missingVideoPermission = LivenessError(code: 1, webSocketCloseCode: .missingVideoPermission)
+        static let errorWithUnderlyingOSFramework = LivenessError(code: 2, webSocketCloseCode: .unexpectedRuntimeError)
+        static let userCancelled = LivenessError(code: 3, webSocketCloseCode: .ovalFitUserClosedSession)
+        static let timedOut = LivenessError(code: 4, webSocketCloseCode: .ovalFitMatchTimeout)
+        static let couldNotOpenStream = LivenessError(code: 5, webSocketCloseCode: .unexpectedRuntimeError)
+        static let socketClosed = LivenessError(code: 6, webSocketCloseCode: .normalClosure)
+        static let viewResignation = LivenessError(code: 8, webSocketCloseCode: .viewClosure)
 
         static func == (lhs: LivenessError, rhs: LivenessError) -> Bool {
             lhs.code == rhs.code
         }
     }
+}
+
+extension URLSessionWebSocketTask.CloseCode {
+    static let ovalFitMatchTimeout = URLSessionWebSocketTask.CloseCode(rawValue: 4001)
+    static let ovalFitTimeOutNoFaceDetected = URLSessionWebSocketTask.CloseCode(rawValue: 4002)
+    static let ovalFitUserClosedSession = URLSessionWebSocketTask.CloseCode(rawValue: 4003)
+    static let viewClosure = URLSessionWebSocketTask.CloseCode(rawValue: 4004)
+    static let unexpectedRuntimeError = URLSessionWebSocketTask.CloseCode(rawValue: 4005)
+    static let missingVideoPermission = URLSessionWebSocketTask.CloseCode(rawValue: 4006)
 }

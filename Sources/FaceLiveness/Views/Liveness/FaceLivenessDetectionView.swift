@@ -170,7 +170,8 @@ public struct FaceLivenessDetectorView: View {
                     isPresented = false
                     onCompletion(.success(()))
                 case .encounteredUnrecoverableError(let error):
-                    viewModel.livenessService.closeSocket(with: .normalClosure)
+                    let closeCode = error.webSocketCloseCode ?? .normalClosure
+                    viewModel.livenessService.closeSocket(with: closeCode)
                     isPresented = false
                     onCompletion(.failure(mapError(error)))
                 default:
@@ -188,8 +189,6 @@ public struct FaceLivenessDetectorView: View {
             return .sessionTimedOut
         case .socketClosed:
             return .socketClosed
-        case .invalidFaceMovementDuringCountdown:
-            return .countdownFaceTooClose
         default:
             return .cameraPermissionDenied
         }
@@ -226,12 +225,6 @@ public struct FaceLivenessDetectorView: View {
             break
         }
     }
-}
-
-enum CountdownDisplayState {
-    case waitingToDisplay
-    case displaying
-    case finishedDisplaying
 }
 
 enum DisplayState {
