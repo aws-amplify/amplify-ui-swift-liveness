@@ -9,6 +9,10 @@ import UIKit
 import AWSPluginsCore
 
 struct UserAgentValues {
+    
+    static let libVersion = "1.1.1"
+    static let libName = "amplify-ui-swift-face-liveness"
+    
     let amplifyVersion: String
     let os: String
     let osVersion: String
@@ -57,7 +61,7 @@ struct UserAgentValues {
             swiftVersion: Swift().version(),
             unameMachine: Device.current.machine.replacingOccurrences(of: ",", with: "_"),
             locale: Locale.current.identifier,
-            lib: "lib/amplify-ui-swift-face-liveness/1.1.0",
+            lib: "lib/\(Self.libName)/\(Self.libVersion)",
             additionalMetadata: additionalMetadata
         )
     }
