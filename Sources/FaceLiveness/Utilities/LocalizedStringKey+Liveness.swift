@@ -58,7 +58,7 @@ extension LocalizedStringKey {
         "amplify_ui_liveness_get_ready_lighting"
     )
 
-    /// en = "When an oval appears, fill the oval with your face within 7 seconds."
+    /// en = "When an oval appears, fill the oval with your face in it."
     static let get_ready_fit_face = LocalizedStringKey(
         "amplify_ui_liveness_get_ready_fit_face"
     )
