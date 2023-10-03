@@ -3,18 +3,22 @@ name: Run Unit Tests | Amplify UI Swift Liveness
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches: [ phantum/unit_test ]
   pull_request:
     branches: [ main ]
 
 jobs:
-  build:
+  test-iOS:
+    name: Liveness iOS Unit Tests
     runs-on: macos-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           persist-credentials: false
       - name: Test FaceLiveness
+        continue-on-error: false
+        uses: ./.github/composite_actions/run_xcodebuild_test
         with:
           scheme: AmplifyUILiveness
           destination: 'platform=iOS Simulator,name=iPhone 14,OS=16.4'
