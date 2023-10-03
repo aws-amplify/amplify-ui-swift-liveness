@@ -13,7 +13,7 @@ struct RecordingButton: View {
             Circle()
                 .foregroundColor(.hex("#F92626"))
                 .frame(width: 17, height: 17)
-            Text(.challenge_recording_indicator_label, bundle: .module)
+            Text(LocalizedStrings.challenge_recording_indicator_label)
                 .font(.system(size: 12))
                 .fontWeight(.bold)
         }

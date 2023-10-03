@@ -9,13 +9,13 @@ import SwiftUI
 
 struct WarningBox<PopoverView: View>: View {
     @State var isPresentingPopover = false
-    let titleText: LocalizedStringKey
-    let bodyText: LocalizedStringKey
+    let titleText: String
+    let bodyText: String
     let popoverContent: PopoverView
 
     init(
-        titleText: LocalizedStringKey,
-        bodyText: LocalizedStringKey,
+        titleText: String,
+        bodyText: String,
         @ViewBuilder popoverContent: () -> PopoverView
     ) {
         self.titleText = titleText
@@ -26,11 +26,11 @@ struct WarningBox<PopoverView: View>: View {
     var body: some View {
         HStack {
             VStack(alignment: .leading) {
-                Text(titleText, bundle: .module)
+                Text(titleText)
                     .fontWeight(.semibold)
                     .foregroundColor(.livenessWarningLabel)
 
-                Text(bodyText, bundle: .module)
+                Text(bodyText)
                     .foregroundColor(.livenessWarningLabel)
             }
             Spacer()

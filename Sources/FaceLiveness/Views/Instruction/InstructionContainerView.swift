@@ -15,7 +15,7 @@ struct InstructionContainerView: View {
         switch viewModel.livenessState.state {
         case .displayingFreshness:
             InstructionView(
-                text: .challenge_instruction_hold_still,
+                text: LocalizedStrings.challenge_instruction_hold_still,
                 backgroundColor: .livenessPrimaryBackground,
                 textColor: .livenessPrimaryLabel,
                 font: .title
@@ -23,17 +23,13 @@ struct InstructionContainerView: View {
             .onAppear {
                 UIAccessibility.post(
                     notification: .announcement,
-                    argument: NSLocalizedString(
-                        "amplify_ui_liveness_challenge_instruction_hold_still",
-                        bundle: .module,
-                        comment: ""
-                    )
+                    argument: LocalizedStrings.challenge_instruction_hold_still
                 )
             }
 
         case .awaitingFaceInOvalMatch(.faceTooClose, _):
             InstructionView(
-                text: .challenge_instruction_move_face_back,
+                text: LocalizedStrings.challenge_instruction_move_face_back,
                 backgroundColor: .livenessErrorBackground,
                 textColor: .livenessErrorLabel,
                 font: .title
@@ -41,11 +37,7 @@ struct InstructionContainerView: View {
             .onAppear {
                 UIAccessibility.post(
                     notification: .announcement,
-                    argument: NSLocalizedString(
-                        "amplify_ui_liveness_challenge_instruction_move_face_back",
-                        bundle: .module,
-                        comment: ""
-                    )
+                    argument: LocalizedStrings.challenge_instruction_move_face_back
                 )
             }
 
@@ -67,7 +59,7 @@ struct InstructionContainerView: View {
             .frame(width: 200, height: 30)
         case .recording(ovalDisplayed: true):
             InstructionView(
-                text: .challenge_instruction_move_face_closer,
+                text: LocalizedStrings.challenge_instruction_move_face_closer,
                 backgroundColor: .livenessPrimaryBackground,
                 textColor: .livenessPrimaryLabel,
                 font: .title
@@ -75,11 +67,7 @@ struct InstructionContainerView: View {
             .onAppear {
                 UIAccessibility.post(
                     notification: .announcement,
-                    argument: NSLocalizedString(
-                        "amplify_ui_liveness_challenge_instruction_move_face_closer",
-                        bundle: .module,
-                        comment: ""
-                    )
+                    argument: LocalizedStrings.challenge_instruction_move_face_closer
                 )
             }
 
@@ -98,17 +86,13 @@ struct InstructionContainerView: View {
             )
         case .completedDisplayingFreshness:
             InstructionView(
-                text: .challenge_verifying,
+                text: LocalizedStrings.challenge_verifying,
                 backgroundColor: .livenessBackground
             )
             .onAppear {
                 UIAccessibility.post(
                     notification: .announcement,
-                    argument: NSLocalizedString(
-                        "amplify_ui_liveness_challenge_verifying",
-                        bundle: .module,
-                        comment: ""
-                    )
+                    argument: LocalizedStrings.challenge_verifying
                 )
             }
         default:
