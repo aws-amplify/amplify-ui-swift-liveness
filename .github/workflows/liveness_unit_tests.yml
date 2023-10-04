@@ -3,7 +3,7 @@ name: Run Unit Tests | Amplify UI Swift Liveness
 on:
   workflow_dispatch:
   push:
-    branches: [ phantum/unit_test ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
