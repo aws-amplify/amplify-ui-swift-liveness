@@ -20,7 +20,7 @@ struct CloseButton: View {
                     .frame(width: 44, height: 44)
                     .background(Color.livenessBackground)
                     .clipShape(Circle())
-                    .accessibilityLabel(Text(.close_button_a11y, bundle: .module))
+                    .accessibilityLabel(Text(LocalizedStrings.close_button_a11y))
             }
         )
     }

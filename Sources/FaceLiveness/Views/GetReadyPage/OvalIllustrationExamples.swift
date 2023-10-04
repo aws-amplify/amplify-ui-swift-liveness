@@ -12,23 +12,23 @@ struct OvalIllustrationExamples: View {
         HStack(spacing: 16) {
                 OvalIllustrationView(
                     icon: .checkmark(backgroundColor: .hex("#365E3D")),
-                    text: { Text(.get_ready_good_fit_example, bundle: .module) },
+                    text: { Text(LocalizedStrings.get_ready_good_fit_example) },
                     primaryColor: .hex("#365E3D"),
                     secondaryColor: .hex("#D6F5DB"),
                     illustration: { Image("illustration_face_good_fit", bundle: .module) }
                 )
                 .accessibilityElement(children: .ignore)
-                .accessibilityLabel(Text(.get_ready_illustration_good_fit_a11y, bundle: .module))
+                .accessibilityLabel(Text(LocalizedStrings.get_ready_illustration_good_fit_a11y))
 
                 OvalIllustrationView(
                     icon: .xmark(backgroundColor: .hex("#660000")),
-                    text: { Text(.get_ready_too_far_example, bundle: .module) },
+                    text: { Text(LocalizedStrings.get_ready_too_far_example) },
                     primaryColor: .hex("#660000"),
                     secondaryColor: .hex("#F5BCBC"),
                     illustration: { Image("illustration_face_too_far", bundle: .module) }
                 )
                 .accessibilityElement(children: .ignore)
-                .accessibilityLabel(Text(.get_ready_illustration_too_far_a11y, bundle: .module))
+                .accessibilityLabel(Text(LocalizedStrings.get_ready_illustration_too_far_a11y))
 
                 Spacer()
         }

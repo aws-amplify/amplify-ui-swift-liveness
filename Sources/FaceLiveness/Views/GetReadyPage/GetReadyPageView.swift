@@ -26,23 +26,23 @@ struct GetReadyPageView: View {
         VStack {
             ScrollView {
                 VStack(alignment: .leading) {
-                    Text(.get_ready_page_title, bundle: .module)
+                    Text(LocalizedStrings.get_ready_page_title)
                         .font(.system(size: 34, weight: .semibold))
                         .accessibilityAddTraits(.isHeader)
                         .padding(.bottom, 8)
 
-                    Text(.get_ready_page_description, bundle: .module)
+                    Text(LocalizedStrings.get_ready_page_description)
                         .padding(.bottom, 8)
 
                     WarningBox(
-                        titleText: .get_ready_photosensitivity_title,
-                        bodyText: .get_ready_photosensitivity_description,
+                        titleText: LocalizedStrings.get_ready_photosensitivity_title,
+                        bodyText: LocalizedStrings.get_ready_photosensitivity_description,
                         popoverContent: { photosensitivityWarningPopoverContent }
                     )
                     .accessibilityElement(children: .combine)
                     .padding(.bottom, 8)
 
-                    Text(.get_ready_steps_title, bundle: .module)
+                    Text(LocalizedStrings.get_ready_steps_title)
                         .fontWeight(.semibold)
                         .padding(.bottom, 16)
 
@@ -59,15 +59,15 @@ struct GetReadyPageView: View {
         }
         .alert(isPresented: $displayingCameraPermissionsNeededAlert) {
             Alert(
-                title: Text(.camera_setting_alert_title, bundle: .module),
-                message: Text(.camera_setting_alert_message, bundle: .module),
+                title: Text(LocalizedStrings.camera_setting_alert_title),
+                message: Text(LocalizedStrings.camera_setting_alert_message),
                 primaryButton: .default(
-                    Text(.camera_setting_alert_update_setting_button_text, bundle: .module).bold(),
+                    Text(LocalizedStrings.camera_setting_alert_update_setting_button_text).bold(),
                     action: {
                         goToSettingsAppPage()
                     }),
                 secondaryButton: .default(
-                    Text(.camera_setting_alert_not_now_button_text, bundle: .module)
+                    Text(LocalizedStrings.camera_setting_alert_not_now_button_text)
                 )
             )
         }
@@ -83,7 +83,7 @@ struct GetReadyPageView: View {
         Button(
             action: onBegin,
             label: {
-                Text(.get_ready_begin_check, bundle: .module)
+                Text(LocalizedStrings.get_ready_begin_check)
                     .foregroundColor(.livenessPrimaryLabel)
                     .frame(maxWidth: .infinity)
             }
@@ -98,21 +98,21 @@ struct GetReadyPageView: View {
 
     private var photosensitivityWarningPopoverContent: some View {
         VStack {
-            Text(.get_ready_photosensitivity_dialog_title, bundle: .module)
+            Text(LocalizedStrings.get_ready_photosensitivity_dialog_title)
                 .font(.system(size: 20, weight: .medium))
                 .frame(alignment: .center)
                 .padding()
-            Text(.get_ready_photosensitivity_dialog_description, bundle: .module)
+            Text(LocalizedStrings.get_ready_photosensitivity_dialog_description)
                 .padding()
             Spacer()
         }
     }
 
     private func steps() -> some View {
-        func step(number: Int, text: LocalizedStringKey) -> some View {
+        func step(number: Int, text: String) -> some View {
             HStack(alignment: .top) {
                 Text("\(number).")
-                Text(text, bundle: .module)
+                Text(text)
             }
         }
 
@@ -120,13 +120,13 @@ struct GetReadyPageView: View {
             alignment: .leading,
             spacing: 16
         ) {
-            step(number: 1, text: .get_ready_fit_face)
+            step(number: 1, text: LocalizedStrings.get_ready_fit_face)
                 .accessibilityElement(children: .combine)
 
-            step(number: 2, text: .get_ready_face_not_covered)
+            step(number: 2, text: LocalizedStrings.get_ready_face_not_covered)
                 .accessibilityElement(children: .combine)
 
-            step(number: 3, text: .get_ready_lighting)
+            step(number: 3, text: LocalizedStrings.get_ready_lighting)
                 .accessibilityElement(children: .combine)
         }
     }

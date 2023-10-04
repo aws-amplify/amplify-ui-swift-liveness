@@ -1,4 +1,4 @@
-name: Run Unit Tests
+name: Run Unit Tests | Amplify UI Swift Liveness
 
 on:
   workflow_dispatch:
@@ -8,9 +8,18 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
-    runs-on: macos-latest
+  test-iOS:
+    name: Liveness iOS Unit Tests
+    runs-on: macos-13
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        with:
+          persist-credentials: false
       - name: Test FaceLiveness
-        run:  xcodebuild test -scheme AmplifyUILiveness -sdk 'iphonesimulator' -destination 'platform=iOS Simulator,name=iPhone 14,OS=latest' | xcpretty --simple --color --report junit && exit ${PIPESTATUS[0]}
+        continue-on-error: false
+        uses: ./.github/composite_actions/run_xcodebuild_test
+        with:
+          scheme: AmplifyUILiveness
+          destination: 'platform=iOS Simulator,name=iPhone 14,OS=16.4'
+          xcode_path: '/Applications/Xcode_14.3.app'
