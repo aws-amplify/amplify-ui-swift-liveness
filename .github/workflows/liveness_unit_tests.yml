@@ -2,6 +2,7 @@ name: Run Unit Tests | Amplify UI Swift Liveness
 
 on:
   workflow_dispatch:
+  workflow_call:
   push:
     branches: [ main ]
   pull_request:
