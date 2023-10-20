@@ -152,6 +152,7 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
         XCTAssertNotEqual(self.viewModel.livenessState.state,  .encounteredUnrecoverableError(.timedOut))
         try await Task.sleep(seconds: 1)
         self.viewModel.handleNoFaceFit(instruction: .tooFar(nearnessPercentage: 0.2), percentage: 0.2)
+        try await Task.sleep(seconds: 1)
         XCTAssertEqual(self.viewModel.livenessState.state,  .encounteredUnrecoverableError(.timedOut))
     }
     
@@ -168,6 +169,7 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
         XCTAssertNotEqual(self.viewModel.livenessState.state,  .encounteredUnrecoverableError(.timedOut))
         try await Task.sleep(seconds: 1)
         self.viewModel.handleNoFaceDetected()
+        try await Task.sleep(seconds: 1)
         XCTAssertEqual(self.viewModel.livenessState.state,  .encounteredUnrecoverableError(.timedOut))
     }
 }
