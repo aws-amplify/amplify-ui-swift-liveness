@@ -89,9 +89,11 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
             noFitStartTime = Date()
         }
         if let elapsedTime = noFitStartTime?.timeIntervalSinceNow, abs(elapsedTime) >= noFitTimeoutInterval {
-            self.livenessState
-                .unrecoverableStateEncountered(.timedOut)
-            self.captureSession.stopRunning()
+            DispatchQueue.main.async {
+                self.livenessState
+                    .unrecoverableStateEncountered(.timedOut)
+                self.captureSession.stopRunning()
+            }
         }
     }
     
@@ -100,9 +102,11 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
             noFitStartTime = Date()
         }
         if let elapsedTime = noFitStartTime?.timeIntervalSinceNow, abs(elapsedTime) >= noFitTimeoutInterval {
-            self.livenessState
-                .unrecoverableStateEncountered(.timedOut)
-            self.captureSession.stopRunning()
+            DispatchQueue.main.async {
+                self.livenessState
+                    .unrecoverableStateEncountered(.timedOut)
+                self.captureSession.stopRunning()
+            }
         }
     }
 
