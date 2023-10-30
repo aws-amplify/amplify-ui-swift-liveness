@@ -128,6 +128,7 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
     }
     
     private func handleSessionTimedOut() {
+        noFitStartTime = nil
         DispatchQueue.main.async {
             self.livenessState
                 .unrecoverableStateEncountered(.timedOut)
