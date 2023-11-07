@@ -32,11 +32,3 @@ struct CameraView: UIViewControllerRepresentable {
         context: Context
     ) {}
 }
-
-class _CameraViewCoordinator: NSObject {
-    let livenessViewController: _LivenessViewController
-
-    init(livenessViewController: _LivenessViewController) {
-        self.livenessViewController = livenessViewController
-    }
-}

@@ -14,7 +14,8 @@ extension LivenessResultContentView {
         let valueTextColor: Color
         let valueBackgroundColor: Color
         let auditImage: Data?
-
+        let isLive: Bool
+        
         init(livenessResult: LivenessResult) {
             guard livenessResult.confidenceScore > 0 else {
                 text = ""
@@ -22,9 +23,10 @@ extension LivenessResultContentView {
                 valueTextColor = .clear
                 valueBackgroundColor = .clear
                 auditImage = nil
+                isLive = false
                 return
             }
-
+            isLive = livenessResult.isLive
             let truncated = String(format: "%.4f", livenessResult.confidenceScore)
             value = truncated
             if livenessResult.isLive {

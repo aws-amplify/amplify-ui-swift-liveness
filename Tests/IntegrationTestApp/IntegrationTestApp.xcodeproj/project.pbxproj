@@ -10,7 +10,6 @@
 		732CF8492A3183F3004D0BE3 /* FaceLiveness in Frameworks */ = {isa = PBXBuildFile; productRef = 732CF8482A3183F3004D0BE3 /* FaceLiveness */; };
 		732CF84E2A31871D004D0BE3 /* MockLivenessCaptureSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 732CF84D2A31871D004D0BE3 /* MockLivenessCaptureSession.swift */; };
 		732CF8502A3187E0004D0BE3 /* FaceLivenessDetectorView+Mock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 732CF84F2A3187E0004D0BE3 /* FaceLivenessDetectorView+Mock.swift */; };
-		732CF8522A318F7D004D0BE3 /* mock.mov in Resources */ = {isa = PBXBuildFile; fileRef = 732CF8512A318F7D004D0BE3 /* mock.mov */; };
 		7336965E2A312F17009448F0 /* ExampleLivenessViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 733696542A312F17009448F0 /* ExampleLivenessViewModel.swift */; };
 		7336965F2A312F17009448F0 /* StartSessionView+PresentationState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 733696552A312F17009448F0 /* StartSessionView+PresentationState.swift */; };
 		733696602A312F17009448F0 /* LivenessResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 733696562A312F17009448F0 /* LivenessResultView.swift */; };
@@ -52,7 +51,6 @@
 /* Begin PBXFileReference section */
 		732CF84D2A31871D004D0BE3 /* MockLivenessCaptureSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockLivenessCaptureSession.swift; sourceTree = "<group>"; };
 		732CF84F2A3187E0004D0BE3 /* FaceLivenessDetectorView+Mock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FaceLivenessDetectorView+Mock.swift"; sourceTree = "<group>"; };
-		732CF8512A318F7D004D0BE3 /* mock.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = mock.mov; sourceTree = "<group>"; };
 		733696542A312F17009448F0 /* ExampleLivenessViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExampleLivenessViewModel.swift; sourceTree = "<group>"; };
 		733696552A312F17009448F0 /* StartSessionView+PresentationState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "StartSessionView+PresentationState.swift"; sourceTree = "<group>"; };
 		733696562A312F17009448F0 /* LivenessResultView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LivenessResultView.swift; sourceTree = "<group>"; };
@@ -205,7 +203,6 @@
 				733696532A312F17009448F0 /* Views */,
 				73B8F41F2A2D7A27004215B5 /* IntegrationTestApp.swift */,
 				73B8F4232A2D7A28004215B5 /* Assets.xcassets */,
-				732CF8512A318F7D004D0BE3 /* mock.mov */,
 				73B8F4252A2D7A28004215B5 /* IntegrationTestApp.entitlements */,
 				73B8F4262A2D7A28004215B5 /* Preview Content */,
 			);
@@ -325,7 +322,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				732CF8522A318F7D004D0BE3 /* mock.mov in Resources */,
 				73B8F4282A2D7A28004215B5 /* Preview Assets.xcassets in Resources */,
 				733696782A312FC3009448F0 /* amplifyconfiguration.json in Resources */,
 				73B8F4242A2D7A28004215B5 /* Assets.xcassets in Resources */,
@@ -543,7 +539,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"IntegrationTestApp/Preview Content\"";
-				DEVELOPMENT_TEAM = D8BB58X7QJ;
+				DEVELOPMENT_TEAM = 4TQQ7884GF;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -582,7 +578,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"IntegrationTestApp/Preview Content\"";
-				DEVELOPMENT_TEAM = D8BB58X7QJ;
+				DEVELOPMENT_TEAM = 4TQQ7884GF;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_TESTABILITY = YES;

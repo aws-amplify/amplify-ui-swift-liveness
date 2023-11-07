@@ -16,7 +16,7 @@ import Amplify
 public struct FaceLivenessDetectorView: View {
     @StateObject var viewModel: FaceLivenessDetectionViewModel
     @Binding var isPresented: Bool
-    @State var displayState: DisplayState = .awaitingLivenessSession
+    @State var displayState: DisplayState = .awaitingCameraPermission
     @State var displayingCameraPermissionsNeededAlert = false
 
     let disableStartView: Bool
@@ -114,10 +114,10 @@ public struct FaceLivenessDetectorView: View {
 
         self._viewModel = StateObject(
             wrappedValue: .init(
-                faceDetector: captureSession.outputDelegate.faceDetector,
+                faceDetector: captureSession.outputSampleBufferCapturer!.faceDetector,
                 faceInOvalMatching: faceInOvalStateMatching,
                 captureSession: captureSession,
-                videoChunker: captureSession.outputDelegate.videoChunker,
+                videoChunker: captureSession.outputSampleBufferCapturer!.videoChunker,
                 closeButtonAction: { onCompletion(.failure(.userCancelled)) },
                 sessionID: sessionID
             )
@@ -146,10 +146,16 @@ public struct FaceLivenessDetectorView: View {
 
         case .displayingGetReadyView:
             GetReadyPageView(
-                displayingCameraPermissionsNeededAlert: $displayingCameraPermissionsNeededAlert,
-                onBegin: beginButtonTapped,
+                onBegin: {
+                    displayState = .displayingLiveness
+                },
                 beginCheckButtonDisabled: false
             )
+            .onAppear {
+                DispatchQueue.main.async {
+                    UIScreen.main.brightness = 1.0
+                }
+            }
         case .displayingLiveness:
             _FaceLivenessDetectionView(
                 viewModel: viewModel,
@@ -178,6 +184,11 @@ public struct FaceLivenessDetectorView: View {
                     break
                 }
             }
+        case .awaitingCameraPermission:
+            CameraPermissionView(displayingCameraPermissionsNeededAlert: $displayingCameraPermissionsNeededAlert)
+                .onAppear {
+                    checkCameraPermission()
+                }
         }
     }
 
@@ -211,16 +222,16 @@ public struct FaceLivenessDetectorView: View {
     private func alertCameraAccessNeeded() {
         displayingCameraPermissionsNeededAlert = true
     }
-
-    private func beginButtonTapped() {
+    
+    private func checkCameraPermission() {
         let cameraAuthorizationStatus = AVCaptureDevice.authorizationStatus(for: .video)
         switch cameraAuthorizationStatus {
         case .notDetermined:
             requestCameraPermission()
-        case .authorized:
-            displayState = .displayingLiveness
         case .restricted, .denied:
             alertCameraAccessNeeded()
+        case .authorized:
+            displayState = .awaitingLivenessSession
         @unknown default:
             break
         }
@@ -231,6 +242,7 @@ enum DisplayState {
     case awaitingLivenessSession
     case displayingGetReadyView
     case displayingLiveness
+    case awaitingCameraPermission
 }
 
 enum InstructionState {

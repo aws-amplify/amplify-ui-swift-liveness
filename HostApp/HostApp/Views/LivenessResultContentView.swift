@@ -17,7 +17,10 @@ struct LivenessResultContentView: View {
                 Text("Result:")
                 Text(result.text)
                     .fontWeight(.semibold)
-
+                    .foregroundColor(result.valueTextColor)
+                    .padding(6)
+                    .background(result.valueBackgroundColor)
+                    .cornerRadius(8)
             }
             .padding(.bottom, 12)
 
@@ -28,6 +31,20 @@ struct LivenessResultContentView: View {
                     .padding(6)
                     .background(result.valueBackgroundColor)
                     .cornerRadius(8)
+            }
+            
+            if !result.isLive {
+                steps()
+                    .padding()
+                    .background(
+                        Rectangle()
+                            .foregroundColor(
+                                .dynamicColors(
+                                    light: .hex("#ECECEC"),
+                                    dark: .darkGray
+                                )
+                            )
+                            .cornerRadius(6))
             }
 
             if let image = result.auditImage {
@@ -52,6 +69,31 @@ struct LivenessResultContentView: View {
                     print("Error fetching result", error)
                 }
             }
+        }
+    }
+    
+    private func steps() -> some View {
+        func step(number: Int, text: String) -> some View {
+            HStack(alignment: .top) {
+                Text("\(number).")
+                Text(text)
+            }
+        }
+
+        return VStack(
+            alignment: .leading,
+            spacing: 8
+        ) {
+            Text("Tips to pass the video check:")
+                .fontWeight(.semibold)
+            step(number: 1, text: "Maximize your screen's brightness.")
+                .accessibilityElement(children: .combine)
+
+            step(number: 2, text: "Avoid very bright lighting conditions, such as direct sunlight.")
+                .accessibilityElement(children: .combine)
+
+            step(number: 3, text: "Remove sunglasses, mask, hat, or anything blocking your face.")
+                .accessibilityElement(children: .combine)
         }
     }
 }
