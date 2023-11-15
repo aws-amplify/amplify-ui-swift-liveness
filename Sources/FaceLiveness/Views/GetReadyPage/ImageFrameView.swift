@@ -29,6 +29,8 @@ struct ImageFrameView: View {
     }
 }
 
-#Preview {
-    ImageFrameView()
+struct ImageFrameView_Previews: PreviewProvider {
+    static var previews: some View {
+        ImageFrameView()
+    }
 }
