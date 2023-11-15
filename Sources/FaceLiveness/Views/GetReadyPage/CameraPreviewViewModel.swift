@@ -9,6 +9,7 @@ import Foundation
 import CoreImage
 import Combine
 import AVFoundation
+import Amplify
 
 class CameraPreviewViewModel: NSObject, ObservableObject {
     @Published var currentImageFrame: CGImage?
@@ -34,7 +35,7 @@ class CameraPreviewViewModel: NSObject, ObservableObject {
         do {
             try self.previewCaptureSession?.startSession()
         } catch {
-            print("Error starting preview camera session: \(error)")
+            Amplify.Logging.default.error("Error starting preview capture session with error: \(error)")
         }
     }
 
