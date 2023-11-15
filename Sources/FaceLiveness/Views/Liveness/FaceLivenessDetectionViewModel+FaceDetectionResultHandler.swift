@@ -28,7 +28,7 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
             }
         case .singleFace(let face):
             var normalizedFace = normalizeFace(face)
-            normalizedFace.boundingBox = normalizedFace.boundingBoxFromLandmarks()
+            normalizedFace.boundingBox = normalizedFace.boundingBoxFromLandmarks(ovalRect: ovalRect)
 
             switch livenessState.state {
             case .pendingFacePreparedConfirmation:
