@@ -177,7 +177,7 @@ public struct FaceLivenessDetectorView: View {
                     onCompletion(.success(()))
                 case .encounteredUnrecoverableError(let error):
                     let closeCode = error.webSocketCloseCode ?? .normalClosure
-                    viewModel.livenessService.closeSocket(with: closeCode)
+                    viewModel.livenessService?.closeSocket(with: closeCode)
                     isPresented = false
                     onCompletion(.failure(mapError(error)))
                 default:
@@ -210,10 +210,7 @@ public struct FaceLivenessDetectorView: View {
             for: .video,
             completionHandler: { accessGranted in
                 guard accessGranted == true else { return }
-                displayState = .displayingLiveness
-                DispatchQueue.main.async {
-                    UIScreen.main.brightness = 1.0
-                }
+                displayState = .awaitingLivenessSession
             }
         )
 

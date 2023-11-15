@@ -24,7 +24,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     var closeButtonAction: () -> Void
     let videoChunker: VideoChunker
     let sessionID: String
-    var livenessService: LivenessService!
+    var livenessService: LivenessService?
     let faceDetector: FaceDetector
     let faceInOvalMatching: FaceInOvalMatching
     let challengeID: String = UUID().uuidString
@@ -90,7 +90,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     }
 
     func registerServiceEvents() {
-        livenessService.register(onComplete: { [weak self] reason in
+        livenessService?.register(onComplete: { [weak self] reason in
             self?.stopRecording()
 
             switch reason {
@@ -106,7 +106,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
             }
         })
 
-        livenessService.register(
+        livenessService?.register(
             listener: { [weak self] _sessionConfiguration in
                 self?.sessionConfiguration = _sessionConfiguration
             },
@@ -174,7 +174,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
 
     func initializeLivenessStream() {
         do {
-            try livenessService.initializeLivenessStream(
+            try livenessService?.initializeLivenessStream(
                 withSessionID: sessionID,
                 userAgent: UserAgentValues.standard().userAgentString
             )
@@ -197,7 +197,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         )
 
         do {
-            try livenessService.send(
+            try livenessService?.send(
                 .freshness(event: freshnessEvent),
                 eventDate: { .init() }
             )
@@ -238,7 +238,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         initialClientEvent = _initialClientEvent
 
         do {
-            try livenessService.send(
+            try livenessService?.send(
                 .initialFaceDetected(event: _initialClientEvent),
                 eventDate: { .init() }
             )
@@ -270,7 +270,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         )
 
         do {
-            try livenessService.send(
+            try livenessService?.send(
                 .final(event: finalClientEvent),
                 eventDate: { .init() }
             )
@@ -296,7 +296,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         let videoEvent = VideoEvent.init(chunk: data, timestamp: timestamp)
 
         do {
-            try livenessService.send(
+            try livenessService?.send(
                 .video(event: videoEvent),
                 eventDate: { eventDate }
             )
@@ -335,7 +335,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         let videoEvent = VideoEvent.init(chunk: data, timestamp: timestamp)
 
         do {
-            try livenessService.send(
+            try livenessService?.send(
                 .video(event: videoEvent),
                 eventDate: { eventDate }
             )
