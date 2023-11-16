@@ -88,4 +88,34 @@ enum LocalizedStrings {
     
     /// en = "You may have to go into settings to grant camera permissions and close the app and retry"
     static let camera_permission_change_setting_description = "amplify_ui_liveness_camera_permission_button_description".localized()
+    
+    /// en = ""
+    static let amplify_ui_liveness_face_not_prepared_reason_pendingCheck = "amplify_ui_liveness_face_not_prepared_reason_pendingCheck".localized()
+    
+    /// en = "Move face to fit in oval"
+    static let amplify_ui_liveness_face_not_prepared_reason_not_in_oval = "amplify_ui_liveness_face_not_prepared_reason_not_in_oval".localized()
+    
+    /// en = "Move closer"
+    static let amplify_ui_liveness_face_not_prepared_reason_move_face_closer = "amplify_ui_liveness_face_not_prepared_reason_move_face_closer".localized()
+    
+    /// en = "Move face right"
+    static let amplify_ui_liveness_face_not_prepared_reason_move_face_right = "amplify_ui_liveness_face_not_prepared_reason_move_face_right".localized()
+    
+    /// en = "Move face left"
+    static let amplify_ui_liveness_face_not_prepared_reason_move_face_left = "amplify_ui_liveness_face_not_prepared_reason_move_face_left".localized()
+    
+    /// en = "Move to dimmer area"
+    static let amplify_ui_liveness_face_not_prepared_reason_move_to_dimmer_area = "amplify_ui_liveness_face_not_prepared_reason_move_to_dimmer_area".localized()
+    
+    /// en = "Move to brighter area"
+    static let amplify_ui_liveness_face_not_prepared_reason_move_to_brighter_area = "amplify_ui_liveness_face_not_prepared_reason_move_to_brighter_area".localized()
+    
+    /// en = "Move face in front of camera"
+    static let amplify_ui_liveness_face_not_prepared_reason_no_face = "amplify_ui_liveness_face_not_prepared_reason_no_face".localized()
+    
+    /// en = "Ensure only one face is in front of camera"
+    static let amplify_ui_liveness_face_not_prepared_reason_multiple_faces = "amplify_ui_liveness_face_not_prepared_reason_multiple_faces".localized()
+    
+    /// en = "Move face farther away"
+    static let amplify_ui_liveness_face_not_prepared_reason_face_too_close = "amplify_ui_liveness_face_not_prepared_reason_face_too_close".localized()
 }
