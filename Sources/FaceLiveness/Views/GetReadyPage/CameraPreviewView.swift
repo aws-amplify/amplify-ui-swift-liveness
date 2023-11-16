@@ -50,6 +50,8 @@ struct CameraPreviewView: View {
     }
 }
 
-#Preview {
-    CameraPreviewView()
+struct CameraPreviewView_Previews: PreviewProvider {
+    static var previews: some View {
+        CameraPreviewView()
+    }
 }
