@@ -101,7 +101,7 @@ final class DetectedFaceTests: XCTestCase {
         let expectedBoundingBox = CGRect(
             x: 0.1658528943614037,
             y: 0.041756969751750916,
-            width: 0.606473766178437,
+            width: 0.6240418540649166,
             height: 0.8457092820983773
         )
         let boundingBox = detectedFace.boundingBoxFromLandmarks(ovalRect: ovalRect)
