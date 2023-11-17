@@ -39,8 +39,9 @@ struct DetectedFace {
         let faceBoxTop = faceBoxBottom - faceHeight
         let faceBoxLeft = min(cx - ow / 2, rightEar.x)
         let faceBoxRight = min(cx + ow / 2, leftEar.x)
-        
-        let rect = CGRect(x: faceBoxLeft, y: faceBoxTop, width: faceBoxRight, height: faceBoxBottom)
+        let width = faceBoxRight - faceBoxLeft
+        let height = faceBoxBottom - faceBoxTop
+        let rect = CGRect(x: faceBoxLeft, y: faceBoxTop, width: width, height: height)
         return rect
     }
 
