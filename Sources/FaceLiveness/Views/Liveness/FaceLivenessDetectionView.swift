@@ -131,13 +131,14 @@ public struct FaceLivenessDetectorView: View {
                 .onAppear {
                     Task {
                         do {
+                            let newState = disableStartView
+                            ? DisplayState.displayingLiveness
+                            : DisplayState.displayingGetReadyView
+                            guard self.displayState != newState else { return }
                             let session = try await sessionTask.value
                             viewModel.livenessService = session
                             viewModel.registerServiceEvents()
-
-                            self.displayState = disableStartView
-                            ? .displayingLiveness
-                            : .displayingGetReadyView
+                            self.displayState = newState
                         } catch {
                             throw FaceLivenessDetectionError.accessDenied
                         }
@@ -147,6 +148,7 @@ public struct FaceLivenessDetectorView: View {
         case .displayingGetReadyView:
             GetReadyPageView(
                 onBegin: {
+                    guard displayState != .displayingLiveness else { return }
                     displayState = .displayingLiveness
                 },
                 beginCheckButtonDisabled: false
