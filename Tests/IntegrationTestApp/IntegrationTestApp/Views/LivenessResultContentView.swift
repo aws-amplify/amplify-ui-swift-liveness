@@ -33,6 +33,19 @@ struct LivenessResultContentView: View {
                     .background(result.valueBackgroundColor)
                     .cornerRadius(8)
             }
+
+            if let image = result.auditImage {
+                Image(uiImage: .init(data: image) ?? UIImage())
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                        .frame(maxHeight: 300)
+                    .background(Color.secondary.opacity(0.1))
+            } else {
+                Image(systemName: "person.fill")
+                    .font(.system(size: 128))
+                    .frame(maxWidth: .infinity, idealHeight: 268)
+                    .background(Color.secondary.opacity(0.1))
+            }
             
             if !result.isLive {
                 steps()
@@ -46,19 +59,6 @@ struct LivenessResultContentView: View {
                                 )
                             )
                             .cornerRadius(6))
-            }
-
-            if let image = result.auditImage {
-                Image(uiImage: .init(data: image) ?? UIImage())
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                        .frame(maxHeight: 300)
-                    .background(Color.secondary.opacity(0.1))
-            } else {
-                Image(systemName: "person.fill")
-                    .font(.system(size: 128))
-                    .frame(maxWidth: .infinity, idealHeight: 268)
-                    .background(Color.secondary.opacity(0.1))
             }
         }
         .padding(.bottom, 16)
