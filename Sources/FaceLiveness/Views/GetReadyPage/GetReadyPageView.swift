@@ -29,7 +29,6 @@ struct GetReadyPageView: View {
                 VStack {
                     HStack(alignment: .top) {
                         Spacer()
-
                         CloseButton(
                             action: onCancel
                         )
