@@ -151,6 +151,7 @@ public struct FaceLivenessDetectorView: View {
                     guard displayState != .displayingLiveness else { return }
                     displayState = .displayingLiveness
                 },
+                onCancel: { onCompletion(.failure(.userCancelled)) },
                 beginCheckButtonDisabled: false
             )
             .onAppear {
