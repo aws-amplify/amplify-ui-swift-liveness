@@ -11,7 +11,7 @@ struct CameraPreviewView: View {
     private static let previewWidthRatio = 0.6
     private static let previewHeightRatio = 0.55
     private static let previewXPositionRatio = 0.5
-    private static let previewYPositionRatio = 0.5
+    private static let previewYPositionRatio = 0.6
     
     @StateObject var model: CameraPreviewViewModel
     

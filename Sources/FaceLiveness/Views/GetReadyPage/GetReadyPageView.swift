@@ -10,15 +10,12 @@ import SwiftUI
 struct GetReadyPageView: View {
     let beginCheckButtonDisabled: Bool
     let onBegin: () -> Void
-    let onCancel: () -> Void
 
     init(
         onBegin: @escaping () -> Void,
-        onCancel: @escaping () -> Void,
         beginCheckButtonDisabled: Bool = false
     ) {
         self.onBegin = onBegin
-        self.onCancel = onCancel
         self.beginCheckButtonDisabled = beginCheckButtonDisabled
     }
 
@@ -27,24 +24,17 @@ struct GetReadyPageView: View {
             ZStack {
                 CameraPreviewView()
                 VStack {
-                    HStack(alignment: .top) {
-                        Spacer()
-                        CloseButton(
-                            action: onCancel
-                        )
-                    }
-                    Text(LocalizedStrings.preview_center_your_face_text)
-                        .font(.title)
-                        .multilineTextAlignment(.center)
-
-                    Spacer()
                     WarningBox(
                         titleText: LocalizedStrings.get_ready_photosensitivity_title,
                         bodyText: LocalizedStrings.get_ready_photosensitivity_description,
                         popoverContent: { photosensitivityWarningPopoverContent }
                     )
                     .accessibilityElement(children: .combine)
-                }
+                    Text(LocalizedStrings.preview_center_your_face_text)
+                        .font(.title)
+                        .multilineTextAlignment(.center)
+                    Spacer()
+                }.padding()
             }
             beginCheckButton
         }
@@ -82,6 +72,6 @@ struct GetReadyPageView: View {
 
 struct GetReadyPageView_Previews: PreviewProvider {
     static var previews: some View {
-        GetReadyPageView(onBegin: {}, onCancel: {})
+        GetReadyPageView(onBegin: {})
     }
 }
