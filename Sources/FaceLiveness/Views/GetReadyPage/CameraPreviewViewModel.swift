@@ -21,14 +21,14 @@ class CameraPreviewViewModel: NSObject, ObservableObject {
         super.init()
         setupSubscriptions()
         
-        let avCpatureDevice = AVCaptureDevice.DiscoverySession(
+        let avCaptureDevice = AVCaptureDevice.DiscoverySession(
             deviceTypes: [.builtInWideAngleCamera],
             mediaType: .video,
             position: .front
         ).devices.first
 
         self.previewCaptureSession = LivenessCaptureSession(
-            captureDevice: .init(avCaptureDevice: avCpatureDevice),
+            captureDevice: .init(avCaptureDevice: avCaptureDevice),
             outputDelegate: self
         )
         
