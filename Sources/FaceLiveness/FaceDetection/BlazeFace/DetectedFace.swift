@@ -34,7 +34,7 @@ struct DetectedFace {
         }
         
         let faceWidth = ow
-        let faceHeight = 1.68 * faceWidth
+        let faceHeight = 1.618 * faceWidth
         let faceBoxBottom = boundingBox.maxY
         let faceBoxTop = faceBoxBottom - faceHeight
         let faceBoxLeft = min(cx - ow / 2, rightEar.x)
