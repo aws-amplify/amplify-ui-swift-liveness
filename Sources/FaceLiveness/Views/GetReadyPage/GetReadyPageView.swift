@@ -21,25 +21,21 @@ struct GetReadyPageView: View {
 
     var body: some View {
         VStack {
-                VStack(alignment: .leading) {
-                    Text(LocalizedStrings.get_ready_page_title)
-                        .font(.system(size: 34, weight: .semibold))
-                        .accessibilityAddTraits(.isHeader)
-                        .padding(.bottom, 8)
-
+            ZStack {
+                CameraPreviewView()
+                VStack {
                     WarningBox(
                         titleText: LocalizedStrings.get_ready_photosensitivity_title,
                         bodyText: LocalizedStrings.get_ready_photosensitivity_description,
                         popoverContent: { photosensitivityWarningPopoverContent }
                     )
                     .accessibilityElement(children: .combine)
-                    .padding(.bottom, 8)
-                    
-                    CameraPreviewView()
-                        .border(Color.livenessPreviewBorder)
-                }
-                .padding()
-
+                    Text(LocalizedStrings.preview_center_your_face_text)
+                        .font(.title)
+                        .multilineTextAlignment(.center)
+                    Spacer()
+                }.padding()
+            }
             beginCheckButton
         }
     }

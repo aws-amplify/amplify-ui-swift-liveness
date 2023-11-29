@@ -9,13 +9,13 @@ import SwiftUI
 
 struct CameraPreviewView: View {
     private static let previewWidthRatio = 0.6
-    private static let previewHeightRatio = 0.75
+    private static let previewHeightRatio = 0.55
     private static let previewXPositionRatio = 0.5
-    private static let previewYPositionRatio = 0.55
+    private static let previewYPositionRatio = 0.6
     
     @StateObject var model: CameraPreviewViewModel
     
-    public init(model: CameraPreviewViewModel = CameraPreviewViewModel()) {
+    init(model: CameraPreviewViewModel = CameraPreviewViewModel()) {
         self._model = StateObject(wrappedValue: model)
     }
     
@@ -38,13 +38,6 @@ struct CameraPreviewView: View {
                            height: geometry.size.height*Self.previewHeightRatio)
                     .position(x: geometry.size.width*Self.previewXPositionRatio,
                               y: geometry.size.height*Self.previewYPositionRatio)
-            }
-            VStack {
-                Text(LocalizedStrings.preview_center_your_face_text)
-                    .font(.largeTitle)
-                    .multilineTextAlignment(.center)
-                    .padding()
-                Spacer()
             }
         }
     }

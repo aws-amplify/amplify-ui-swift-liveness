@@ -29,7 +29,7 @@ cd amplify-ui-swift-livenes/HostApp
 
 7. Once signed in and authenticated, the "Create Liveness Session" is enabled.  Click the button to generate and get a session id from your backend.
 
-8. Once a session id is created, the Liveness Check screen is displayed.  Follow the instructions and click on Begin Check button to begin liveness verification.
+8. Once a session id is created, the Liveness Check screen is displayed.  Follow the instructions and click on Start video check button to begin liveness verification.
 
 ## Provision AWS Backend Resources
 

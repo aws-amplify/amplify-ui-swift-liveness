@@ -18,10 +18,6 @@ struct CameraPermissionView: View {
 
     var body: some View {
         VStack(alignment: .leading) {
-            Text(LocalizedStrings.camera_permission_page_title)
-                .font(.system(size: 34, weight: .semibold))
-                .accessibilityAddTraits(.isHeader)
-                .padding()
             Spacer()
             VStack {
                 Text(LocalizedStrings.camera_permission_change_setting_header)

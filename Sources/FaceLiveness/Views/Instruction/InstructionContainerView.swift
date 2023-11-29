@@ -97,6 +97,13 @@ struct InstructionContainerView: View {
                     argument: LocalizedStrings.challenge_verifying
                 )
             }
+        case .faceMatched:
+            InstructionView(
+                text: LocalizedStrings.challenge_instruction_hold_still,
+                backgroundColor: .livenessPrimaryBackground,
+                textColor: .livenessPrimaryLabel,
+                font: .title
+            )
         default:
             EmptyView()
         }

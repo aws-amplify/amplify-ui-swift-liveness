@@ -59,6 +59,20 @@ struct LivenessResultContentView: View {
                     .frame(maxWidth: .infinity, idealHeight: 268)
                     .background(Color.secondary.opacity(0.1))
             }
+            
+            if !result.isLive {
+                steps()
+                    .padding()
+                    .background(
+                        Rectangle()
+                            .foregroundColor(
+                                .dynamicColors(
+                                    light: .hex("#ECECEC"),
+                                    dark: .darkGray
+                                )
+                            )
+                            .cornerRadius(6))
+            }
         }
         .padding(.bottom, 16)
         .onAppear {
