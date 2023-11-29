@@ -43,7 +43,7 @@ struct InstructionContainerView: View {
 
         case .awaitingFaceInOvalMatch(let reason, let percentage):
             InstructionView(
-                text: .init(reason.rawValue),
+                text: .init(reason.localizedValue),
                 backgroundColor: .livenessPrimaryBackground,
                 textColor: .livenessPrimaryLabel,
                 font: .title
@@ -81,7 +81,7 @@ struct InstructionContainerView: View {
             .frame(width: 200, height: 30)
         case .pendingFacePreparedConfirmation(let reason):
             InstructionView(
-                text: .init(reason.rawValue),
+                text: .init(reason.localizedValue),
                 backgroundColor: .livenessPrimaryBackground,
                 textColor: .livenessPrimaryLabel,
                 font: .title

@@ -38,3 +38,14 @@
 "amplify_ui_liveness_camera_permission_button_title" = "Change Camera Setting";
 "amplify_ui_liveness_camera_permission_button_header" = "Camera is not accessible";
 "amplify_ui_liveness_camera_permission_button_description" = "You may have to go into settings to grant camera permissions and close the app and retry.";
+
+"amplify_ui_liveness_face_not_prepared_reason_pendingCheck" = "";
+"amplify_ui_liveness_face_not_prepared_reason_not_in_oval" = "Move face to fit in oval";
+"amplify_ui_liveness_face_not_prepared_reason_move_face_closer" = "Move closer";
+"amplify_ui_liveness_face_not_prepared_reason_move_face_right" = "Move face right";
+"amplify_ui_liveness_face_not_prepared_reason_move_face_left" = "Move face left";
+"amplify_ui_liveness_face_not_prepared_reason_move_to_dimmer_area" = "Move to dimmer area";
+"amplify_ui_liveness_face_not_prepared_reason_move_to_brighter_area" = "Move to brighter area";
+"amplify_ui_liveness_face_not_prepared_reason_no_face" = "Move face in front of camera";
+"amplify_ui_liveness_face_not_prepared_reason_multiple_faces" = "Only one face per check";
+"amplify_ui_liveness_face_not_prepared_reason_face_too_close" = "Move face farther away";

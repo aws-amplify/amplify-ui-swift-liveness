@@ -109,17 +109,42 @@ struct LivenessStateMachine {
         case waitForRecording
     }
 
-    enum FaceNotPreparedReason: String, Equatable {
-        case pendingCheck = ""
-        case notInOval = "Move face to fit in oval"
-        case moveFaceCloser = "Move closer"
-        case moveFaceRight = "Move face right"
-        case moveFaceLeft = "Move face left"
-        case moveToDimmerArea = "Move to dimmer area"
-        case moveToBrighterArea = "Move to brighter area"
-        case noFace = "Move face in front of camera"
-        case multipleFaces = "Ensure only one face is in front of camera"
-        case faceTooClose = "Move face farther away"
+    enum FaceNotPreparedReason {
+        case pendingCheck
+        case notInOval
+        case moveFaceCloser
+        case moveFaceRight
+        case moveFaceLeft
+        case moveToDimmerArea
+        case moveToBrighterArea
+        case noFace
+        case multipleFaces
+        case faceTooClose
+        
+        var localizedValue: String {
+            switch self {
+            case .pendingCheck:
+                return LocalizedStrings.amplify_ui_liveness_face_not_prepared_reason_pendingCheck
+            case .notInOval:
+                return LocalizedStrings.amplify_ui_liveness_face_not_prepared_reason_not_in_oval
+            case .moveFaceCloser:
+                return LocalizedStrings.amplify_ui_liveness_face_not_prepared_reason_move_face_closer
+            case .moveFaceRight:
+                return LocalizedStrings.amplify_ui_liveness_face_not_prepared_reason_move_face_right
+            case .moveFaceLeft:
+                return LocalizedStrings.amplify_ui_liveness_face_not_prepared_reason_move_face_left
+            case .moveToDimmerArea:
+                return LocalizedStrings.amplify_ui_liveness_face_not_prepared_reason_move_to_dimmer_area
+            case .moveToBrighterArea:
+                return LocalizedStrings.amplify_ui_liveness_face_not_prepared_reason_move_to_brighter_area
+            case .noFace:
+                return LocalizedStrings.amplify_ui_liveness_face_not_prepared_reason_no_face
+            case .multipleFaces:
+                return LocalizedStrings.challenge_instruction_multiple_faces_detected
+            case .faceTooClose:
+                return LocalizedStrings.amplify_ui_liveness_face_not_prepared_reason_face_too_close
+            }
+        }
     }
 
     struct LivenessError: Error, Equatable {
