@@ -39,7 +39,7 @@
 "amplify_ui_liveness_camera_permission_button_header" = "Camera is not accessible";
 "amplify_ui_liveness_camera_permission_button_description" = "You may have to go into settings to grant camera permissions and close the app and retry.";
 
-"amplify_ui_liveness_face_not_prepared_reason_pendingCheck" = "";
+"amplify_ui_liveness_face_not_prepared_reason_pendingCheck" = " ";
 "amplify_ui_liveness_face_not_prepared_reason_not_in_oval" = "Move face to fit in oval";
 "amplify_ui_liveness_face_not_prepared_reason_move_face_closer" = "Move closer";
 "amplify_ui_liveness_face_not_prepared_reason_move_face_right" = "Move face right";
