@@ -126,7 +126,9 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
         let rightEye = CGPoint(x: 0.38036393762719456, y: 0.48050540685653687)
         let nose = CGPoint(x: 0.48489856674964926, y: 0.54713362455368042)
         let mouth = CGPoint(x: 0.47411978167652435, y: 0.63170802593231201)
-        let detectedFace = DetectedFace(boundingBox: boundingBox, leftEye: leftEye, rightEye: rightEye, nose: nose, mouth: mouth, confidence: 0.971859633)
+        let leftEar = CGPoint(x: 0.7898947484263203, y: 0.5973731875419617)
+        let rightEar = CGPoint(x: 0.1658528943614037, y: 0.5668278932571411)
+        let detectedFace = DetectedFace(boundingBox: boundingBox, leftEye: leftEye, rightEye: rightEye, nose: nose, mouth: mouth, rightEar: rightEar, leftEar: leftEar, confidence: 0.971859633)
         viewModel.process(newResult: .singleFace(detectedFace))
         try await Task.sleep(seconds: 1)
 
