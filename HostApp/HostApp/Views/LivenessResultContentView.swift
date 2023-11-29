@@ -32,20 +32,6 @@ struct LivenessResultContentView: View {
                     .background(result.valueBackgroundColor)
                     .cornerRadius(8)
             }
-            
-            if !result.isLive {
-                steps()
-                    .padding()
-                    .background(
-                        Rectangle()
-                            .foregroundColor(
-                                .dynamicColors(
-                                    light: .hex("#ECECEC"),
-                                    dark: .darkGray
-                                )
-                            )
-                            .cornerRadius(6))
-            }
 
             if let image = result.auditImage {
                 Image(uiImage: .init(data: image) ?? UIImage())
