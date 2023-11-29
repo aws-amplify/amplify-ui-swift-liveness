@@ -82,7 +82,9 @@ struct InstructionContainerView: View {
         case .pendingFacePreparedConfirmation(let reason):
             InstructionView(
                 text: .init(reason.rawValue),
-                backgroundColor: .livenessBackground
+                backgroundColor: .livenessPrimaryBackground,
+                textColor: .livenessPrimaryLabel,
+                font: .title
             )
         case .completedDisplayingFreshness:
             InstructionView(
@@ -95,6 +97,13 @@ struct InstructionContainerView: View {
                     argument: LocalizedStrings.challenge_verifying
                 )
             }
+        case .faceMatched:
+            InstructionView(
+                text: LocalizedStrings.challenge_instruction_hold_still,
+                backgroundColor: .livenessPrimaryBackground,
+                textColor: .livenessPrimaryLabel,
+                font: .title
+            )
         default:
             EmptyView()
         }

@@ -39,12 +39,17 @@ extension Color {
     )
 
     static let livenessWarningBackground = Color.dynamicColors(
-        light: .hex("#F5D9BC"),
+        light: .hex("#B8CEF9"),
         dark: .hex("#663300")
     )
 
     static let livenessWarningLabel = Color.dynamicColors(
-        light: .hex("#663300"),
+        light: .hex("#002266"),
         dark: .hex("#EFBF8F")
+    )
+    
+    static let livenessPreviewBorder = Color.dynamicColors(
+        light: .hex("#AEB3B7"), 
+        dark: .white
     )
 }
