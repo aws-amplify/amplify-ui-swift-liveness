@@ -11,7 +11,7 @@
 "amplify_ui_liveness_get_ready_photosensitivity_icon_a11y" = "Photosensitivity Information";
 "amplify_ui_liveness_get_ready_photosensitivity_dialog_title" = "Photosensitivity warning";
 "amplify_ui_liveness_get_ready_photosensitivity_dialog_description" = "Some people may experience epileptic seizures when exposed to colored lights. Use caution if you, or anyone in your family, have an epileptic condition.";
-"amplify_ui_liveness_get_ready_begin_check" = "Begin Check";
+"amplify_ui_liveness_get_ready_begin_check" = "Start video check";
 
 "amplify_ui_liveness_challenge_recording_indicator_label" = "REC";
 "amplify_ui_liveness_challenge_instruction_hold_face_during_countdown" = "Hold face position during countdown.";
@@ -19,7 +19,7 @@
 "amplify_ui_liveness_challenge_instruction_move_face_back" = "Move back";
 "amplify_ui_liveness_challenge_instruction_move_face_closer" = "Move closer";
 "amplify_ui_liveness_challenge_instruction_move_face_in_front_of_camera" = "Move face in front of camera";
-"amplify_ui_liveness_challenge_instruction_multiple_faces_detected" = "Ensure only one face is in front of camera";
+"amplify_ui_liveness_challenge_instruction_multiple_faces_detected" = "Only one face per check";
 "amplify_ui_liveness_challenge_instruction_hold_still" = "Hold still";
 
 "amplify_ui_liveness_challenge_connecting" = "Connecting...";
