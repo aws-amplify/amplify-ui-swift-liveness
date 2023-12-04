@@ -15,7 +15,7 @@ struct LivenessResultView<Content: View>: View {
     @State var displayingCopiedNotification = false
 
     init(
-        title: String = "Liveness Check",
+        title: String = "Liveness Result",
         sessionID: String,
         onTryAgain: @escaping () -> Void,
         @ViewBuilder content: () -> Content
