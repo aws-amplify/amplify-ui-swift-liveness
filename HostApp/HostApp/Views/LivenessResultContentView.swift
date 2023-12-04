@@ -17,12 +17,7 @@ struct LivenessResultContentView: View {
                 Text("Result:")
                 Text(result.text)
                     .fontWeight(.semibold)
-                    .foregroundColor(result.valueTextColor)
-                    .padding(6)
-                    .background(result.valueBackgroundColor)
-                    .cornerRadius(8)
             }
-            .padding(.bottom, 12)
 
             HStack {
                 Text("Liveness confidence score:")
@@ -86,13 +81,11 @@ struct LivenessResultContentView: View {
         ) {
             Text("Tips to pass the video check:")
                 .fontWeight(.semibold)
-            step(number: 1, text: "Maximize your screen's brightness.")
+
+            step(number: 1, text: "Avoid very bright lighting conditions, such as direct sunlight.")
                 .accessibilityElement(children: .combine)
 
-            step(number: 2, text: "Avoid very bright lighting conditions, such as direct sunlight.")
-                .accessibilityElement(children: .combine)
-
-            step(number: 3, text: "Remove sunglasses, mask, hat, or anything blocking your face.")
+            step(number: 2, text: "Remove sunglasses, mask, hat, or anything blocking your face.")
                 .accessibilityElement(children: .combine)
         }
     }

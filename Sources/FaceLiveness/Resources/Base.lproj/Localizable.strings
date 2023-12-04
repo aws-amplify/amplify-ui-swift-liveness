@@ -7,7 +7,7 @@
 
 "amplify_ui_liveness_get_ready_page_title" = "Liveness Check";
 "amplify_ui_liveness_get_ready_photosensitivity_title" = "Photosensitivity Warning";
-"amplify_ui_liveness_get_ready_photosensitivity_description" = "This check displays colored lights. Use caution if you are photosensitive.";
+"amplify_ui_liveness_get_ready_photosensitivity_description" = "This check flashes different colors. Use caution if you are photosensitive.";
 "amplify_ui_liveness_get_ready_photosensitivity_icon_a11y" = "Photosensitivity Information";
 "amplify_ui_liveness_get_ready_photosensitivity_dialog_title" = "Photosensitivity warning";
 "amplify_ui_liveness_get_ready_photosensitivity_dialog_description" = "Some people may experience epileptic seizures when exposed to colored lights. Use caution if you, or anyone in your family, have an epileptic condition.";
