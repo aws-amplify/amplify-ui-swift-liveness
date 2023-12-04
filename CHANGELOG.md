@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.0 (2023-12-04)
+
+### Features
+
+- **ux**: update get ready page with new preview screen (#78)
+
 ## 1.1.4 (2023-10-31)
 
 ### Bug Fixes
