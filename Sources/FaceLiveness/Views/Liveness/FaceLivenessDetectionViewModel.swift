@@ -289,27 +289,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         }
     }
 
-    func sendVideoEvent(data: Data, videoEventTime: UInt64, n: UInt8 = 1) {
-        guard !hasSentFinalVideoEvent else { return }
-        let eventDate = Date()
-        let timestamp = eventDate.timestampMilliseconds
-
-        let videoEvent = VideoEvent.init(chunk: data, timestamp: timestamp)
-
-        do {
-            try livenessService?.send(
-                .video(event: videoEvent),
-                eventDate: { eventDate }
-            )
-        } catch {
-            DispatchQueue.main.async {
-                self.livenessState.unrecoverableStateEncountered(.unknown)
-            }
-        }
-    }
-
-    func sendFinalVideoChunk(data: Data, videoEventTime: UInt64) {
-        sendVideoEvent(data: data, videoEventTime: videoEventTime)
+    func sendFinalVideoEvent() {
         sendFinalEvent(
             targetFaceRect: faceGuideRect,
             viewSize: videoSize,
