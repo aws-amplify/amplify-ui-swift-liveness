@@ -10,10 +10,7 @@ import SwiftUI
 enum LocalizedStrings {
     /// en = "Liveness Check"
     static let get_ready_page_title = "amplify_ui_liveness_get_ready_page_title".localized()
-
-    /// en = "You will go through a face verification process to prove that you are a real person. Your screen's brightness will temporarily be set to 100% for highest accuracy."
-    static let get_ready_page_description = "amplify_ui_liveness_get_ready_page_description".localized()
-
+    
     /// en = "Photosensitivity Warning"
     static let get_ready_photosensitivity_title = "amplify_ui_liveness_get_ready_photosensitivity_title".localized()
 
@@ -29,26 +26,8 @@ enum LocalizedStrings {
     /// en = "A small percentage of individuals may experience epileptic seizures when exposed to colored lights. Use caution if you, or anyone in your family, have an epileptic condition."
     static let get_ready_photosensitivity_dialog_description = "amplify_ui_liveness_get_ready_photosensitivity_dialog_description".localized()
 
-    /// en = "Follow the instructions to complete the check:"
-    static let get_ready_steps_title = "amplify_ui_liveness_get_ready_steps_title".localized()
-
-    /// en = "Make sure your face is not covered with sunglasses or a mask."
-    static let get_ready_face_not_covered = "amplify_ui_liveness_get_ready_face_not_covered".localized()
-
-    /// en = "Move to a well-lit place that is not in direct sunlight."
-    static let get_ready_lighting = "amplify_ui_liveness_get_ready_lighting".localized()
-
-    /// en = "When an oval appears, fill the oval with your face in it."
-    static let get_ready_fit_face = "amplify_ui_liveness_get_ready_fit_face".localized()
-
-    /// en = "Begin Check"
+    /// en = "Start video check"
     static let get_ready_begin_check = "amplify_ui_liveness_get_ready_begin_check".localized()
-
-    /// en = "Illustration demonstrating good fit of face in oval."
-    static let get_ready_illustration_good_fit_a11y = "amplify_ui_liveness_get_ready_illustration_good_fit_a11y".localized()
-
-    /// en = "Illustration demonstrating face too far from screen."
-    static let get_ready_illustration_too_far_a11y = "amplify_ui_liveness_get_ready_illustration_too_far_a11y".localized()
 
     /// en = "REC"
     static let challenge_recording_indicator_label = "amplify_ui_liveness_challenge_recording_indicator_label".localized()
@@ -68,7 +47,7 @@ enum LocalizedStrings {
     /// en = "Hold still"
     static let challenge_instruction_hold_still = "amplify_ui_liveness_challenge_instruction_hold_still".localized()
 
-    /// en = "Ensure only one face is in front of camera"
+    /// en = "Only one face per check"
     static let challenge_instruction_multiple_faces_detected = "amplify_ui_liveness_challenge_instruction_multiple_faces_detected".localized()
 
     /// en = "Connecting..."
@@ -94,11 +73,49 @@ enum LocalizedStrings {
 
     /// en = "Close"
     static let close_button_a11y = "amplify_ui_liveness_close_button_a11y".localized()
-
-    /// en = "Good fit"
-    static let get_ready_good_fit_example = "amplify_ui_liveness_get_ready_good_fit_example".localized()
     
-    /// en = "Too far"
-    static let get_ready_too_far_example = "amplify_ui_liveness_get_ready_too_far_example".localized()
+    /// en = "Center your face"
+    static let preview_center_your_face_text = "amplify_ui_liveness_center_your_face_text".localized()
     
+    /// en = "Liveness check"
+    static let camera_permission_page_title = "amplify_ui_liveness_camera_permission_page_title".localized()
+    
+    /// en = "Change Camera Setting"
+    static let camera_permission_change_setting_button_title = "amplify_ui_liveness_camera_permission_button_title".localized()
+    
+    /// en = "Camera is not accessible"
+    static let camera_permission_change_setting_header = "amplify_ui_liveness_camera_permission_button_header".localized()
+    
+    /// en = "You may have to go into settings to grant camera permissions and close the app and retry"
+    static let camera_permission_change_setting_description = "amplify_ui_liveness_camera_permission_button_description".localized()
+    
+    /// en = ""
+    static let amplify_ui_liveness_face_not_prepared_reason_pendingCheck = "amplify_ui_liveness_face_not_prepared_reason_pendingCheck".localized()
+    
+    /// en = "Move face to fit in oval"
+    static let amplify_ui_liveness_face_not_prepared_reason_not_in_oval = "amplify_ui_liveness_face_not_prepared_reason_not_in_oval".localized()
+    
+    /// en = "Move closer"
+    static let amplify_ui_liveness_face_not_prepared_reason_move_face_closer = "amplify_ui_liveness_face_not_prepared_reason_move_face_closer".localized()
+    
+    /// en = "Move face right"
+    static let amplify_ui_liveness_face_not_prepared_reason_move_face_right = "amplify_ui_liveness_face_not_prepared_reason_move_face_right".localized()
+    
+    /// en = "Move face left"
+    static let amplify_ui_liveness_face_not_prepared_reason_move_face_left = "amplify_ui_liveness_face_not_prepared_reason_move_face_left".localized()
+    
+    /// en = "Move to dimmer area"
+    static let amplify_ui_liveness_face_not_prepared_reason_move_to_dimmer_area = "amplify_ui_liveness_face_not_prepared_reason_move_to_dimmer_area".localized()
+    
+    /// en = "Move to brighter area"
+    static let amplify_ui_liveness_face_not_prepared_reason_move_to_brighter_area = "amplify_ui_liveness_face_not_prepared_reason_move_to_brighter_area".localized()
+    
+    /// en = "Move face in front of camera"
+    static let amplify_ui_liveness_face_not_prepared_reason_no_face = "amplify_ui_liveness_face_not_prepared_reason_no_face".localized()
+    
+    /// en = "Ensure only one face is in front of camera"
+    static let amplify_ui_liveness_face_not_prepared_reason_multiple_faces = "amplify_ui_liveness_face_not_prepared_reason_multiple_faces".localized()
+    
+    /// en = "Move face farther away"
+    static let amplify_ui_liveness_face_not_prepared_reason_face_too_close = "amplify_ui_liveness_face_not_prepared_reason_face_too_close".localized()
 }

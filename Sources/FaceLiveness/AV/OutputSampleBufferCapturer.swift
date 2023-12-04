@@ -24,7 +24,7 @@ class OutputSampleBufferCapturer: NSObject, AVCaptureVideoDataOutputSampleBuffer
     ) {
         videoChunker.consume(sampleBuffer)
 
-        guard let imageBuffer = sampleBuffer.rotateRightUpMirrored()
+        guard let imageBuffer = sampleBuffer.imageBuffer
         else { return }
 
         faceDetector.detectFaces(from: imageBuffer)

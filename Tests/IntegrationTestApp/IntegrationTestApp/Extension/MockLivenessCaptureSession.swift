@@ -95,10 +95,10 @@ final class MockLivenessCaptureSession: LivenessCaptureSession {
                                                sampleTiming: &timingInfo,
                                                sampleBufferOut: &sampleBuffer)
             if let sampleBuffer = sampleBuffer {
-                self.outputDelegate.videoChunker.consume(sampleBuffer)
-                guard let imageBuffer = sampleBuffer.rotateRightUpMirrored()
+                self.outputSampleBufferCapturer?.videoChunker.consume(sampleBuffer)
+                guard let imageBuffer = sampleBuffer.imageBuffer
                 else { return }
-                self.outputDelegate.faceDetector.detectFaces(from: imageBuffer)
+                self.outputSampleBufferCapturer?.faceDetector.detectFaces(from: imageBuffer)
             }
         }
     }

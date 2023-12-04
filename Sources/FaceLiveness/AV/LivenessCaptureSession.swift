@@ -11,15 +11,34 @@ import AVFoundation
 class LivenessCaptureSession {
     let captureDevice: LivenessCaptureDevice
     private let captureQueue = DispatchQueue(label: "com.amazonaws.faceliveness.cameracapturequeue")
-    let outputDelegate: OutputSampleBufferCapturer
+    let outputDelegate: AVCaptureVideoDataOutputSampleBufferDelegate
     var captureSession: AVCaptureSession?
+    
+    var outputSampleBufferCapturer: OutputSampleBufferCapturer? {
+        return outputDelegate as? OutputSampleBufferCapturer
+    }
 
-    init(captureDevice: LivenessCaptureDevice, outputDelegate: OutputSampleBufferCapturer) {
+    init(captureDevice: LivenessCaptureDevice, outputDelegate: AVCaptureVideoDataOutputSampleBufferDelegate) {
         self.captureDevice = captureDevice
         self.outputDelegate = outputDelegate
     }
 
     func startSession(frame: CGRect) throws -> CALayer {
+        try startSession()
+
+        guard let captureSession = captureSession else {
+            throw LivenessCaptureSessionError.captureSessionUnavailable
+        }
+        
+        let previewLayer = previewLayer(
+            frame: frame,
+            for: captureSession
+        )
+
+        return previewLayer
+    }
+    
+    func startSession() throws {
         guard let camera = captureDevice.avCaptureDevice
         else { throw LivenessCaptureSessionError.cameraUnavailable }
 
@@ -44,17 +63,10 @@ class LivenessCaptureSession {
             captureSession.startRunning()
         }
 
-        let previewLayer = previewLayer(
-            frame: frame,
-            for: captureSession
-        )
-
         videoOutput.setSampleBufferDelegate(
             outputDelegate,
             queue: captureQueue
         )
-
-        return previewLayer
     }
 
     func stopRunning() {
@@ -83,6 +95,11 @@ class LivenessCaptureSession {
         _ output: AVCaptureVideoDataOutput,
         for captureSession: AVCaptureSession
     ) throws {
+        if captureSession.canAddOutput(output) {
+            captureSession.addOutput(output)
+        } else {
+            throw LivenessCaptureSessionError.captureSessionOutputUnavailable
+        }
         output.videoSettings = [
             kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
         ]
@@ -91,12 +108,6 @@ class LivenessCaptureSession {
             .filter(\.isVideoOrientationSupported)
             .forEach {
                 $0.videoOrientation = .portrait
-        }
-
-        if captureSession.canAddOutput(output) {
-            captureSession.addOutput(output)
-        } else {
-            throw LivenessCaptureSessionError.captureSessionOutputUnavailable
         }
     }
 

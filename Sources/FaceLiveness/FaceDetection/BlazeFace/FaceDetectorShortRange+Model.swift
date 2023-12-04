@@ -157,6 +157,9 @@ extension FaceDetectorShortRange {
                 let leftEye = faceResult[3]
                 let nose = faceResult[4]
                 let mouth = faceResult[5]
+                let rightEar = faceResult[6]
+                let leftEar = faceResult[7]
+                
 
 
                 let boundingBox = CGRect(
@@ -172,6 +175,8 @@ extension FaceDetectorShortRange {
                     rightEye: .init(x: rightEye.x, y: rightEye.y),
                     nose: .init(x: nose.x, y: nose.y),
                     mouth: .init(x: mouth.x, y: mouth.y),
+                    rightEar: .init(x: rightEar.x, y: rightEar.y),
+                    leftEar: .init(x: leftEar.x, y: leftEar.y),
                     confidence: overlappingConfidenceScore / Float(overlappingOutputs.count)
                 )
 

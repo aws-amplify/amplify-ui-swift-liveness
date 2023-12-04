@@ -43,7 +43,7 @@ struct InstructionContainerView: View {
 
         case .awaitingFaceInOvalMatch(let reason, let percentage):
             InstructionView(
-                text: .init(reason.rawValue),
+                text: .init(reason.localizedValue),
                 backgroundColor: .livenessPrimaryBackground,
                 textColor: .livenessPrimaryLabel,
                 font: .title
@@ -81,8 +81,10 @@ struct InstructionContainerView: View {
             .frame(width: 200, height: 30)
         case .pendingFacePreparedConfirmation(let reason):
             InstructionView(
-                text: .init(reason.rawValue),
-                backgroundColor: .livenessBackground
+                text: .init(reason.localizedValue),
+                backgroundColor: .livenessPrimaryBackground,
+                textColor: .livenessPrimaryLabel,
+                font: .title
             )
         case .completedDisplayingFreshness:
             InstructionView(
@@ -95,6 +97,13 @@ struct InstructionContainerView: View {
                     argument: LocalizedStrings.challenge_verifying
                 )
             }
+        case .faceMatched:
+            InstructionView(
+                text: LocalizedStrings.challenge_instruction_hold_still,
+                backgroundColor: .livenessPrimaryBackground,
+                textColor: .livenessPrimaryLabel,
+                font: .title
+            )
         default:
             EmptyView()
         }

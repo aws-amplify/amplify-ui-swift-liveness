@@ -17,9 +17,7 @@ struct LivenessResultContentView: View {
                 Text("Result:")
                 Text(result.text)
                     .fontWeight(.semibold)
-
             }
-            .padding(.bottom, 12)
 
             HStack {
                 Text("Liveness confidence score:")
@@ -42,6 +40,20 @@ struct LivenessResultContentView: View {
                     .frame(maxWidth: .infinity, idealHeight: 268)
                     .background(Color.secondary.opacity(0.1))
             }
+            
+            if !result.isLive {
+                steps()
+                    .padding()
+                    .background(
+                        Rectangle()
+                            .foregroundColor(
+                                .dynamicColors(
+                                    light: .hex("#ECECEC"),
+                                    dark: .darkGray
+                                )
+                            )
+                            .cornerRadius(6))
+            }
         }
         .padding(.bottom, 16)
         .onAppear {
@@ -52,6 +64,29 @@ struct LivenessResultContentView: View {
                     print("Error fetching result", error)
                 }
             }
+        }
+    }
+    
+    private func steps() -> some View {
+        func step(number: Int, text: String) -> some View {
+            HStack(alignment: .top) {
+                Text("\(number).")
+                Text(text)
+            }
+        }
+
+        return VStack(
+            alignment: .leading,
+            spacing: 8
+        ) {
+            Text("Tips to pass the video check:")
+                .fontWeight(.semibold)
+
+            step(number: 1, text: "Avoid very bright lighting conditions, such as direct sunlight.")
+                .accessibilityElement(children: .combine)
+
+            step(number: 2, text: "Remove sunglasses, mask, hat, or anything blocking your face.")
+                .accessibilityElement(children: .combine)
         }
     }
 }
