@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.1 (2023-12-05)
+
+### Bug Fixes
+
+- send the final video event at a delayed time interval (#87)
+
 ## 1.2.0 (2023-12-04)
 
 ### Features
