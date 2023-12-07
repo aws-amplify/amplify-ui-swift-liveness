@@ -10,14 +10,13 @@ struct UIConstants {
     static let primaryButton = "Create Liveness Session"
  
     struct BeginCheck {
-        static let primaryButton = "Begin Check"
-        static let description = "You will go through a face verification process to prove that you are a real person. Your screen's brightness will temporarily be set to 100% for highest accuracy."
-        static let warning = "Photosensitivity Warning, This check displays colored lights. Use caution if you are photosensitive."
-        static let instruction = "Follow the instructions to complete the check:"
+        static let primaryButton = "Start video check"
+        static let warningTitle = "Photosensitivity Warning"
+        static let warningDescription = "This check flashes different colors. Use caution if you are photosensitive."
+        static let instruction = "Center your face"
     }
 
     struct LivenessCheck {
-        static let countdownInstruction = "Hold face position during countdown."
         static let moveInstruction = "Move closer"
         static let holdInstruction = "Hold still"
         static let closeButton = "Close"
