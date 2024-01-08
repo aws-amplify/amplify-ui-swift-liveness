@@ -14,9 +14,6 @@ class LivenessCaptureSession {
     private let configurationQueue = DispatchQueue(label: "com.amazonaws.faceliveness.sessionconfiguration", qos: .userInitiated)
     let outputDelegate: AVCaptureVideoDataOutputSampleBufferDelegate
     var captureSession: AVCaptureSession?
-    private var deviceInput: AVCaptureDeviceInput?
-    private var videoOutput: AVCaptureVideoDataOutput?
-    private var previewLayer: AVCaptureVideoPreviewLayer?
     
     var outputSampleBufferCapturer: OutputSampleBufferCapturer? {
         return outputDelegate as? OutputSampleBufferCapturer
@@ -38,80 +35,79 @@ class LivenessCaptureSession {
             frame: frame,
             for: captureSession
         )
-        self.previewLayer = previewLayer
+
         return previewLayer
     }
     
     func startSession() throws {
-        teardownCurrentSession()
         guard let camera = captureDevice.avCaptureDevice
         else { throw LivenessCaptureSessionError.cameraUnavailable }
+
+        let cameraInput = try AVCaptureDeviceInput(device: camera)
+        let videoOutput = AVCaptureVideoDataOutput()
+
+        teardownExistingSession(input: cameraInput)
         captureSession = AVCaptureSession()
-        deviceInput = try AVCaptureDeviceInput(device: camera)
-        videoOutput = AVCaptureVideoDataOutput()
 
         guard let captureSession = captureSession else {
             throw LivenessCaptureSessionError.captureSessionUnavailable
         }
-        guard let input = deviceInput, captureSession.canAddInput(input) else {
-            throw LivenessCaptureSessionError.captureSessionInputUnavailable
-        }
-        guard let output = videoOutput, captureSession.canAddOutput(output) else {
-            throw LivenessCaptureSessionError.captureSessionOutputUnavailable
-        }
+
+        try setupInput(cameraInput, for: captureSession)
+        captureSession.sessionPreset = captureDevice.preset
+        try setupOutput(videoOutput, for: captureSession)
         try captureDevice.configure()
-        
-        configureOutput(output)
-        
+
         configurationQueue.async {
-            captureSession.beginConfiguration()
-            captureSession.sessionPreset = self.captureDevice.preset
-            captureSession.addInput(input)
-            captureSession.addOutput(output)
-            captureSession.commitConfiguration()
             captureSession.startRunning()
         }
-    }
 
-    func stopRunning() {
-        teardownCurrentSession()
-    }
-    
-    private func configureOutput(_ output: AVCaptureVideoDataOutput) {
-        output.videoSettings = [
-            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
-        ]
-        
-        output.connections
-            .filter(\.isVideoOrientationSupported)
-            .forEach {
-                $0.videoOrientation = .portrait
-            }
-        
-        output.setSampleBufferDelegate(
+        videoOutput.setSampleBufferDelegate(
             outputDelegate,
             queue: captureQueue
         )
     }
 
-    private func teardownCurrentSession() {
+    func stopRunning() {
         if captureSession?.isRunning == true {
             captureSession?.stopRunning()
         }
-        
-        if let output = videoOutput {
-            captureSession?.removeOutput(output)
-            videoOutput = nil
+    }
+
+    private func teardownExistingSession(input: AVCaptureDeviceInput) {
+        stopRunning()
+        captureSession?.removeInput(input)
+    }
+
+    private func setupInput(
+        _ input: AVCaptureDeviceInput,
+        for captureSession: AVCaptureSession
+    ) throws {
+        if captureSession.canAddInput(input) {
+            captureSession.addInput(input)
+        } else {
+            throw LivenessCaptureSessionError.captureSessionInputUnavailable
         }
-        if let input = deviceInput {
-            captureSession?.removeInput(input)
-            deviceInput = nil
+    }
+
+    private func setupOutput(
+        _ output: AVCaptureVideoDataOutput,
+        for captureSession: AVCaptureSession
+    ) throws {
+        if captureSession.canAddOutput(output) {
+            captureSession.addOutput(output)
+        } else {
+            throw LivenessCaptureSessionError.captureSessionOutputUnavailable
         }
-    
-        previewLayer?.removeFromSuperlayer()
-        previewLayer?.session = nil
-        previewLayer = nil
-        captureSession = nil
+        output.videoSettings = [
+            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
+        ]
+
+        output.connections
+            .filter(\.isVideoOrientationSupported)
+            .forEach {
+                $0.videoOrientation = .portrait
+        }
     }
 
     private func previewLayer(
