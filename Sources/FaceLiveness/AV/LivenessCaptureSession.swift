@@ -11,6 +11,7 @@ import AVFoundation
 class LivenessCaptureSession {
     let captureDevice: LivenessCaptureDevice
     private let captureQueue = DispatchQueue(label: "com.amazonaws.faceliveness.cameracapturequeue")
+    private let configurationQueue = DispatchQueue(label: "com.amazonaws.faceliveness.sessionconfiguration", qos: .userInitiated)
     let outputDelegate: AVCaptureVideoDataOutputSampleBufferDelegate
     var captureSession: AVCaptureSession?
     
@@ -43,6 +44,7 @@ class LivenessCaptureSession {
         else { throw LivenessCaptureSessionError.cameraUnavailable }
 
         let cameraInput = try AVCaptureDeviceInput(device: camera)
+        let videoOutput = AVCaptureVideoDataOutput()
 
         teardownExistingSession(input: cameraInput)
         captureSession = AVCaptureSession()
@@ -53,13 +55,10 @@ class LivenessCaptureSession {
 
         try setupInput(cameraInput, for: captureSession)
         captureSession.sessionPreset = captureDevice.preset
-
-        let videoOutput = AVCaptureVideoDataOutput()
         try setupOutput(videoOutput, for: captureSession)
-
         try captureDevice.configure()
 
-        DispatchQueue.global().async {
+        configurationQueue.async {
             captureSession.startRunning()
         }
 

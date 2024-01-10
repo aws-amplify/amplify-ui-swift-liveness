@@ -37,6 +37,12 @@ final class _LivenessViewController: UIViewController {
             }
         }
     }
+    
+    deinit {
+        self.previewLayer.removeFromSuperlayer()
+        (self.previewLayer as? AVCaptureVideoPreviewLayer)?.session = nil
+        self.previewLayer = nil
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -110,6 +116,7 @@ extension _LivenessViewController: FaceLivenessViewControllerPresenter {
             imageView.frame = self.previewLayer.frame
             self.view.addSubview(imageView)
             self.previewLayer.removeFromSuperlayer()
+            (self.previewLayer as? AVCaptureVideoPreviewLayer)?.session = nil
             self.viewModel.stopRecording()
         }
     }

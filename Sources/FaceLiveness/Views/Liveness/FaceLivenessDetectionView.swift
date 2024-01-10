@@ -172,6 +172,9 @@ public struct FaceLivenessDetectorView: View {
                     UIScreen.main.brightness = 1.0
                 }
             }
+            .onDisappear() {
+                viewModel.stopRecording()
+            }
             .onReceive(viewModel.$livenessState) { output in
                 switch output.state {
                 case .completed:
