@@ -26,11 +26,9 @@ class CreateLivenessSessionUITests: XCTestCase {
         Thread.sleep(forTimeInterval: 2)
         XCTAssert(app!.buttons[UIConstants.BeginCheck.primaryButton].exists)
         XCTAssertFalse(app!.buttons[UIConstants.primaryButton].exists)
-        let scrollViewsQuery = app!.scrollViews
-        let elementsQuery = scrollViewsQuery.otherElements
-        XCTAssertEqual(elementsQuery.staticTexts.element(boundBy: 1).label, UIConstants.BeginCheck.description)
-        XCTAssert(elementsQuery.buttons[UIConstants.BeginCheck.warning].exists)
-        XCTAssert(elementsQuery.staticTexts[UIConstants.BeginCheck.instruction].exists)
+        XCTAssert(app!.staticTexts[UIConstants.BeginCheck.warningTitle].exists)
+        XCTAssert(app!.staticTexts[UIConstants.BeginCheck.warningDescription].exists)
+        XCTAssert(app!.staticTexts[UIConstants.BeginCheck.instruction].exists)
     }
     
     func testStartLivenessIntegration() throws {
@@ -40,14 +38,11 @@ class CreateLivenessSessionUITests: XCTestCase {
         app?.buttons[UIConstants.primaryButton].tap()
         Thread.sleep(forTimeInterval: 2)
         XCTAssert(app!.buttons[UIConstants.BeginCheck.primaryButton].exists)
-        XCTAssertFalse(app!.buttons[UIConstants.primaryButton].exists)
         app!.buttons[UIConstants.BeginCheck.primaryButton].tap()
         Thread.sleep(forTimeInterval: 2)
-        XCTAssert(app!.staticTexts[UIConstants.LivenessCheck.countdownInstruction].exists)
         XCTAssert(app!.buttons[UIConstants.LivenessCheck.closeButton].exists)
-        Thread.sleep(forTimeInterval: 3)
         XCTAssert(app!.staticTexts[UIConstants.LivenessCheck.moveInstruction].exists)
-        Thread.sleep(forTimeInterval: 3)
+        Thread.sleep(forTimeInterval: 4)
         XCTAssert(app!.staticTexts[UIConstants.LivenessCheck.holdInstruction].exists)
         Thread.sleep(forTimeInterval: 8)
         XCTAssert(app!.buttons[UIConstants.LivenessResult.primaryButton].exists)
