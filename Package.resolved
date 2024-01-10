@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/aws-amplify/amplify-swift",
       "state" : {
-        "revision" : "54c763c44279be924421243ac82c08af5f88e338",
-        "version" : "2.22.0"
+        "revision" : "eec6a7f67f11ea91cd9fff674e204ba469893841",
+        "version" : "2.25.3"
       }
     },
     {
@@ -14,8 +14,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/aws-amplify/amplify-swift-utils-notifications.git",
       "state" : {
-        "revision" : "f970384ad1035732f99259255cd2f97564807e41",
-        "version" : "1.1.0"
+        "revision" : "959eec669ba97c7d923b963c3e66ca8a0b2737f6",
+        "version" : "1.1.1"
       }
     },
     {
@@ -77,8 +77,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-collections",
       "state" : {
-        "revision" : "a902f1823a7ff3c9ab2fba0f992396b948eda307",
-        "version" : "1.0.5"
+        "revision" : "d029d9d39c87bed85b1c50adee7c41795261a192",
+        "version" : "1.0.6"
       }
     },
     {

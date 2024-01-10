@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.2 (2024-01-10)
+
+### Bug Fixes
+
+- resolve race condition when starting AVCaptureSession (#93)
+
 ## 1.2.1 (2023-12-05)
 
 ### Bug Fixes
