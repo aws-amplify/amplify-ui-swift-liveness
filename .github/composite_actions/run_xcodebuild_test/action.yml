@@ -47,7 +47,7 @@ runs:
         coverageFlags=""
         if [ "${{ inputs.generate_coverage }}" == "true" ]; then
           echo "Code Coverage is enabled!"
-          coverageFlags+="-derivedDataPath Build/ -clonedSourcePackagesDirPath "~/Library/Developer/Xcode/DerivedData/$SCHEME" -enableCodeCoverage YES build test"
+          coverageFlags+="-derivedDataPath Build/ -clonedSourcePackagesDirPath "~/Library/Developer/Xcode/DerivedData/$SCHEME" -enableCodeCoverage YES"
         fi
         xcode-select -p
         xcodebuild -version
@@ -56,6 +56,8 @@ runs:
 
     - name: Generate Coverage report
       if: ${{ inputs.generate_coverage == 'true' }}
+      env:
+        SCHEME: ${{ inputs.scheme }}
       run: |
         echo "Generating Coverage report..."
         cd Build/Build/ProfileData
