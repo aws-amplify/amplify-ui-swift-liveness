@@ -28,3 +28,4 @@ jobs:
           scheme: AmplifyUILiveness
           destination: 'platform=iOS Simulator,name=iPhone 14,OS=16.4'
           xcode_path: '/Applications/Xcode_14.3.app'
+          generate_coverage: true
