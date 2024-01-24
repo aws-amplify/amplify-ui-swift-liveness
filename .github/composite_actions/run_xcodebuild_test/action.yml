@@ -65,7 +65,7 @@ runs:
         pathCoverage=Build/Build/ProfileData/${PWD##*/}/Coverage.profdata
         cd ${{ github.workspace }}
         echo $pathCoverage
-        cd $pathCoverage
+        cd Build/Build/ProfileData/${PWD##*/}
         ls
         cd ${{ github.workspace }}
         xcrun llvm-cov export -format="lcov" -instr-profile $pathCoverage Build/Build/Products/Debug-iphonesimulator/$SCHEME.o > Coverage.lcov
