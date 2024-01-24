@@ -63,14 +63,8 @@ runs:
         cd Build/Build/ProfileData
         cd $(ls -d */|head -n 1)
         pathCoverage=Build/Build/ProfileData/${PWD##*/}/Coverage.profdata
-        cd ${{ github.workspace }}
-        echo $pathCoverage
-        cd Build/Build/ProfileData/${PWD##*/}
-        ls
-        cd ${{ github.workspace }}
-        xcrun llvm-cov export -format="lcov" -instr-profile $pathCoverage Build/Build/Products/Debug-iphonesimulator/$SCHEME.o > Coverage.lcov
-        cd Build/Build/Products/Debug-iphonesimulator/
-        ls
+        cd ../../../../
+        xcrun llvm-cov export -format="lcov" -instr-profile $pathCoverage Build/Build/Products/Debug-${{ inputs.sdk }}/$SCHEME.o > $SCHEME-Coverage.lcov
       shell: bash
 
     - name: Upload Report
