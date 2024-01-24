@@ -15,7 +15,7 @@ on:
 jobs:
   test-iOS:
     name: Liveness iOS Unit Tests
-    runs-on: macos-13
+    runs-on: macos-latest
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
@@ -26,6 +26,5 @@ jobs:
         uses: ./.github/composite_actions/run_xcodebuild_test
         with:
           scheme: FaceLiveness
-          destination: 'platform=iOS Simulator,name=iPhone 14,OS=16.4'
-          xcode_path: '/Applications/Xcode_14.3.app'
+          destination: 'platform=iOS Simulator,name=iPhone 14,OS=latest'
           generate_coverage: true
