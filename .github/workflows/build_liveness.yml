@@ -29,7 +29,7 @@ jobs:
       - name: Build Amplify Swift Liveness UI
         uses: ./.github/composite_actions/run_xcodebuild
         with:
-          scheme: AmplifyUILiveness
+          scheme: FaceLiveness
           destination: 'platform=iOS Simulator,name=iPhone 14,OS=16.4'
           xcode_path: '/Applications/Xcode_14.3.app'
 
