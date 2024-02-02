@@ -39,6 +39,8 @@ struct CameraPreviewView: View {
                     .position(x: geometry.size.width*Self.previewXPositionRatio,
                               y: geometry.size.height*Self.previewYPositionRatio)
             }
+        }.onDisappear {
+            model.stopSession()
         }
     }
 }

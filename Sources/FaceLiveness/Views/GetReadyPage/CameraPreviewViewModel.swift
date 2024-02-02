@@ -33,7 +33,7 @@ class CameraPreviewViewModel: NSObject, ObservableObject {
         )
         
         do {
-            try self.previewCaptureSession?.startSession()
+            try previewCaptureSession?.startSession()
         } catch {
             Amplify.Logging.default.error("Error starting preview capture session with error: \(error)")
         }
@@ -46,6 +46,10 @@ class CameraPreviewViewModel: NSObject, ObservableObject {
                 return CGImage.convert(from: $0)
             }
             .assign(to: &$currentImageFrame)
+    }
+
+    func stopSession() {
+        previewCaptureSession?.stopRunning()
     }
 }
 
