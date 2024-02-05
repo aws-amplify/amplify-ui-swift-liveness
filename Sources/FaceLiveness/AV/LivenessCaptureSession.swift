@@ -69,18 +69,23 @@ class LivenessCaptureSession {
     }
 
     func stopRunning() {
-        if captureSession?.isRunning == true {
-            captureSession?.stopRunning()
+        guard let session = captureSession else { return }
+
+        defer {
+            captureSession = nil
         }
-        if let session = captureSession {
-            for input in session.inputs {
-                session.removeInput(input)
-            }
-            for output in session.outputs {
-                session.removeOutput(output)
-            }
+
+        if session.isRunning {
+            session.stopRunning()
         }
-        captureSession = nil
+
+        for input in session.inputs {
+            session.removeInput(input)
+        }
+        
+        for output in session.outputs {
+            session.removeOutput(output)
+        }
     }
 
     private func teardownExistingSession(input: AVCaptureDeviceInput) {
