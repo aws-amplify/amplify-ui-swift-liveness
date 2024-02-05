@@ -69,8 +69,22 @@ class LivenessCaptureSession {
     }
 
     func stopRunning() {
-        if captureSession?.isRunning == true {
-            captureSession?.stopRunning()
+        guard let session = captureSession else { return }
+
+        defer {
+            captureSession = nil
+        }
+
+        if session.isRunning {
+            session.stopRunning()
+        }
+
+        for input in session.inputs {
+            session.removeInput(input)
+        }
+        
+        for output in session.outputs {
+            session.removeOutput(output)
         }
     }
 
