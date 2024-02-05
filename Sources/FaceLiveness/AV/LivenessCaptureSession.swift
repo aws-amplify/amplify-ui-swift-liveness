@@ -121,6 +121,7 @@ class LivenessCaptureSession {
             .filter(\.isVideoOrientationSupported)
             .forEach {
                 $0.videoOrientation = .portrait
+                $0.isVideoMirrored = true
         }
     }
 
