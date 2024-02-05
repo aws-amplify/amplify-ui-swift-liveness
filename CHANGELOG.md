@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.3 (2024-02-05)
+
+### Bug Fixes
+
+- cleanup camera session in the preview page (#101)
+
 ## 1.2.2 (2024-01-10)
 
 ### Bug Fixes
