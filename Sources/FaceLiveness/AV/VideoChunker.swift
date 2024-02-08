@@ -44,7 +44,9 @@ final class VideoChunker {
         state = .awaitingSingleFrame
 
         // explicitly calling `endSession` is unnecessary
-        assetWriter.finishWriting {}
+        if state != .complete {
+            assetWriter.finishWriting {}
+        }
     }
 
     func consume(_ buffer: CMSampleBuffer) {
