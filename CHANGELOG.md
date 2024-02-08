@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.5 (2024-02-08)
+
+### Bug Fixes
+
+- add additional guard for finishing AVAssetWriter (#108)
+
 ## 1.2.4 (2024-02-05)
 
 ### Bug Fixes
