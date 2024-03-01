@@ -88,9 +88,7 @@ public struct FaceLivenessDetectionError: Error, Equatable {
         code: 12,
         message: "The input fails to satisfy the constraints specified by the service.",
         recoverySuggestion: """
-        Potential reasons inlcude: video quality or size is invalid, video container format not supported,
-        video does not have enough information - no person detected in video, request couldn't be parsed or is invalid,
-        session has expired or is invalid, S3 bucket is invalid/in another AWS region, KMS Key is invalid."
+        Retry the face liveness check and prompt the user to follow the on screen instructions.
         """
     )
 
