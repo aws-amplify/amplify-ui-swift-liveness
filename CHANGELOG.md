@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.7 (2024-03-18)
+
+### Bug Fixes
+
+- use higher priority task queue for AVCaptureSession (#118)
+
 ## 1.2.6 (2024-03-11)
 
 ## 1.2.5 (2024-02-08)
