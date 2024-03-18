@@ -1,5 +1,4 @@
 {
-  "originHash" : "dbef33cc5f6a5163d3d5f4bd1823d1658bcec0bb3aee64f24c545e6c74b14e2c",
   "pins" : [
     {
       "identity" : "amplify-swift",
@@ -17,15 +16,6 @@
       "state" : {
         "revision" : "959eec669ba97c7d923b963c3e66ca8a0b2737f6",
         "version" : "1.1.1"
-      }
-    },
-    {
-      "identity" : "amplify-ui-swift-liveness",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/aws-amplify/amplify-ui-swift-liveness",
-      "state" : {
-        "revision" : "8d8e354351fc8a7f5951575a38e9ae2a6b3dc0b0",
-        "version" : "1.2.5"
       }
     },
     {
@@ -92,5 +82,5 @@
       }
     }
   ],
-  "version" : 3
+  "version" : 2
 }
