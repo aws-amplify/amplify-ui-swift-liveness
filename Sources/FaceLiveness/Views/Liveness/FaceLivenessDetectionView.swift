@@ -28,7 +28,7 @@ public struct FaceLivenessDetectorView: View {
         sessionID: String,
         credentialsProvider: AWSCredentialsProvider? = nil,
         region: String,
-        disableStartView: Bool = false,
+        disableStartView: Bool = true,
         isPresented: Binding<Bool>,
         onCompletion: @escaping (Result<Void, FaceLivenessDetectionError>) -> Void
     ) {
@@ -48,15 +48,6 @@ public struct FaceLivenessDetectorView: View {
         }
 
         let faceDetector = try! FaceDetectorShortRange.Model()
-        let faceInOvalStateMatching = FaceInOvalMatching(
-            instructor: Instructor()
-        )
-
-        let videoChunker = VideoChunker(
-            assetWriter: LivenessAVAssetWriter(),
-            assetWriterDelegate: VideoChunker.AssetWriterDelegate(),
-            assetWriterInput: LivenessAVAssetWriterInput()
-        )
 
         let avCpatureDevice = AVCaptureDevice.DiscoverySession(
             deviceTypes: [.builtInWideAngleCamera],
@@ -66,18 +57,13 @@ public struct FaceLivenessDetectorView: View {
 
         let captureSession = LivenessCaptureSession(
             captureDevice: .init(avCaptureDevice: avCpatureDevice),
-            outputDelegate: OutputSampleBufferCapturer(
-                faceDetector: faceDetector,
-                videoChunker: videoChunker
-            )
+            outputDelegate: OutputSampleBufferCapturer(faceDetector: faceDetector)
         )
 
         self._viewModel = StateObject(
             wrappedValue: .init(
                 faceDetector: faceDetector,
-                faceInOvalMatching: faceInOvalStateMatching,
                 captureSession: captureSession,
-                videoChunker: videoChunker,
                 closeButtonAction: { onCompletion(.failure(.userCancelled)) },
                 sessionID: sessionID
             )
@@ -88,7 +74,7 @@ public struct FaceLivenessDetectorView: View {
         sessionID: String,
         credentialsProvider: AWSCredentialsProvider? = nil,
         region: String,
-        disableStartView: Bool = false,
+        disableStartView: Bool = true,
         isPresented: Binding<Bool>,
         onCompletion: @escaping (Result<Void, FaceLivenessDetectionError>) -> Void,
         captureSession: LivenessCaptureSession
@@ -108,16 +94,10 @@ public struct FaceLivenessDetectorView: View {
             return session
         }
 
-        let faceInOvalStateMatching = FaceInOvalMatching(
-            instructor: Instructor()
-        )
-
         self._viewModel = StateObject(
             wrappedValue: .init(
                 faceDetector: captureSession.outputSampleBufferCapturer!.faceDetector,
-                faceInOvalMatching: faceInOvalStateMatching,
                 captureSession: captureSession,
-                videoChunker: captureSession.outputSampleBufferCapturer!.videoChunker,
                 closeButtonAction: { onCompletion(.failure(.userCancelled)) },
                 sessionID: sessionID
             )
@@ -135,9 +115,6 @@ public struct FaceLivenessDetectorView: View {
                             ? DisplayState.displayingLiveness
                             : DisplayState.displayingGetReadyView
                             guard self.displayState != newState else { return }
-                            let session = try await sessionTask.value
-                            viewModel.livenessService = session
-                            viewModel.registerServiceEvents()
                             self.displayState = newState
                         } catch {
                             throw FaceLivenessDetectionError.accessDenied
@@ -182,7 +159,6 @@ public struct FaceLivenessDetectorView: View {
                     onCompletion(.success(()))
                 case .encounteredUnrecoverableError(let error):
                     let closeCode = error.webSocketCloseCode ?? .normalClosure
-                    viewModel.livenessService?.closeSocket(with: closeCode)
                     isPresented = false
                     onCompletion(.failure(mapError(error)))
                 default:

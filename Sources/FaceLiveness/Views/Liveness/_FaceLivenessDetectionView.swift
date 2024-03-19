@@ -45,10 +45,6 @@ struct _FaceLivenessDetectionView<VideoView: View>: View {
                     }
                     .padding()
 
-                    InstructionContainerView(
-                        viewModel: viewModel
-                    )
-
                     Spacer()
                 }
                 .padding([.leading, .trailing])

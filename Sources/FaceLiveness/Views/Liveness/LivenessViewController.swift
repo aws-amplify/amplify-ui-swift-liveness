@@ -132,15 +132,15 @@ extension _LivenessViewController: FaceLivenessViewControllerPresenter {
             height: UIScreen.main.bounds.height,
             view: self.freshnessView,
             onNewColor: { [weak self] colorEvent in
-                self?.viewModel.sendColorDisplayedEvent(colorEvent)
+                //self?.viewModel.sendColorDisplayedEvent(colorEvent)
             },
             onComplete: { [weak self] in
                 guard let self else { return }
                 self.freshnessView.removeFromSuperview()
 
-                self.viewModel.handleFreshnessComplete(
-                    faceGuide: self.faceGuideRect!
-                )
+//                self.viewModel.handleFreshnessComplete(
+//                    faceGuide: self.faceGuideRect!
+//                )
             }
         )
     }

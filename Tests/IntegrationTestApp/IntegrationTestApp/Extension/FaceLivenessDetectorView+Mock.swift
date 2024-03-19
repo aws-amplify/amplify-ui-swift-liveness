@@ -27,15 +27,8 @@ extension FaceLivenessDetectorView {
         let captureDevice = LivenessCaptureDevice(avCaptureDevice: avCaptureDevice)
         
         let faceDetector = try! FaceDetectorShortRange.Model()
-
-        let videoChunker = VideoChunker(
-            assetWriter: LivenessAVAssetWriter(),
-            assetWriterDelegate: VideoChunker.AssetWriterDelegate(),
-            assetWriterInput: LivenessAVAssetWriterInput()
-        )
         
-        let outputDelegate = OutputSampleBufferCapturer(faceDetector: faceDetector, videoChunker: videoChunker
-        )
+        let outputDelegate = OutputSampleBufferCapturer(faceDetector: faceDetector)
         let inputUrl = Bundle.main.url(forResource: "mock", withExtension: "mov")!
         let captureSession = MockLivenessCaptureSession(captureDevice: captureDevice, outputDelegate: outputDelegate, inputFile: inputUrl)
         let detectorView = FaceLivenessDetectorView(sessionID: sessionID, region: region, isPresented: isPresented, onCompletion: onCompletion, captureSession: captureSession)
