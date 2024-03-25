@@ -1,0 +1,14 @@
+ignore:
+  - "**/Views"
+  - "**/Tests"
+  - "**/Resources"
+  - "**/fastlane"
+
+codecov:
+  branch: main
+
+coverage:
+  status:
+    project:
+      default:
+        threshold: 1%
