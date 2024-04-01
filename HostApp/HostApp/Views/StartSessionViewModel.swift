@@ -25,14 +25,16 @@ class StartSessionViewModel: ObservableObject {
                 ? .signedIn(action: signOut)
                 : .signedOut(action: signIn)
             } catch {
+                presentationState = .signedOut(action: signIn)
                 print("Error fetching auth session", error)
             }
 
         }
     }
 
-    func createSession(_ completion: @escaping (String) -> Void) {
+    func createSession(_ completion: @escaping (String?, Error?) -> Void) {
         Task { @MainActor in
+            let currentPresentationState = presentationState
             presentationState = .loading
             let request = RESTRequest(
                 apiName: "liveness",
@@ -45,9 +47,12 @@ class StartSessionViewModel: ObservableObject {
                     CreateSessionResponse.self,
                     from: data
                 )
-                completion(response.sessionId)
+                presentationState = currentPresentationState
+                completion(response.sessionId, nil)
             } catch {
+                presentationState = currentPresentationState
                 print("Error creating session", error)
+                completion(nil, error)
             }
         }
     }

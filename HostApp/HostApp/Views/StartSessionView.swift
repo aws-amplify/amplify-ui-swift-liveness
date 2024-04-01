@@ -13,6 +13,7 @@ struct StartSessionView: View {
     @ObservedObject var viewModel = StartSessionViewModel()
     @Binding var sessionID: String
     @Binding var isPresentingContainerView: Bool
+    @State private var showAlert = false
 
     var body: some View {
         VStack {
@@ -31,18 +32,34 @@ struct StartSessionView: View {
                     dark: .hex("#7dd6e8")
                 ),
                 action: {
-                    viewModel.createSession {
-                        sessionID = $0
-                        isPresentingContainerView = true
+                    viewModel.createSession { sessionId, err in
+                        if let sessionId = sessionId {
+                            sessionID = sessionId
+                            isPresentingContainerView = true
+                        }
+
+                        showAlert = err != nil
                     }
                 },
                 enabled: viewModel.isSignedIn
             )
+            .alert(isPresented: $showAlert) {
+                Alert(
+                    title: Text("Error Creating Liveness Session"),
+                    message: Text("Unable to create a liveness session id.  Please try again."),
+                    dismissButton: .default(
+                                    Text("OK"),
+                                    action: {
+                                        isPresentingContainerView = false
+                                    }
+                    )
+                )
+            }
 
             Spacer()
             HStack {
                 Spacer()
-                Text("v0.1.16")
+                Text("v0.1.19")
                     .font(.callout)
                     .padding()
             }
