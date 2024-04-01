@@ -31,7 +31,7 @@ class StartSessionViewModel: ObservableObject {
         }
     }
 
-    func createSession(_ completion: @escaping (String) -> Void) {
+    func createSession(_ completion: @escaping (String?, Error?) -> Void) {
         Task { @MainActor in
             presentationState = .loading
             let request = RESTRequest(
@@ -45,9 +45,10 @@ class StartSessionViewModel: ObservableObject {
                     CreateSessionResponse.self,
                     from: data
                 )
-                completion(response.sessionId)
+                completion(response.sessionId, nil)
             } catch {
                 print("Error creating session", error)
+                completion(nil, error)
             }
         }
     }
