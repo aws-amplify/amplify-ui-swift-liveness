@@ -37,10 +37,8 @@ struct StartSessionView: View {
                             sessionID = sessionId
                             isPresentingContainerView = true
                         }
-                        if let error = err {
-                            showAlert = true
-                            isPresentingContainerView = false
-                        }
+
+                        showAlert = err != nil
                     }
                 },
                 enabled: viewModel.isSignedIn
@@ -48,10 +46,15 @@ struct StartSessionView: View {
             .alert(isPresented: $showAlert) {
                 Alert(
                     title: Text("Error Creating Liveness Session"),
-                    message: Text("Unable to create a liveness session id.  Please try again.")
+                    message: Text("Unable to create a liveness session id.  Please try again."),
+                    dismissButton: .default(
+                                    Text("OK"),
+                                    action: {
+                                        isPresentingContainerView = false
+                                    }
+                    )
                 )
             }
-
 
             Spacer()
             HStack {
