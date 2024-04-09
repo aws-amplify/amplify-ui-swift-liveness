@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.8 (2024-04-09)
+
+### Bug Fixes
+
+- update preview layer to be optional and check for nil values (#122)
+
 ## 1.2.7 (2024-03-18)
 
 ### Bug Fixes
