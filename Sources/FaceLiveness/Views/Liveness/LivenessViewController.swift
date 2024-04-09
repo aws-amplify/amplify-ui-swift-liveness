@@ -39,6 +39,7 @@ final class _LivenessViewController: UIViewController {
     }
     
     deinit {
+        guard let previewLayer = self.previewLayer else { return }
         self.previewLayer.removeFromSuperlayer()
         (self.previewLayer as? AVCaptureVideoPreviewLayer)?.session = nil
         self.previewLayer = nil
