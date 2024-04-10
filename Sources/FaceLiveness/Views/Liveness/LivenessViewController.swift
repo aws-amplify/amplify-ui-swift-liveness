@@ -49,9 +49,6 @@ final class _LivenessViewController: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = .black
         layoutSubviews()
-    }
-
-    override func viewDidAppear(_ animated: Bool) {
         setupAVLayer()
     }
 
@@ -69,13 +66,14 @@ final class _LivenessViewController: UIViewController {
     }
 
     private func setupAVLayer() {
+        guard previewLayer == nil else { return }
         let x = view.frame.minX
         let y = view.frame.minY
         let width = view.frame.width
         let height = width / 3 * 4
         let cameraFrame = CGRect(x: x, y: y, width: width, height: height)
 
-        guard let avLayer = viewModel.startCamera(withinFrame: cameraFrame) else {
+        guard let avLayer = viewModel.configureCamera(withinFrame: cameraFrame) else {
             DispatchQueue.main.async {
                 self.viewModel.livenessState
                     .unrecoverableStateEncountered(.missingVideoPermission)
@@ -92,6 +90,8 @@ final class _LivenessViewController: UIViewController {
         DispatchQueue.main.async {
             self.view.layer.insertSublayer(avLayer, at: 0)
             self.view.layoutIfNeeded()
+
+            self.viewModel.startSession()
         }
     }
 
