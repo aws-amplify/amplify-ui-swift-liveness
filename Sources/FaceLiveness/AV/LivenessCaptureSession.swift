@@ -73,7 +73,6 @@ class LivenessCaptureSession {
 
     func stopRunning() {
         guard let session = captureSession else { return }
-        print("*** Stop running")
         defer {
             captureSession = nil
         }
