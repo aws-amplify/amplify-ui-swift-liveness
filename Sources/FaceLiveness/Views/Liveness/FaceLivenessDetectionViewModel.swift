@@ -122,14 +122,17 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         }
     }
 
+    func startSession() {
+        captureSession.startSession()
+    }
 
     func stopRecording() {
         captureSession.stopRunning()
     }
 
-    func startCamera(withinFrame frame: CGRect) -> CALayer? {
+    func configureCamera(withinFrame frame: CGRect) -> CALayer? {
         do {
-            let avLayer = try captureSession.startSession(frame: frame)
+            let avLayer = try captureSession.configureCamera(frame: frame)
             DispatchQueue.main.async {
                 self.livenessState.checkIsFacePrepared()
             }
