@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.9 (2024-04-11)
+
+### Bug Fixes
+
+- prevent AVCaptureSession from starting during session configuration (#124)
+
 ## 1.2.8 (2024-04-09)
 
 ### Bug Fixes
