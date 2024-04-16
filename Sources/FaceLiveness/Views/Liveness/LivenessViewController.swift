@@ -169,4 +169,10 @@ extension _LivenessViewController: FaceLivenessViewControllerPresenter {
             self.ovalExists = true
         }
     }
+    
+    func completeNoLightCheck() {
+        self.viewModel.completeNoLightCheck(
+            faceGuide: self.faceGuideRect!
+        )
+    }
 }

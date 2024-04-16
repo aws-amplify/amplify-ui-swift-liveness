@@ -16,10 +16,11 @@ import Amplify
 public struct FaceLivenessDetectorView: View {
     @StateObject var viewModel: FaceLivenessDetectionViewModel
     @Binding var isPresented: Bool
-    @State var displayState: DisplayState = .awaitingCameraPermission
+    @State var displayState: DisplayState = .awaitingChallengeType
     @State var displayingCameraPermissionsNeededAlert = false
 
     let disableStartView: Bool
+    let facelivenessDetectorViewId: String
     let onCompletion: (Result<Void, FaceLivenessDetectionError>) -> Void
 
     let sessionTask: Task<FaceLivenessSession, Error>
@@ -32,6 +33,8 @@ public struct FaceLivenessDetectorView: View {
         isPresented: Binding<Bool>,
         onCompletion: @escaping (Result<Void, FaceLivenessDetectionError>) -> Void
     ) {
+        let viewId = UUID().uuidString
+        self.facelivenessDetectorViewId = viewId
         self.disableStartView = disableStartView
         self._isPresented = isPresented
         self.onCompletion = onCompletion
@@ -41,7 +44,8 @@ public struct FaceLivenessDetectorView: View {
                 withID: sessionID,
                 credentialsProvider: credentialsProvider,
                 region: region,
-                options: .init(),
+                options: .init(faceLivenessDetectorViewId: viewId,
+                               preCheckViewEnabled: !disableStartView),
                 completion: map(detectionCompletion: onCompletion)
             )
             return session
@@ -93,6 +97,8 @@ public struct FaceLivenessDetectorView: View {
         onCompletion: @escaping (Result<Void, FaceLivenessDetectionError>) -> Void,
         captureSession: LivenessCaptureSession
     ) {
+        let viewId = UUID().uuidString
+        self.facelivenessDetectorViewId = viewId
         self.disableStartView = disableStartView
         self._isPresented = isPresented
         self.onCompletion = onCompletion
@@ -102,7 +108,8 @@ public struct FaceLivenessDetectorView: View {
                 withID: sessionID,
                 credentialsProvider: credentialsProvider,
                 region: region,
-                options: .init(),
+                options: .init(faceLivenessDetectorViewId: viewId,
+                               preCheckViewEnabled: !disableStartView),
                 completion: map(detectionCompletion: onCompletion)
             )
             return session
@@ -126,6 +133,22 @@ public struct FaceLivenessDetectorView: View {
 
     public var body: some View {
         switch displayState {
+        case .awaitingChallengeType:
+            LoadingPageView()
+            .onAppear {
+                Task {
+                    do {
+                        let session = try await sessionTask.value
+                        viewModel.livenessService = session
+                        viewModel.registerServiceEvents(onChallengeTypeReceived: {
+                            self.displayState = DisplayState.awaitingLivenessSession
+                        })
+                        viewModel.initializeLivenessStream()
+                    } catch {
+                        throw FaceLivenessDetectionError.accessDenied
+                    }
+                }
+            }
         case .awaitingLivenessSession:
             Color.clear
                 .onAppear {
@@ -135,12 +158,7 @@ public struct FaceLivenessDetectorView: View {
                             ? DisplayState.displayingLiveness
                             : DisplayState.displayingGetReadyView
                             guard self.displayState != newState else { return }
-                            let session = try await sessionTask.value
-                            viewModel.livenessService = session
-                            viewModel.registerServiceEvents()
                             self.displayState = newState
-                        } catch {
-                            throw FaceLivenessDetectionError.accessDenied
                         }
                     }
                 }
@@ -151,7 +169,8 @@ public struct FaceLivenessDetectorView: View {
                     guard displayState != .displayingLiveness else { return }
                     displayState = .displayingLiveness
                 },
-                beginCheckButtonDisabled: false
+                beginCheckButtonDisabled: false,
+                challenge: viewModel.challenge!
             )
             .onAppear {
                 DispatchQueue.main.async {
@@ -245,6 +264,7 @@ enum DisplayState {
     case displayingGetReadyView
     case displayingLiveness
     case awaitingCameraPermission
+    case awaitingChallengeType
 }
 
 enum InstructionState {

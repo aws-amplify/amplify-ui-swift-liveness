@@ -13,7 +13,8 @@ let package = Package(
             targets: ["FaceLiveness"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/aws-amplify/amplify-swift", exact: "2.27.2")
+        // TODO: Change this before merge to main
+        .package(path: "../amplify-swift")
     ],
     targets: [
         .target(

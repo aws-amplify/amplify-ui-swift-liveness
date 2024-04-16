@@ -12,6 +12,7 @@ import Accelerate
 import CoreGraphics
 import CoreImage
 import VideoToolbox
+@_spi(PredictionsFaceLiveness) import AWSPredictionsPlugin
 
 enum FaceDetectorShortRange {}
 
@@ -33,10 +34,15 @@ extension FaceDetectorShortRange {
             )
         }
 
+        weak var faceDetectionSessionConfiguration: FaceDetectionSessionConfiguration?
         weak var detectionResultHandler: FaceDetectionResultHandler?
 
         func setResultHandler(detectionResultHandler: FaceDetectionResultHandler) {
             self.detectionResultHandler = detectionResultHandler
+        }
+        
+        func setFaceLivenessDetectionViewModel(faceDetectionSessionConfiguration: FaceDetectionSessionConfiguration) {
+            self.faceDetectionSessionConfiguration = faceDetectionSessionConfiguration
         }
 
         func detectFaces(from buffer: CVPixelBuffer) {
@@ -105,10 +111,17 @@ extension FaceDetectorShortRange {
                     count: confidenceScoresCapacity
                 )
             )
+            
+            let blazeFaceDetectionThreshold: Float
+            if let sessionConfiguration = faceDetectionSessionConfiguration?.getFaceDetectionSessionConfiguration() {
+                blazeFaceDetectionThreshold = Float(sessionConfiguration.ovalMatchChallenge.faceDetectionThreshold)
+            } else {
+                blazeFaceDetectionThreshold = confidenceScoreThreshold
+            }
 
             var passingConfidenceScoresIndices = confidenceScores
                 .enumerated()
-                .filter { $0.element >= confidenceScoreThreshold }
+                .filter { $0.element >=  blazeFaceDetectionThreshold}
                 .sorted(by: {
                     $0.element > $1.element
                 })

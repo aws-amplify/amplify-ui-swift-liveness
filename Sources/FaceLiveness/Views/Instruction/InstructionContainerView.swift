@@ -97,6 +97,17 @@ struct InstructionContainerView: View {
                     argument: LocalizedStrings.challenge_verifying
                 )
             }
+        case .completedNoLightCheck:
+            InstructionView(
+                text: LocalizedStrings.challenge_verifying,
+                backgroundColor: .livenessBackground
+            )
+            .onAppear {
+                UIAccessibility.post(
+                    notification: .announcement,
+                    argument: LocalizedStrings.challenge_verifying
+                )
+            }
         case .faceMatched:
             InstructionView(
                 text: LocalizedStrings.challenge_instruction_hold_still,
