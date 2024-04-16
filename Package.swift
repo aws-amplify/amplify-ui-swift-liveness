@@ -14,7 +14,7 @@ let package = Package(
     ],
     dependencies: [
         // TODO: Change this before merge to main
-        .package(path: "../amplify-swift")
+        .package(url: "https://github.com/aws-amplify/amplify-swift", branch: "no-light-implementation")
     ],
     targets: [
         .target(

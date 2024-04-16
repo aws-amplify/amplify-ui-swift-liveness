@@ -1,6 +1,15 @@
 {
   "pins" : [
     {
+      "identity" : "amplify-swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/aws-amplify/amplify-swift",
+      "state" : {
+        "branch" : "no-light-implementation",
+        "revision" : "19c7af19dfa1aa1ca49d63a82605ee0f367b9f64"
+      }
+    },
+    {
       "identity" : "amplify-swift-utils-notifications",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/aws-amplify/amplify-swift-utils-notifications.git",
