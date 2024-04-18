@@ -69,6 +69,7 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
     /// Then: The end state of this flow is `.faceMatched`
     func testHappyPathToMatchedFace() async throws {
         viewModel.livenessService = self.livenessService
+        viewModel.challenge = Challenge(version: "2.0.0", type: .faceMovementAndLightChallenge)
 
         viewModel.livenessState.checkIsFacePrepared()
         XCTAssertEqual(viewModel.livenessState.state, .pendingFacePreparedConfirmation(.pendingCheck))
@@ -103,9 +104,7 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
         XCTAssertEqual(faceDetector.interactions, [
             "setResultHandler(detectionResultHandler:) (FaceLivenessDetectionViewModel)"
         ])
-        XCTAssertEqual(livenessService.interactions, [
-            "initializeLivenessStream(withSessionID:userAgent:challenges:)"
-        ])
+        XCTAssertEqual(livenessService.interactions, [])
     }
     
     /// Given:  A `FaceLivenessDetectionViewModel`
@@ -113,6 +112,7 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
     /// Then: The end state of this flow is `.recording(ovalDisplayed: false)`
     func testTransitionToRecordingState() async throws {
         viewModel.livenessService = self.livenessService
+        viewModel.challenge = Challenge(version: "2.0.0", type: .faceMovementAndLightChallenge)
         
         let face = FaceLivenessSession.OvalMatchChallenge.Face(
             distanceThreshold: 0.32,

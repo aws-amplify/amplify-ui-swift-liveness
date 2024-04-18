@@ -17,9 +17,8 @@ protocol FaceDetectionResultHandler: AnyObject {
     func process(newResult: FaceDetectionResult)
 }
 
-protocol FaceDetectionSessionConfiguration: AnyObject {
-    func getFaceDetectionSessionConfiguration() 
-        -> FaceLivenessSession.SessionConfiguration?
+protocol FaceDetectionSessionConfigurationWrapper: AnyObject {
+    var sessionConfiguration: FaceLivenessSession.SessionConfiguration? { get }
 }
 
 enum FaceDetectionResult {

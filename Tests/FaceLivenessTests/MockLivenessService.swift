@@ -46,7 +46,7 @@ extension MockLivenessService: LivenessService {
     func initializeLivenessStream(
         withSessionID sessionID: String, 
         userAgent: String,
-        challenges: [Challenge]?
+        challenges: [Challenge]
     ) throws {
         interactions.append(#function)
         onInitializeLivenessStream(sessionID, userAgent, challenges)

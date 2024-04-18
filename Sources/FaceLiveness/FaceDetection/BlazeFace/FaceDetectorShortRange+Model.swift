@@ -34,15 +34,15 @@ extension FaceDetectorShortRange {
             )
         }
 
-        weak var faceDetectionSessionConfiguration: FaceDetectionSessionConfiguration?
+        weak var faceDetectionSessionConfiguration: FaceDetectionSessionConfigurationWrapper?
         weak var detectionResultHandler: FaceDetectionResultHandler?
 
         func setResultHandler(detectionResultHandler: FaceDetectionResultHandler) {
             self.detectionResultHandler = detectionResultHandler
         }
         
-        func setFaceLivenessDetectionViewModel(faceDetectionSessionConfiguration: FaceDetectionSessionConfiguration) {
-            self.faceDetectionSessionConfiguration = faceDetectionSessionConfiguration
+        func setFaceDetectionSessionConfigurationWrapper(configuration: FaceDetectionSessionConfigurationWrapper) {
+            self.faceDetectionSessionConfiguration = configuration
         }
 
         func detectFaces(from buffer: CVPixelBuffer) {
@@ -113,7 +113,7 @@ extension FaceDetectorShortRange {
             )
             
             let blazeFaceDetectionThreshold: Float
-            if let sessionConfiguration = faceDetectionSessionConfiguration?.getFaceDetectionSessionConfiguration() {
+            if let sessionConfiguration = faceDetectionSessionConfiguration?.sessionConfiguration {
                 blazeFaceDetectionThreshold = Float(sessionConfiguration.ovalMatchChallenge.faceDetectionThreshold)
             } else {
                 blazeFaceDetectionThreshold = confidenceScoreThreshold

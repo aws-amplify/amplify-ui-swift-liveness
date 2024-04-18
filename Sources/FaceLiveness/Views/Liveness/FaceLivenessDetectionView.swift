@@ -86,6 +86,8 @@ public struct FaceLivenessDetectorView: View {
                 sessionID: sessionID
             )
         )
+        
+        faceDetector.setFaceDetectionSessionConfigurationWrapper(configuration: viewModel)
     }
     
     init(
@@ -140,8 +142,8 @@ public struct FaceLivenessDetectorView: View {
                     do {
                         let session = try await sessionTask.value
                         viewModel.livenessService = session
-                        viewModel.registerServiceEvents(onChallengeTypeReceived: {
-                            self.displayState = DisplayState.awaitingLivenessSession
+                        viewModel.registerServiceEvents(onChallengeTypeReceived: { challenge in
+                            self.displayState = DisplayState.awaitingLivenessSession(challenge)
                         })
                         viewModel.initializeLivenessStream()
                     } catch {
@@ -149,28 +151,28 @@ public struct FaceLivenessDetectorView: View {
                     }
                 }
             }
-        case .awaitingLivenessSession:
+        case .awaitingLivenessSession(let challenge):
             Color.clear
                 .onAppear {
                     Task {
                         do {
                             let newState = disableStartView
                             ? DisplayState.displayingLiveness
-                            : DisplayState.displayingGetReadyView
+                            : DisplayState.displayingGetReadyView(challenge)
                             guard self.displayState != newState else { return }
                             self.displayState = newState
                         }
                     }
                 }
 
-        case .displayingGetReadyView:
+        case .displayingGetReadyView(let challenge):
             GetReadyPageView(
                 onBegin: {
                     guard displayState != .displayingLiveness else { return }
                     displayState = .displayingLiveness
                 },
                 beginCheckButtonDisabled: false,
-                challenge: viewModel.challenge!
+                challenge: challenge
             )
             .onAppear {
                 DispatchQueue.main.async {
@@ -234,7 +236,8 @@ public struct FaceLivenessDetectorView: View {
             for: .video,
             completionHandler: { accessGranted in
                 guard accessGranted == true else { return }
-                displayState = .awaitingLivenessSession
+                guard let challenge = viewModel.challenge else { return }
+                displayState = .awaitingLivenessSession(challenge)
             }
         )
 
@@ -252,19 +255,37 @@ public struct FaceLivenessDetectorView: View {
         case .restricted, .denied:
             alertCameraAccessNeeded()
         case .authorized:
-            displayState = .awaitingLivenessSession
+            guard let challenge = viewModel.challenge else { return }
+            displayState = .awaitingLivenessSession(challenge)
         @unknown default:
             break
         }
     }
 }
 
-enum DisplayState {
-    case awaitingLivenessSession
-    case displayingGetReadyView
+enum DisplayState: Equatable {
+    case awaitingChallengeType
+    case awaitingLivenessSession(Challenge)
+    case displayingGetReadyView(Challenge)
     case displayingLiveness
     case awaitingCameraPermission
-    case awaitingChallengeType
+    
+    static func == (lhs: DisplayState, rhs: DisplayState) -> Bool {
+        switch (lhs, rhs) {
+        case (.awaitingChallengeType, .awaitingChallengeType):
+            return true
+        case (let .awaitingLivenessSession(c1), let .awaitingLivenessSession(c2)):
+            return c1.type == c2.type && c1.version == c2.version
+        case (let .displayingGetReadyView(c1), let .displayingGetReadyView(c2)):
+            return c1.type == c2.type && c1.version == c2.version
+        case (.displayingLiveness, .displayingLiveness):
+            return true
+        case (.awaitingCameraPermission, .awaitingCameraPermission):
+            return true
+        default:
+            return false
+        }
+    }
 }
 
 enum InstructionState {
