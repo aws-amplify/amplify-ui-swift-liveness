@@ -28,14 +28,15 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
             }
         case .singleFace(let face):
             var normalizedFace = normalizeFace(face)
-            normalizedFace.boundingBox = normalizedFace.boundingBoxFromLandmarks(ovalRect: ovalRect)
+            guard let sessionConfiguration = sessionConfiguration else { return }
+            normalizedFace.boundingBox = normalizedFace.boundingBoxFromLandmarks(ovalRect: ovalRect,
+                                                                                 ovalMatchChallenge: sessionConfiguration.ovalMatchChallenge)
 
             switch livenessState.state {
             case .pendingFacePreparedConfirmation:
-                if face.faceDistance <= initialFaceDistanceThreshold {
+                if face.faceDistance <= sessionConfiguration.ovalMatchChallenge.face.distanceThreshold {
                         DispatchQueue.main.async {
                             self.livenessState.awaitingRecording()
-                            self.initializeLivenessStream()
                         }
                         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                             self.livenessState.beginRecording()
@@ -55,7 +56,6 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
                     )
                 })
             case .recording(ovalDisplayed: true):
-                guard let sessionConfiguration = sessionConfiguration else { return }
                 let instruction = faceInOvalMatching.faceMatchState(
                     for: normalizedFace.boundingBox,
                     in: ovalRect,
@@ -64,18 +64,18 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
 
                 handleInstruction(
                     instruction,
-                    colorSequences: sessionConfiguration.colorChallenge.colors
+                    colorSequences: sessionConfiguration.colorChallenge?.colors
                 )
             case .awaitingFaceInOvalMatch:
-                guard let sessionConfiguration = sessionConfiguration else { return }
                 let instruction = faceInOvalMatching.faceMatchState(
                     for: normalizedFace.boundingBox,
                     in: ovalRect,
                     challengeConfig: sessionConfiguration.ovalMatchChallenge
                 )
+
                 handleInstruction(
                     instruction,
-                    colorSequences: sessionConfiguration.colorChallenge.colors
+                    colorSequences: sessionConfiguration.colorChallenge?.colors
                 )
             default: break
 
@@ -104,16 +104,30 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
 
     func handleInstruction(
         _ instruction: Instructor.Instruction,
-        colorSequences: [FaceLivenessSession.DisplayColor]
+        colorSequences: [FaceLivenessSession.DisplayColor]?
     ) {
         DispatchQueue.main.async {
             switch instruction {
             case .match:
                 self.livenessState.faceMatched()
                 self.faceMatchedTimestamp = Date().timestampMilliseconds
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                    self.livenessViewControllerDelegate?.displayFreshness(colorSequences: colorSequences)
+                
+                // next step after face match
+                switch self.challenge?.type {
+                case .faceMovementAndLightChallenge:
+                    if let colorSequences = colorSequences {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                            self.livenessViewControllerDelegate?.displayFreshness(colorSequences: colorSequences)
+                        }
+                    }
+                case .faceMovementChallenge:
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                        self.livenessViewControllerDelegate?.completeNoLightCheck()
+                    }
+                default:
+                    break
                 }
+
                 let generator = UINotificationFeedbackGenerator()
                 generator.notificationOccurred(.success)
                 self.noFitStartTime = nil

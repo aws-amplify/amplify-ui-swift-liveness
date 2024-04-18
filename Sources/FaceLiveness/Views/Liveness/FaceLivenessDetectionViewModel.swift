@@ -33,6 +33,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     var hasSentFirstVideo = false
     var layerRectConverted: (CGRect) -> CGRect = { $0 }
     var sessionConfiguration: FaceLivenessSession.SessionConfiguration?
+    var challenge: Challenge?
     var normalizeFace: (DetectedFace) -> DetectedFace = { $0 }
     var provideSingleFrame: ((UIImage) -> Void)?
     var cameraViewRect = CGRect.zero
@@ -89,7 +90,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         NotificationCenter.default.removeObserver(self)
     }
 
-    func registerServiceEvents() {
+    func registerServiceEvents(onChallengeTypeReceived: @escaping (Challenge) -> Void) {
         livenessService?.register(onComplete: { [weak self] reason in
             self?.stopRecording()
 
@@ -112,6 +113,13 @@ class FaceLivenessDetectionViewModel: ObservableObject {
             },
             on: .challenge
         )
+        
+        livenessService?.register(
+            listener: { [weak self] _challenge in
+                self?.challenge = _challenge
+                onChallengeTypeReceived(_challenge)
+            },
+            on: .challenge)
     }
 
     @objc func willResignActive(_ notification: Notification) {
@@ -178,7 +186,11 @@ class FaceLivenessDetectionViewModel: ObservableObject {
 
     func initializeLivenessStream() {
         do {
-            try livenessService?.initializeLivenessStream(
+            guard let livenessSession = livenessService as? FaceLivenessSession else {
+                throw FaceLivenessDetectionError.unknown
+            }
+            
+            try livenessSession.initializeLivenessStream(
                 withSessionID: sessionID,
                 userAgent: UserAgentValues.standard().userAgentString
             )
@@ -226,6 +238,8 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         videoStartTime: UInt64
     ) {
         guard initialClientEvent == nil else { return }
+        guard let challenge else { return }
+        
         videoChunker.start()
 
         let initialFace = FaceDetection(
@@ -243,7 +257,9 @@ class FaceLivenessDetectionViewModel: ObservableObject {
 
         do {
             try livenessService?.send(
-                .initialFaceDetected(event: _initialClientEvent),
+                .initialFaceDetected(event: _initialClientEvent, 
+                                     challenge: .init(version: challenge.version,
+                                                      type: challenge.type)),
                 eventDate: { .init() }
             )
         } catch {
@@ -261,7 +277,8 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         guard
             let sessionConfiguration,
             let initialClientEvent,
-            let faceMatchedTimestamp
+            let faceMatchedTimestamp,
+            let challenge
         else { return }
 
         let finalClientEvent = FinalClientEvent(
@@ -275,7 +292,9 @@ class FaceLivenessDetectionViewModel: ObservableObject {
 
         do {
             try livenessService?.send(
-                .final(event: finalClientEvent),
+                .final(event: finalClientEvent,
+                       challenge: .init(version: challenge.version,
+                                            type: challenge.type)),
                 eventDate: { .init() }
             )
 
@@ -307,6 +326,13 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     func handleFreshnessComplete(faceGuide: CGRect) {
         DispatchQueue.main.async {
             self.livenessState.completedDisplayingFreshness()
+            self.faceGuideRect = faceGuide
+        }
+    }
+    
+    func completeNoLightCheck(faceGuide: CGRect) {
+        DispatchQueue.main.async {
+            self.livenessState.completedNoLightCheck()
             self.faceGuideRect = faceGuide
         }
     }
@@ -362,3 +388,5 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         return data
     }
 }
+
+extension FaceLivenessDetectionViewModel: FaceDetectionSessionConfigurationWrapper { }
