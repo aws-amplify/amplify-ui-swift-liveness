@@ -7,7 +7,7 @@
 
 import XCTest
 @testable import FaceLiveness
-
+@_spi(PredictionsFaceLiveness) import AWSPredictionsPlugin
 
 final class DetectedFaceTests: XCTestCase {
     var detectedFace: DetectedFace!
@@ -104,7 +104,29 @@ final class DetectedFaceTests: XCTestCase {
             width: 0.6240418540649166,
             height: 0.8144985824018897
         )
-        let boundingBox = detectedFace.boundingBoxFromLandmarks(ovalRect: ovalRect)
+        
+        let face = FaceLivenessSession.OvalMatchChallenge.Face(
+            distanceThreshold: 0.1,
+            distanceThresholdMax: 0.1,
+            distanceThresholdMin: 0.1,
+            iouWidthThreshold: 0.1,
+            iouHeightThreshold: 0.1
+        )
+        
+        let oval = FaceLivenessSession.OvalMatchChallenge.Oval(boundingBox: .init(x: 0.1,
+                                                                                  y: 0.1,
+                                                                                  width: 0.1,
+                                                                                  height: 0.1),
+                                                               heightWidthRatio: 1.618,
+                                                               iouThreshold: 0.1,
+                                                               iouWidthThreshold: 0.1,
+                                                               iouHeightThreshold: 0.1,
+                                                               ovalFitTimeout: 1)
+        
+        let boundingBox = detectedFace.boundingBoxFromLandmarks(ovalRect: ovalRect,
+                                                                ovalMatchChallenge: .init(faceDetectionThreshold: 0.7,
+                                                                                          face: face,
+                                                                                          oval: oval))
         XCTAssertEqual(boundingBox.origin.x, expectedBoundingBox.origin.x)
         XCTAssertEqual(boundingBox.origin.y, expectedBoundingBox.origin.y)
         XCTAssertEqual(boundingBox.width, expectedBoundingBox.width)
