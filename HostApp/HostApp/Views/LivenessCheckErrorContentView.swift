@@ -50,6 +50,11 @@ extension LivenessCheckErrorContentView {
         name: "Check failed during countdown",
         description: "Avoid moving closer during countdown and ensure only one face is in front of camera."
     )
+
+    static let invalidSignature = LivenessCheckErrorContentView(
+        name: "The signature on the request is invalid.",
+        description: "Ensure the device time is correct and try again."
+    )
 }
 
 struct LivenessCheckErrorContentView_Previews: PreviewProvider {
