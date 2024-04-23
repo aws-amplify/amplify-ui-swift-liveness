@@ -30,7 +30,7 @@ final class MockLivenessCaptureSession: LivenessCaptureSession {
         displayLink?.invalidate()
     }
     
-    override func startSession(frame: CGRect) throws -> CALayer {
+    override func configureCamera(frame: CGRect) throws -> CALayer {
         videoRenderView = VideoRenderView(frame: frame)
         let asset = AVAsset(url: inputFile)
         // Setup display link

@@ -202,7 +202,7 @@ public struct FaceLivenessDetectorView: View {
         case .userCancelled:
             return .userCancelled
         case .timedOut:
-            return .sessionTimedOut
+            return .faceInOvalMatchExceededTimeLimitError
         case .socketClosed:
             return .socketClosed
         default:
@@ -273,6 +273,8 @@ private func map(detectionCompletion: @escaping (Result<Void, FaceLivenessDetect
             detectionCompletion(.failure(.serviceUnavailable))
         case .failure(.sessionNotFound):
             detectionCompletion(.failure(.sessionNotFound))
+        case .failure(.invalidSignature):
+            detectionCompletion(.failure(.invalidSignature))
         default:
             detectionCompletion(.failure(.unknown))
         }

@@ -43,6 +43,8 @@ struct ExampleLivenessView: View {
                         viewModel.presentationState = .error(.socketClosed)
                     case .failure(.countdownNoFace), .failure(.countdownFaceTooClose), .failure(.countdownMultipleFaces):
                         viewModel.presentationState = .error(.countdownFaceTooClose)
+                    case .failure(.invalidSignature):
+                        viewModel.presentationState = .error(.invalidSignature)
                     default:
                         viewModel.presentationState = .liveness
                     }
@@ -70,6 +72,8 @@ struct ExampleLivenessView: View {
                         LivenessCheckErrorContentView.faceMatchTimeOut
                     case .countdownNoFace, .countdownFaceTooClose, .countdownMultipleFaces:
                         LivenessCheckErrorContentView.failedDuringCountdown
+                    case .invalidSignature:
+                        LivenessCheckErrorContentView.invalidSignature
                     default:
                         LivenessCheckErrorContentView.unexpected
                     }
