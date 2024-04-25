@@ -10,7 +10,7 @@ import AWSPluginsCore
 
 struct UserAgentValues {
     
-    static let libVersion = "1.2.11"
+    static let libVersion = "1.2.12"
     static let libName = "amplify-ui-swift-face-liveness"
     
     let amplifyVersion: String
