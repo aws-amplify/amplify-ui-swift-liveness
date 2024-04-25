@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.12 (2024-04-25)
+
+### Bug Fixes
+
+- remove strong reference retain cycle from camera preview view model (#135)
+
 ## 1.2.11 (2024-04-23)
 
 ## 1.2.10 (2024-04-18)
