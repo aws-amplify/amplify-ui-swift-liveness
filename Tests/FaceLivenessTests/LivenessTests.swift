@@ -32,7 +32,8 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
             captureSession: captureSession,
             videoChunker: videoChunker,
             closeButtonAction: {},
-            sessionID: UUID().uuidString
+            sessionID: UUID().uuidString,
+            isPreviewScreenEnabled: false
         )
 
         self.videoChunker = videoChunker
