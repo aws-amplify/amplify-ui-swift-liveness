@@ -12,6 +12,7 @@ import AVFoundation
 
 fileprivate let videoSize: CGSize = .init(width: 480, height: 640)
 fileprivate let defaultNoFitTimeoutInterval: TimeInterval = 7
+fileprivate let defaultAttemptCountResetInterval: TimeInterval = 300.0
 
 @MainActor
 class FaceLivenessDetectionViewModel: ObservableObject {
@@ -28,6 +29,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     let faceDetector: FaceDetector
     let faceInOvalMatching: FaceInOvalMatching
     let challengeID: String = UUID().uuidString
+    let isPreviewScreenEnabled : Bool
     var colorSequences: [ColorSequence] = []
     var hasSentFinalVideoEvent = false
     var hasSentFirstVideo = false
@@ -42,6 +44,9 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     var initialClientEvent: InitialClientEvent?
     var faceMatchedTimestamp: UInt64?
     var noFitStartTime: Date?
+    
+    private static var attemptCount: Int = 0
+    private static var attemptIdTimeStamp: Date = Date()
     
     var noFitTimeoutInterval: TimeInterval {
         if let sessionTimeoutMilliSec = sessionConfiguration?.ovalMatchChallenge.oval.ovalFitTimeout {
@@ -58,7 +63,8 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         videoChunker: VideoChunker,
         stateMachine: LivenessStateMachine = .init(state: .initial),
         closeButtonAction: @escaping () -> Void,
-        sessionID: String
+        sessionID: String,
+        isPreviewScreenEnabled: Bool
     ) {
         self.closeButtonAction = closeButtonAction
         self.videoChunker = videoChunker
@@ -67,6 +73,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         self.captureSession = captureSession
         self.faceDetector = faceDetector
         self.faceInOvalMatching = faceInOvalMatching
+        self.isPreviewScreenEnabled = isPreviewScreenEnabled
 
         self.closeButtonAction = { [weak self] in
             guard let self else { return }
@@ -190,9 +197,18 @@ class FaceLivenessDetectionViewModel: ObservableObject {
                 throw FaceLivenessDetectionError.unknown
             }
             
+            if (abs(Self.attemptIdTimeStamp.timeIntervalSinceNow) > defaultAttemptCountResetInterval) {
+                Self.attemptCount = 1
+            } else {
+                Self.attemptCount += 1
+            }
+            Self.attemptIdTimeStamp = Date()
+            
             try livenessSession.initializeLivenessStream(
                 withSessionID: sessionID,
-                userAgent: UserAgentValues.standard().userAgentString
+                userAgent: UserAgentValues.standard().userAgentString,
+                options: .init(attemptCount: Self.attemptCount,
+                               preCheckViewEnabled: isPreviewScreenEnabled)
             )
         } catch {
             DispatchQueue.main.async {

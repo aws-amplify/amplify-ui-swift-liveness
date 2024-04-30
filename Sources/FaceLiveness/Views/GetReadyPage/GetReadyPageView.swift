@@ -27,28 +27,19 @@ struct GetReadyPageView: View {
         VStack {
             ZStack {
                 CameraPreviewView()
-                switch self.challenge.type {
-                case .faceMovementChallenge:
-                    VStack {
-                        Text(LocalizedStrings.preview_center_your_face_text)
-                            .font(.title)
-                            .multilineTextAlignment(.center)
-                        Spacer()
-                    }.padding()
-                case . faceMovementAndLightChallenge:
-                    VStack {
-                        WarningBox(
-                            titleText: LocalizedStrings.get_ready_photosensitivity_title,
-                            bodyText: LocalizedStrings.get_ready_photosensitivity_description,
-                            popoverContent: { photosensitivityWarningPopoverContent }
-                        )
-                        .accessibilityElement(children: .combine)
-                        Text(LocalizedStrings.preview_center_your_face_text)
-                            .font(.title)
-                            .multilineTextAlignment(.center)
-                        Spacer()
-                    }.padding()
-                }
+                VStack {
+                    WarningBox(
+                        titleText: LocalizedStrings.get_ready_photosensitivity_title,
+                        bodyText: LocalizedStrings.get_ready_photosensitivity_description,
+                        popoverContent: { photosensitivityWarningPopoverContent }
+                    )
+                    .accessibilityElement(children: .combine)
+                    .opacity(challenge.type == .faceMovementAndLightChallenge ? 1.0 : 0.0)
+                    Text(LocalizedStrings.preview_center_your_face_text)
+                        .font(.title)
+                        .multilineTextAlignment(.center)
+                    Spacer()
+                }.padding()
             }
             beginCheckButton
         }

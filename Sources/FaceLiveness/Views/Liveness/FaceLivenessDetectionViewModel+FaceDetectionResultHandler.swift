@@ -121,9 +121,7 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
                         }
                     }
                 case .faceMovementChallenge:
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                        self.livenessViewControllerDelegate?.completeNoLightCheck()
-                    }
+                    self.livenessViewControllerDelegate?.completeNoLightCheck()
                 default:
                     break
                 }
