@@ -105,7 +105,9 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
         XCTAssertEqual(faceDetector.interactions, [
             "setResultHandler(detectionResultHandler:) (FaceLivenessDetectionViewModel)"
         ])
-        XCTAssertEqual(livenessService.interactions, [])
+        XCTAssertEqual(livenessService.interactions, [
+                    "initializeLivenessStream(withSessionID:userAgent:challenges:options:)"
+        ])
     }
     
     /// Given:  A `FaceLivenessDetectionViewModel`
@@ -193,5 +195,56 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
         self.viewModel.handleNoFaceDetected()
         try await Task.sleep(seconds: 1)
         XCTAssertEqual(self.viewModel.livenessState.state,  .encounteredUnrecoverableError(.timedOut))
+    }
+    
+    /// Given:  A `FaceLivenessDetectionViewModel`
+    /// When: The initializeLivenessStream() is called for the first time and then called again after 3 seconds
+    /// Then: The attempt count is incremented
+    func testAttemptCountIncrementFirstTime() async throws {
+        viewModel.livenessService = self.livenessService
+        self.viewModel.initializeLivenessStream()
+        XCTAssertEqual(livenessService.interactions, [
+                    "initializeLivenessStream(withSessionID:userAgent:challenges:options:)"
+        ])
+        
+        XCTAssertEqual(FaceLivenessDetectionViewModel.attemptCount, 1)
+        try await Task.sleep(seconds: 3)
+        
+        self.viewModel.initializeLivenessStream()
+        XCTAssertEqual(livenessService.interactions, [
+                    "initializeLivenessStream(withSessionID:userAgent:challenges:options:)",
+                    "initializeLivenessStream(withSessionID:userAgent:challenges:options:)"
+        ])
+        XCTAssertEqual(FaceLivenessDetectionViewModel.attemptCount, 2)
+    }
+    
+    /// Given:  A `FaceLivenessDetectionViewModel`
+    /// When: The attempt count is 4, last attempt time was < 5 minutes and initializeLivenessStream() is called
+    /// Then: The attempt count is incremented
+    func testAttemptCountIncrement() async throws {
+        viewModel.livenessService = self.livenessService
+        FaceLivenessDetectionViewModel.attemptCount = 4
+        FaceLivenessDetectionViewModel.attemptIdTimeStamp = Date().addingTimeInterval(-180)
+        self.viewModel.initializeLivenessStream()
+        XCTAssertEqual(livenessService.interactions, [
+                    "initializeLivenessStream(withSessionID:userAgent:challenges:options:)"
+        ])
+        
+        XCTAssertEqual(FaceLivenessDetectionViewModel.attemptCount, 5)
+    }
+    
+    /// Given:  A `FaceLivenessDetectionViewModel`
+    /// When: The attempt count is 4, last attempt time was > 5 minutes and initializeLivenessStream() is called
+    /// Then: The attempt count is not incremented and reset to 1
+    func testAttemptCountReset() async throws {
+        viewModel.livenessService = self.livenessService
+        FaceLivenessDetectionViewModel.attemptCount = 4
+        FaceLivenessDetectionViewModel.attemptIdTimeStamp = Date().addingTimeInterval(-305)
+        self.viewModel.initializeLivenessStream()
+        XCTAssertEqual(livenessService.interactions, [
+                    "initializeLivenessStream(withSessionID:userAgent:challenges:options:)"
+        ])
+        
+        XCTAssertEqual(FaceLivenessDetectionViewModel.attemptCount, 1)
     }
 }

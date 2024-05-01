@@ -45,8 +45,8 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     var faceMatchedTimestamp: UInt64?
     var noFitStartTime: Date?
     
-    private static var attemptCount: Int = 0
-    private static var attemptIdTimeStamp: Date = Date()
+    static var attemptCount: Int = 0
+    static var attemptIdTimeStamp: Date = Date()
     
     var noFitTimeoutInterval: TimeInterval {
         if let sessionTimeoutMilliSec = sessionConfiguration?.ovalMatchChallenge.oval.ovalFitTimeout {
@@ -193,10 +193,6 @@ class FaceLivenessDetectionViewModel: ObservableObject {
 
     func initializeLivenessStream() {
         do {
-            guard let livenessSession = livenessService as? FaceLivenessSession else {
-                throw FaceLivenessDetectionError.unknown
-            }
-            
             if (abs(Self.attemptIdTimeStamp.timeIntervalSinceNow) > defaultAttemptCountResetInterval) {
                 Self.attemptCount = 1
             } else {
@@ -204,11 +200,13 @@ class FaceLivenessDetectionViewModel: ObservableObject {
             }
             Self.attemptIdTimeStamp = Date()
             
-            try livenessSession.initializeLivenessStream(
+            try livenessService?.initializeLivenessStream(
                 withSessionID: sessionID,
                 userAgent: UserAgentValues.standard().userAgentString,
-                options: .init(attemptCount: Self.attemptCount,
-                               preCheckViewEnabled: isPreviewScreenEnabled)
+                challenges: FaceLivenessSession.supportedChallenges,
+                options: .init(
+                    attemptCount: Self.attemptCount,
+                    preCheckViewEnabled: isPreviewScreenEnabled)
             )
         } catch {
             DispatchQueue.main.async {
