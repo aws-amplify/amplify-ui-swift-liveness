@@ -18,7 +18,7 @@ class MockLivenessService {
     var onFinalClientEvent: (LivenessEvent<FinalClientEvent>, Date) -> Void = { _, _ in }
     var onFreshnessEvent: (LivenessEvent<FreshnessEvent>, Date) -> Void = { _, _ in }
     var onVideoEvent: (LivenessEvent<VideoEvent>, Date) -> Void = { _, _ in }
-    var onInitializeLivenessStream: (String, String,[Challenge]?) -> Void = { _, _, _ in }
+    var onInitializeLivenessStream: (String, String,[Challenge]?,FaceLivenessSession.Options) -> Void = { _, _, _, _ in }
     var onServiceException: (FaceLivenessSessionError) -> Void = { _ in }
     var onCloseSocket: (URLSessionWebSocketTask.CloseCode) -> Void = { _ in }
 }
@@ -46,10 +46,11 @@ extension MockLivenessService: LivenessService {
     func initializeLivenessStream(
         withSessionID sessionID: String, 
         userAgent: String,
-        challenges: [Challenge]
+        challenges: [Challenge],
+        options: FaceLivenessSession.Options
     ) throws {
         interactions.append(#function)
-        onInitializeLivenessStream(sessionID, userAgent, challenges)
+        onInitializeLivenessStream(sessionID, userAgent, challenges, options)
     }
 
     func register(
