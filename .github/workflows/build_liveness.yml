@@ -20,7 +20,7 @@ concurrency:
 
 jobs:
   build-amplify-ui-swift-liveness:
-    runs-on: macos-13
+    runs-on: macos-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 #v3.5.3
@@ -29,9 +29,8 @@ jobs:
       - name: Build Amplify Swift Liveness UI
         uses: ./.github/composite_actions/run_xcodebuild
         with:
-          scheme: AmplifyUILiveness
-          destination: 'platform=iOS Simulator,name=iPhone 14,OS=16.4'
-          xcode_path: '/Applications/Xcode_14.3.app'
+          scheme: FaceLiveness
+          destination: 'platform=iOS Simulator,name=iPhone 14,OS=latest'
 
   confirm-pass:
     runs-on: ubuntu-latest

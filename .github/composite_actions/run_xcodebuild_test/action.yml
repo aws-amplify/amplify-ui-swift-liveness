@@ -47,7 +47,7 @@ runs:
         coverageFlags=""
         if [ "${{ inputs.generate_coverage }}" == "true" ]; then
           echo "Code Coverage is enabled!"
-          coverageFlags+="-derivedDataPath Build/ -clonedSourcePackagesDirPath "~/Library/Developer/Xcode/DerivedData/$SCHEME" -enableCodeCoverage YES build test"
+          coverageFlags+="-derivedDataPath Build/ -clonedSourcePackagesDirPath "~/Library/Developer/Xcode/DerivedData/$SCHEME" -enableCodeCoverage YES"
         fi
         xcode-select -p
         xcodebuild -version
@@ -56,11 +56,19 @@ runs:
 
     - name: Generate Coverage report
       if: ${{ inputs.generate_coverage == 'true' }}
+      env:
+        SCHEME: ${{ inputs.scheme }}
       run: |
         echo "Generating Coverage report..."
         cd Build/Build/ProfileData
         cd $(ls -d */|head -n 1)
         pathCoverage=Build/Build/ProfileData/${PWD##*/}/Coverage.profdata
-        cd ../../../../
-        xcrun llvm-cov export -format="lcov" -instr-profile $pathCoverage Build/Build/Products/Debug-iphonesimulator/$SCHEME.o > Coverage.lcov
+        cd ${{ github.workspace }}
+        xcrun llvm-cov export -format="lcov" -instr-profile $pathCoverage Build/Build/Products/Debug-${{ inputs.sdk }}/${SCHEME}Tests.xctest/${SCHEME}Tests > $SCHEME-Coverage.lcov
       shell: bash
+
+    - name: Upload Report
+      if: ${{ inputs.generate_coverage == 'true' }}
+      uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d # v3.1.4
+      with:
+        verbose: true
