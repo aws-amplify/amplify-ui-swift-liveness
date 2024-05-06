@@ -20,7 +20,6 @@ public struct FaceLivenessDetectorView: View {
     @State var displayingCameraPermissionsNeededAlert = false
 
     let disableStartView: Bool
-    let facelivenessDetectorViewId: String
     let onCompletion: (Result<Void, FaceLivenessDetectionError>) -> Void
 
     let sessionTask: Task<FaceLivenessSession, Error>
@@ -32,9 +31,7 @@ public struct FaceLivenessDetectorView: View {
         disableStartView: Bool = false,
         isPresented: Binding<Bool>,
         onCompletion: @escaping (Result<Void, FaceLivenessDetectionError>) -> Void
-    ) {
-        let viewId = UUID().uuidString
-        self.facelivenessDetectorViewId = viewId
+    ) {        
         self.disableStartView = disableStartView
         self._isPresented = isPresented
         self.onCompletion = onCompletion
@@ -44,8 +41,6 @@ public struct FaceLivenessDetectorView: View {
                 withID: sessionID,
                 credentialsProvider: credentialsProvider,
                 region: region,
-                options: .init(faceLivenessDetectorViewId: viewId,
-                               preCheckViewEnabled: !disableStartView),
                 completion: map(detectionCompletion: onCompletion)
             )
             return session
@@ -83,7 +78,8 @@ public struct FaceLivenessDetectorView: View {
                 captureSession: captureSession,
                 videoChunker: videoChunker,
                 closeButtonAction: { onCompletion(.failure(.userCancelled)) },
-                sessionID: sessionID
+                sessionID: sessionID,
+                isPreviewScreenEnabled: !disableStartView
             )
         )
         
@@ -99,8 +95,6 @@ public struct FaceLivenessDetectorView: View {
         onCompletion: @escaping (Result<Void, FaceLivenessDetectionError>) -> Void,
         captureSession: LivenessCaptureSession
     ) {
-        let viewId = UUID().uuidString
-        self.facelivenessDetectorViewId = viewId
         self.disableStartView = disableStartView
         self._isPresented = isPresented
         self.onCompletion = onCompletion
@@ -110,8 +104,6 @@ public struct FaceLivenessDetectorView: View {
                 withID: sessionID,
                 credentialsProvider: credentialsProvider,
                 region: region,
-                options: .init(faceLivenessDetectorViewId: viewId,
-                               preCheckViewEnabled: !disableStartView),
                 completion: map(detectionCompletion: onCompletion)
             )
             return session
@@ -128,7 +120,8 @@ public struct FaceLivenessDetectorView: View {
                 captureSession: captureSession,
                 videoChunker: captureSession.outputSampleBufferCapturer!.videoChunker,
                 closeButtonAction: { onCompletion(.failure(.userCancelled)) },
-                sessionID: sessionID
+                sessionID: sessionID,
+                isPreviewScreenEnabled: !disableStartView
             )
         )
     }
