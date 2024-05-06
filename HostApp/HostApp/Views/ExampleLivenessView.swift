@@ -22,8 +22,7 @@ struct ExampleLivenessView: View {
         case .liveness:
             FaceLivenessDetectorView(
                 sessionID: viewModel.sessionID,
-                // TODO: Change before merging to main
-                region: "us-west-2",
+                region: "us-east-1",
                 isPresented:  Binding(
                     get: { viewModel.presentationState == .liveness },
                     set: { _ in }
