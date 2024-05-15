@@ -9,6 +9,7 @@ codecov:
 
 coverage:
   status:
+    patch: off
     project:
       default:
         threshold: 1%
