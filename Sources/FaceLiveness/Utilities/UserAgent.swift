@@ -6,7 +6,7 @@
 //
 
 import UIKit
-import AWSPluginsCore
+import InternalAmplifyCredentials
 
 struct UserAgentValues {
     
@@ -55,7 +55,7 @@ struct UserAgentValues {
 
     static func standard(additionalMetadata: KeyValuePairs<String, String> = [:]) -> Self {
         return .init(
-            amplifyVersion: AWSPluginsCore.AmplifyAWSServiceConfiguration.amplifyVersion,
+            amplifyVersion: AmplifyAWSServiceConfiguration.amplifyVersion,
             os: UIDevice.current.systemName.replacingOccurrences(of: " ", with: "-"),
             osVersion: UIDevice.current.systemVersion,
             swiftVersion: Swift().version(),
