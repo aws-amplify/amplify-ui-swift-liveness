@@ -111,6 +111,11 @@ class FaceLivenessDetectionViewModel: ObservableObject {
                     self?.livenessState
                         .unrecoverableStateEncountered(.socketClosed)
                 }
+            case .runtimeError:
+                DispatchQueue.main.async {
+                    self?.livenessState
+                        .unrecoverableStateEncountered(.runtimeError)
+                }
             }
         })
 

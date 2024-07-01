@@ -164,6 +164,7 @@ struct LivenessStateMachine {
         static let timedOut = LivenessError(code: 4, webSocketCloseCode: .ovalFitMatchTimeout)
         static let couldNotOpenStream = LivenessError(code: 5, webSocketCloseCode: .unexpectedRuntimeError)
         static let socketClosed = LivenessError(code: 6, webSocketCloseCode: .normalClosure)
+        static let runtimeError = LivenessError(code: 7, webSocketCloseCode: .unexpectedRuntimeError)
         static let viewResignation = LivenessError(code: 8, webSocketCloseCode: .viewClosure)
 
         static func == (lhs: LivenessError, rhs: LivenessError) -> Bool {

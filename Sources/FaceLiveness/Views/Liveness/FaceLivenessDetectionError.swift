@@ -125,6 +125,12 @@ public struct FaceLivenessDetectionError: Error, Equatable {
         message: "The signature on the request is invalid.",
         recoverySuggestion: "Ensure the device time is correct and try again."
     )
+    
+    public static let runtimeError = FaceLivenessDetectionError(
+        code: 18,
+        message: "An unexpected runtime error occurred.",
+        recoverySuggestion: "Please try again."
+    )
 
     public static func == (lhs: FaceLivenessDetectionError, rhs: FaceLivenessDetectionError) -> Bool {
         lhs.code == rhs.code
