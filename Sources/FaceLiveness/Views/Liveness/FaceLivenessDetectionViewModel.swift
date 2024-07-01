@@ -204,6 +204,13 @@ class FaceLivenessDetectionViewModel: ObservableObject {
                 withSessionID: sessionID,
                 userAgent: UserAgentValues.standard().userAgentString,
                 challenges: FaceLivenessSession.supportedChallenges,
+                
+                // light challenge
+                // challenges: [.init(version: "2.0.0", type: .faceMovementAndLightChallenge)],
+                
+                // no light challenge
+                // challenges: [.init(version: "1.0.0", type: .faceMovementChallenge)],
+                
                 options: .init(
                     attemptCount: Self.attemptCount,
                     preCheckViewEnabled: isPreviewScreenEnabled)
