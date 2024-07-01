@@ -6,9 +6,10 @@
 //
 
 import SwiftUI
+@_spi(PredictionsFaceLiveness) import AWSPredictionsPlugin
 
 struct LivenessResultContentView: View {
-    @State var result: Result = .init(livenessResult: .init(auditImageBytes: nil, confidenceScore: -1, isLive: false))
+    @State var result: Result = .init(livenessResult: .init(auditImageBytes: nil, confidenceScore: -1, isLive: false, challenge: nil))
     let fetchResults: () async throws -> Result
 
     var body: some View {
@@ -67,26 +68,48 @@ struct LivenessResultContentView: View {
         }
     }
     
-    private func steps() -> some View {
-        func step(number: Int, text: String) -> some View {
-            HStack(alignment: .top) {
-                Text("\(number).")
-                Text(text)
-            }
+    func step(number: Int, text: String) -> some View {
+        HStack(alignment: .top) {
+            Text("\(number).")
+            Text(text)
         }
-
-        return VStack(
-            alignment: .leading,
-            spacing: 8
-        ) {
-            Text("Tips to pass the video check:")
-                .fontWeight(.semibold)
-
-            step(number: 1, text: "Avoid very bright lighting conditions, such as direct sunlight.")
-                .accessibilityElement(children: .combine)
-
-            step(number: 2, text: "Remove sunglasses, mask, hat, or anything blocking your face.")
-                .accessibilityElement(children: .combine)
+    }
+    
+    @ViewBuilder
+    private func steps() -> some View {
+        switch result.challenge?.type {
+        case .faceMovementChallenge:
+            VStack(
+                alignment: .leading,
+                spacing: 8
+            ) {
+                Text("Tips to pass the video check:")
+                    .fontWeight(.semibold)
+                
+                Text("Remove sunglasses, mask, hat, or anything blocking your face.")
+                    .accessibilityElement(children: .combine)
+            }
+        case .faceMovementAndLightChallenge:
+            VStack(
+                alignment: .leading,
+                spacing: 8
+            ) {
+                Text("Tips to pass the video check:")
+                    .fontWeight(.semibold)
+                
+                step(number: 1, text: "Avoid very bright lighting conditions, such as direct sunlight.")
+                    .accessibilityElement(children: .combine)
+                
+                step(number: 2, text: "Remove sunglasses, mask, hat, or anything blocking your face.")
+                    .accessibilityElement(children: .combine)
+            }
+        case .none:
+            VStack(
+                alignment: .leading,
+                spacing: 8
+            ) {
+                EmptyView()
+            }
         }
     }
 }
@@ -99,7 +122,8 @@ extension LivenessResultContentView {
                 livenessResult: .init(
                     auditImageBytes: nil,
                     confidenceScore: 99.8329,
-                    isLive: true
+                    isLive: true,
+                    challenge: nil
                 )
             )
         }

@@ -6,11 +6,13 @@
 //
 
 import Foundation
+@_spi(PredictionsFaceLiveness) import AWSPredictionsPlugin
 
 struct LivenessResult: Codable {
     let auditImageBytes: String?
     let confidenceScore: Double
     let isLive: Bool
+    let challenge: Challenge?
 }
 
 extension LivenessResult: CustomDebugStringConvertible {
@@ -20,6 +22,8 @@ extension LivenessResult: CustomDebugStringConvertible {
             - confidenceScore: \(confidenceScore)
             - isLive: \(isLive)
             - auditImageBytes: \(auditImageBytes == nil ? "nil" : "<placeholder>")
+            - challengeType: \(String(describing: challenge?.type))
+            - challengeVersion: \(String(describing: challenge?.version))
         """
     }
 }
