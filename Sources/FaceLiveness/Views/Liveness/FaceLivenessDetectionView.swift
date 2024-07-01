@@ -82,8 +82,6 @@ public struct FaceLivenessDetectorView: View {
                 isPreviewScreenEnabled: !disableStartView
             )
         )
-        
-        faceDetector.setFaceDetectionSessionConfigurationWrapper(configuration: viewModel)
     }
     
     init(
@@ -143,6 +141,22 @@ public struct FaceLivenessDetectorView: View {
                         throw FaceLivenessDetectionError.accessDenied
                     }
                 }
+                DispatchQueue.main.async {
+                    if let faceDetector = viewModel.faceDetector as? FaceDetectorShortRange.Model {
+                        faceDetector.setFaceDetectionSessionConfigurationWrapper(configuration: viewModel)
+                    }
+                }
+            }
+            .onReceive(viewModel.$livenessState) { output in
+                switch output.state {
+                case .encounteredUnrecoverableError(let error):
+                    let closeCode = error.webSocketCloseCode ?? .normalClosure
+                    viewModel.livenessService?.closeSocket(with: closeCode)
+                    isPresented = false
+                    onCompletion(.failure(mapError(error)))
+                default:
+                    break
+                }
             }
         case .awaitingLivenessSession(let challenge):
             Color.clear
@@ -157,7 +171,6 @@ public struct FaceLivenessDetectorView: View {
                         }
                     }
                 }
-
         case .displayingGetReadyView(let challenge):
             GetReadyPageView(
                 onBegin: {
@@ -219,6 +232,8 @@ public struct FaceLivenessDetectorView: View {
             return .faceInOvalMatchExceededTimeLimitError
         case .socketClosed:
             return .socketClosed
+        case .runtimeError:
+            return .runtimeError
         default:
             return .cameraPermissionDenied
         }
