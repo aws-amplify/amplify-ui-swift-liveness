@@ -13,7 +13,7 @@ struct ImageFrameView: View {
     var body: some View {
         if let image = image {
             GeometryReader { geometry in
-                Image(decorative: image, scale: 1.0, orientation: .upMirrored)
+                Image(decorative: image, scale: 1.0, orientation: .up)
                     .resizable()
                     .scaledToFill()
                     .frame(
