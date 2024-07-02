@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.16 (2024-07-02)
+
+### Bug Fixes
+
+- Fixing video not being mirrored in the 'Get Ready' screen (#153)
+
 ## 1.2.15 (2024-06-26)
 
 ## 1.2.14 (2024-05-15)
