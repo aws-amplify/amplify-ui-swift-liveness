@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.17 (2024-07-11)
+
+### Bug Fixes
+
+- Updating the camera frame position when the subviews are laid out (#158)
+
 ## 1.2.16 (2024-07-02)
 
 ### Bug Fixes
