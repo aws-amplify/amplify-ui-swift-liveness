@@ -34,7 +34,6 @@
 		97D1A8E92BA3757700FF1368 /* AWSAPIPlugin in Frameworks */ = {isa = PBXBuildFile; productRef = 97D1A8E82BA3757700FF1368 /* AWSAPIPlugin */; };
 		97D1A8EB2BA3757700FF1368 /* AWSCognitoAuthPlugin in Frameworks */ = {isa = PBXBuildFile; productRef = 97D1A8EA2BA3757700FF1368 /* AWSCognitoAuthPlugin */; };
 		97D1A8ED2BA3757700FF1368 /* Amplify in Frameworks */ = {isa = PBXBuildFile; productRef = 97D1A8EC2BA3757700FF1368 /* Amplify */; };
-		97D1A8EF2BA375AA00FF1368 /* amplify-ui-swift-liveness in Resources */ = {isa = PBXBuildFile; fileRef = 97D1A8EE2BA375AA00FF1368 /* amplify-ui-swift-liveness */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -308,8 +307,6 @@
 				Base,
 			);
 			mainGroup = 9070FF97285112B4009867D5;
-			packageReferences = (
-			);
 			productRefGroup = 9070FFA1285112B4009867D5 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -328,7 +325,6 @@
 			files = (
 				973619262BA378690003A590 /* awsconfiguration.json in Resources */,
 				9070FFAB285112B5009867D5 /* Preview Assets.xcassets in Resources */,
-				97D1A8EF2BA375AA00FF1368 /* amplify-ui-swift-liveness in Resources */,
 				9070FFA8285112B5009867D5 /* Assets.xcassets in Resources */,
 				973619252BA378690003A590 /* amplifyconfiguration.json in Resources */,
 			);

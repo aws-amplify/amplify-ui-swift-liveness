@@ -52,6 +52,10 @@ final class _LivenessViewController: UIViewController {
         setupAVLayer()
     }
 
+    override func viewDidLayoutSubviews() {
+        previewLayer?.position = view.center
+    }
+
     private func layoutSubviews() {
         freshnessView.translatesAutoresizingMaskIntoConstraints = false
 
