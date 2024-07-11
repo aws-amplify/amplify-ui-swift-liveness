@@ -49,11 +49,11 @@ final class _LivenessViewController: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = .black
         layoutSubviews()
+        setupAVLayer()
     }
 
-    override func viewWillAppear(_ animated: Bool) {
-        setupAVLayer()
-        super.viewWillAppear(animated)
+    override func viewDidLayoutSubviews() {
+        previewLayer?.position = view.center
     }
 
     private func layoutSubviews() {
