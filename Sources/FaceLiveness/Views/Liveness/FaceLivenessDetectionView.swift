@@ -254,6 +254,7 @@ enum InstructionState {
 
 private func map(detectionCompletion: @escaping (Result<Void, FaceLivenessDetectionError>) -> Void) -> ((Result<Void, FaceLivenessSessionError>) -> Void) {
     { result in
+        print("FaceLivenessDetectorView map() result: \(result)")
         switch result {
         case .success(()):
             detectionCompletion(.success(()))
