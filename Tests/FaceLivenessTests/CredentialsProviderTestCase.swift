@@ -66,6 +66,7 @@ final class CredentialsProviderTestCase: XCTestCase {
             sessionID: UUID().uuidString,
             credentialsProvider: credentialsProvider,
             region: "us-east-1",
+            cameraPosition: .front,
             isPresented: .constant(true),
             onCompletion: { _ in }
         )
@@ -102,6 +103,7 @@ final class CredentialsProviderTestCase: XCTestCase {
             sessionID: UUID().uuidString,
             credentialsProvider: credentialsProvider,
             region: "us-east-1",
+            cameraPosition: .front,
             isPresented: .constant(true),
             onCompletion: { _ in }
         )

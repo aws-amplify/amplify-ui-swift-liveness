@@ -12,21 +12,24 @@ struct GetReadyPageView: View {
     let beginCheckButtonDisabled: Bool
     let onBegin: () -> Void
     let challenge: Challenge
+    let cameraPosition: LivenessCaptureDevicePosition
     
     init(
         onBegin: @escaping () -> Void,
         beginCheckButtonDisabled: Bool = false,
-        challenge: Challenge
+        challenge: Challenge,
+        cameraPosition: LivenessCaptureDevicePosition
     ) {
         self.onBegin = onBegin
         self.beginCheckButtonDisabled = beginCheckButtonDisabled
         self.challenge = challenge
+        self.cameraPosition = cameraPosition
     }
 
     var body: some View {
         VStack {
             ZStack {
-                CameraPreviewView()
+                CameraPreviewView(model: CameraPreviewViewModel(cameraPosition: cameraPosition))
                 VStack {
                     WarningBox(
                         titleText: LocalizedStrings.get_ready_photosensitivity_title,
@@ -79,6 +82,7 @@ struct GetReadyPageView_Previews: PreviewProvider {
     static var previews: some View {
         GetReadyPageView(onBegin: {}, 
                          challenge: .init(version: "2.0.0",
-                                              type: .faceMovementAndLightChallenge))
+                                              type: .faceMovementAndLightChallenge),
+                         cameraPosition: .front)
     }
 }

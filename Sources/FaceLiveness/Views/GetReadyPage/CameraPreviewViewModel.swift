@@ -16,15 +16,18 @@ class CameraPreviewViewModel: NSObject, ObservableObject {
     @Published var buffer: CVPixelBuffer?
     
     var previewCaptureSession: LivenessCaptureSession?
+    let cameraPosition: LivenessCaptureDevicePosition
     
-    override init() {
+    init(cameraPosition: LivenessCaptureDevicePosition) {
+        self.cameraPosition = cameraPosition
+        
         super.init()
         setupSubscriptions()
         
         let avCaptureDevice = AVCaptureDevice.DiscoverySession(
             deviceTypes: [.builtInWideAngleCamera],
             mediaType: .video,
-            position: .front
+            position: cameraPosition == .front ? .front : .back
         ).devices.first
 
         let outputDelegate = CameraPreviewOutputSampleBufferDelegate { [weak self] buffer in

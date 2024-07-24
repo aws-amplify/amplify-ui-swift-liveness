@@ -20,6 +20,7 @@ public struct FaceLivenessDetectorView: View {
     @State var displayingCameraPermissionsNeededAlert = false
 
     let disableStartView: Bool
+    let cameraPosition: LivenessCaptureDevicePosition
     let onCompletion: (Result<Void, FaceLivenessDetectionError>) -> Void
 
     let sessionTask: Task<FaceLivenessSession, Error>
@@ -29,11 +30,13 @@ public struct FaceLivenessDetectorView: View {
         credentialsProvider: AWSCredentialsProvider? = nil,
         region: String,
         disableStartView: Bool = false,
+        cameraPosition: LivenessCaptureDevicePosition,
         isPresented: Binding<Bool>,
         onCompletion: @escaping (Result<Void, FaceLivenessDetectionError>) -> Void
     ) {        
         self.disableStartView = disableStartView
         self._isPresented = isPresented
+        self.cameraPosition = cameraPosition
         self.onCompletion = onCompletion
 
         self.sessionTask = Task {
@@ -60,7 +63,7 @@ public struct FaceLivenessDetectorView: View {
         let avCpatureDevice = AVCaptureDevice.DiscoverySession(
             deviceTypes: [.builtInWideAngleCamera],
             mediaType: .video,
-            position: .front
+            position: cameraPosition == .front ? .front : .back
         ).devices.first
 
         let captureSession = LivenessCaptureSession(
@@ -89,6 +92,7 @@ public struct FaceLivenessDetectorView: View {
         credentialsProvider: AWSCredentialsProvider? = nil,
         region: String,
         disableStartView: Bool = false,
+        cameraPosition: LivenessCaptureDevicePosition,
         isPresented: Binding<Bool>,
         onCompletion: @escaping (Result<Void, FaceLivenessDetectionError>) -> Void,
         captureSession: LivenessCaptureSession
@@ -96,6 +100,7 @@ public struct FaceLivenessDetectorView: View {
         self.disableStartView = disableStartView
         self._isPresented = isPresented
         self.onCompletion = onCompletion
+        self.cameraPosition = cameraPosition
 
         self.sessionTask = Task {
             let session = try await AWSPredictionsPlugin.startFaceLivenessSession(
@@ -166,21 +171,22 @@ public struct FaceLivenessDetectorView: View {
                         do {
                             let newState = disableStartView
                             ? DisplayState.displayingLiveness
-                            : DisplayState.displayingGetReadyView(challenge)
+                            : DisplayState.displayingGetReadyView(challenge, cameraPosition)
                             guard self.displayState != newState else { return }
                             self.displayState = newState
                         }
                     }
                 }
 
-        case .displayingGetReadyView(let challenge):
+        case .displayingGetReadyView(let challenge, let cameraPosition):
             GetReadyPageView(
                 onBegin: {
                     guard displayState != .displayingLiveness else { return }
                     displayState = .displayingLiveness
                 },
                 beginCheckButtonDisabled: false,
-                challenge: challenge
+                challenge: challenge,
+                cameraPosition: cameraPosition
             )
             .onAppear {
                 DispatchQueue.main.async {
@@ -276,7 +282,7 @@ public struct FaceLivenessDetectorView: View {
 enum DisplayState: Equatable {
     case awaitingChallengeType
     case awaitingLivenessSession(Challenge)
-    case displayingGetReadyView(Challenge)
+    case displayingGetReadyView(Challenge, LivenessCaptureDevicePosition)
     case displayingLiveness
     case awaitingCameraPermission
     
@@ -286,8 +292,8 @@ enum DisplayState: Equatable {
             return true
         case (let .awaitingLivenessSession(c1), let .awaitingLivenessSession(c2)):
             return c1.type == c2.type && c1.version == c2.version
-        case (let .displayingGetReadyView(c1), let .displayingGetReadyView(c2)):
-            return c1.type == c2.type && c1.version == c2.version
+        case (let .displayingGetReadyView(c1, position1), let .displayingGetReadyView(c2, position2)):
+            return c1.type == c2.type && c1.version == c2.version && position1 == position2
         case (.displayingLiveness, .displayingLiveness):
             return true
         case (.awaitingCameraPermission, .awaitingCameraPermission):
