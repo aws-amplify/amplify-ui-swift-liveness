@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.18 (2024-07-29)
+
+### Bug Fixes
+
+- Fixing a crash when attempting to call finishWriting (#161)
+
 ## 1.2.17 (2024-07-11)
 
 ### Bug Fixes
