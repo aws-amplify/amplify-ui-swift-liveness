@@ -205,6 +205,8 @@ public struct FaceLivenessDetectorView: View {
             return .faceInOvalMatchExceededTimeLimitError
         case .socketClosed:
             return .socketClosed
+        case .cameraNotAvailable:
+            return .cameraNotAvailable
         default:
             return .cameraPermissionDenied
         }
