@@ -45,6 +45,8 @@ struct ExampleLivenessView: View {
                         viewModel.presentationState = .error(.countdownFaceTooClose)
                     case .failure(.invalidSignature):
                         viewModel.presentationState = .error(.invalidSignature)
+                    case .failure(.cameraNotAvailable):
+                        viewModel.presentationState = .error(.cameraNotAvailable)
                     default:
                         viewModel.presentationState = .liveness
                     }
@@ -74,6 +76,8 @@ struct ExampleLivenessView: View {
                         LivenessCheckErrorContentView.failedDuringCountdown
                     case .invalidSignature:
                         LivenessCheckErrorContentView.invalidSignature
+                    case .cameraNotAvailable:
+                        LivenessCheckErrorContentView.cameraNotAvailable
                     default:
                         LivenessCheckErrorContentView.unexpected
                     }

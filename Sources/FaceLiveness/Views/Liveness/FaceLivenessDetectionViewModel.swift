@@ -338,8 +338,8 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         switch captureSessionError {
         case LivenessCaptureSessionError.cameraUnavailable,
             LivenessCaptureSessionError.deviceInputUnavailable:
-
-            livenessError = .missingVideoPermission
+            let authStatus = AVCaptureDevice.authorizationStatus(for: .video)
+            livenessError = authStatus == .authorized ? .cameraNotAvailable : .missingVideoPermission
         case LivenessCaptureSessionError.captureSessionOutputUnavailable,
             LivenessCaptureSessionError.captureSessionInputUnavailable:
 
