@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.0 (2024-08-06)
+
+### Features
+
+- Adding new error when the camera is not available even though permissions were granted. (#163)
+
 ## 1.2.18 (2024-07-29)
 
 ### Bug Fixes
