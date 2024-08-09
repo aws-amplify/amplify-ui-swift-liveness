@@ -199,7 +199,7 @@ public struct FaceLivenessDetectorView: View {
 
     func mapError(_ livenessError: LivenessStateMachine.LivenessError) -> FaceLivenessDetectionError {
         switch livenessError {
-        case .userCancelled:
+        case .userCancelled, .viewResignation:
             return .userCancelled
         case .timedOut:
             return .faceInOvalMatchExceededTimeLimitError
