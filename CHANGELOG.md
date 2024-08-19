@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.1 (2024-08-19)
+
+### Bug Fixes
+
+- Returning .userCancelled when the app goes to the background during a Liveness check. (#167)
+
 ## 1.3.0 (2024-08-06)
 
 ### Features
