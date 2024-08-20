@@ -23,13 +23,11 @@ struct ExampleLivenessView: View {
             FaceLivenessDetectorView(
                 sessionID: viewModel.sessionID,
                 region: "us-east-1",
-                disableStartView: true,
                 isPresented:  Binding(
                     get: { viewModel.presentationState == .liveness },
                     set: { _ in }
                 ),
                 onCompletion: { result in
-                    print("\(#function) result: \(result)")
                     DispatchQueue.main.async {
                         switch result {
                         case .success:
