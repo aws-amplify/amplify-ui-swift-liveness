@@ -44,6 +44,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     var initialClientEvent: InitialClientEvent?
     var faceMatchedTimestamp: UInt64?
     var noFitStartTime: Date?
+    let cameraPosition: LivenessCaptureDevicePosition
     
     static var attemptCount: Int = 0
     static var attemptIdTimeStamp: Date = Date()
@@ -64,7 +65,8 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         stateMachine: LivenessStateMachine = .init(state: .initial),
         closeButtonAction: @escaping () -> Void,
         sessionID: String,
-        isPreviewScreenEnabled: Bool
+        isPreviewScreenEnabled: Bool,
+        cameraPosition: LivenessCaptureDevicePosition
     ) {
         self.closeButtonAction = closeButtonAction
         self.videoChunker = videoChunker
@@ -74,6 +76,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         self.faceDetector = faceDetector
         self.faceInOvalMatching = faceInOvalMatching
         self.isPreviewScreenEnabled = isPreviewScreenEnabled
+        self.cameraPosition = cameraPosition
 
         self.closeButtonAction = { [weak self] in
             guard let self else { return }
@@ -124,7 +127,18 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         livenessService?.register(
             listener: { [weak self] _challenge in
                 self?.challenge = _challenge
-                onChallengeTypeReceived(_challenge)
+                guard _challenge.type == .faceMovementAndLightChallenge,
+                      self?.cameraPosition == .back else {
+                    onChallengeTypeReceived(_challenge)
+                    return
+                }
+                
+                // incompatible camera position with challenge type
+                // return error
+                DispatchQueue.main.async {
+                    self?.livenessState
+                        .unrecoverableStateEncountered(.invalidCameraPositionSelecteed)
+                }
             },
             on: .challenge)
     }

@@ -30,7 +30,7 @@ public struct FaceLivenessDetectorView: View {
         credentialsProvider: AWSCredentialsProvider? = nil,
         region: String,
         disableStartView: Bool = false,
-        cameraPosition: LivenessCaptureDevicePosition,
+        cameraPosition: LivenessCaptureDevicePosition = .front,
         isPresented: Binding<Bool>,
         onCompletion: @escaping (Result<Void, FaceLivenessDetectionError>) -> Void
     ) {        
@@ -59,15 +59,14 @@ public struct FaceLivenessDetectorView: View {
             assetWriterDelegate: VideoChunker.AssetWriterDelegate(),
             assetWriterInput: LivenessAVAssetWriterInput()
         )
-
-        let avCpatureDevice = AVCaptureDevice.DiscoverySession(
-            deviceTypes: [.builtInWideAngleCamera],
-            mediaType: .video,
-            position: cameraPosition == .front ? .front : .back
-        ).devices.first
+        
+        let avCaptureDevice = AVCaptureDevice.default(
+                                .builtInWideAngleCamera,
+                                for: .video,
+                                position: cameraPosition == .front ? .front : .back)
 
         let captureSession = LivenessCaptureSession(
-            captureDevice: .init(avCaptureDevice: avCpatureDevice),
+            captureDevice: .init(avCaptureDevice: avCaptureDevice),
             outputDelegate: OutputSampleBufferCapturer(
                 faceDetector: faceDetector,
                 videoChunker: videoChunker
@@ -82,7 +81,8 @@ public struct FaceLivenessDetectorView: View {
                 videoChunker: videoChunker,
                 closeButtonAction: { onCompletion(.failure(.userCancelled)) },
                 sessionID: sessionID,
-                isPreviewScreenEnabled: !disableStartView
+                isPreviewScreenEnabled: !disableStartView,
+                cameraPosition: cameraPosition
             )
         )
     }
@@ -124,7 +124,8 @@ public struct FaceLivenessDetectorView: View {
                 videoChunker: captureSession.outputSampleBufferCapturer!.videoChunker,
                 closeButtonAction: { onCompletion(.failure(.userCancelled)) },
                 sessionID: sessionID,
-                isPreviewScreenEnabled: !disableStartView
+                isPreviewScreenEnabled: !disableStartView,
+                cameraPosition: cameraPosition
             )
         )
     }

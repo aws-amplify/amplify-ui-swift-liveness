@@ -125,6 +125,12 @@ public struct FaceLivenessDetectionError: Error, Equatable {
         message: "The signature on the request is invalid.",
         recoverySuggestion: "Ensure the device time is correct and try again."
     )
+    
+    public static let invalidCameraPositionSelected = FaceLivenessDetectionError(
+        code: 18,
+        message: "The camera position selected is incompatible with the liveness challenge type requested.",
+        recoverySuggestion: "Please ensure the camera position is supported for the liveness challenge type requested."
+    )
 
     public static let cameraNotAvailable = FaceLivenessDetectionError(
         code: 18,
