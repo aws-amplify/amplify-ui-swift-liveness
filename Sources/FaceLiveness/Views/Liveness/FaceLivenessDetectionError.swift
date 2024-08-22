@@ -126,16 +126,16 @@ public struct FaceLivenessDetectionError: Error, Equatable {
         recoverySuggestion: "Ensure the device time is correct and try again."
     )
     
-    public static let invalidCameraPositionSelected = FaceLivenessDetectionError(
-        code: 18,
-        message: "The camera position selected is incompatible with the liveness challenge type requested.",
-        recoverySuggestion: "Please ensure the camera position is supported for the liveness challenge type requested."
-    )
-
     public static let cameraNotAvailable = FaceLivenessDetectionError(
         code: 18,
         message: "The camera is not available.",
-        recoverySuggestion: "There might be a hardware issue."
+        recoverySuggestion: "There might be a hardware issue or the selected camera is not available."
+    )
+    
+    public static let invalidCameraPositionSelected = FaceLivenessDetectionError(
+        code: 19,
+        message: "The camera position selected is incompatible with the liveness challenge type requested.",
+        recoverySuggestion: "Please ensure the camera position is supported for the liveness challenge type requested."
     )
 
     public static func == (lhs: FaceLivenessDetectionError, rhs: FaceLivenessDetectionError) -> Bool {
