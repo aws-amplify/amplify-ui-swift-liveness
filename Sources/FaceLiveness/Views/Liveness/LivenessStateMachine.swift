@@ -166,7 +166,6 @@ struct LivenessStateMachine {
         static let socketClosed = LivenessError(code: 6, webSocketCloseCode: .normalClosure)
         static let viewResignation = LivenessError(code: 8, webSocketCloseCode: .viewClosure)
         static let cameraNotAvailable = LivenessError(code: 9, webSocketCloseCode: .unexpectedRuntimeError)
-        static let invalidCameraPositionSelecteed = LivenessError(code: 10, webSocketCloseCode: .unexpectedRuntimeError)
 
         static func == (lhs: LivenessError, rhs: LivenessError) -> Bool {
             lhs.code == rhs.code

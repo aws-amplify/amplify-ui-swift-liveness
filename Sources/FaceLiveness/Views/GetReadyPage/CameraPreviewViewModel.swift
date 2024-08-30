@@ -16,9 +16,9 @@ class CameraPreviewViewModel: NSObject, ObservableObject {
     @Published var buffer: CVPixelBuffer?
     
     var previewCaptureSession: LivenessCaptureSession?
-    let cameraPosition: LivenessCaptureDevicePosition
+    let cameraPosition: LivenessCamera
     
-    init(cameraPosition: LivenessCaptureDevicePosition) {
+    init(cameraPosition: LivenessCamera) {
         self.cameraPosition = cameraPosition
         
         super.init()

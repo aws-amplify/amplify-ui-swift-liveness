@@ -12,13 +12,13 @@ struct GetReadyPageView: View {
     let beginCheckButtonDisabled: Bool
     let onBegin: () -> Void
     let challenge: Challenge
-    let cameraPosition: LivenessCaptureDevicePosition
+    let cameraPosition: LivenessCamera
     
     init(
         onBegin: @escaping () -> Void,
         beginCheckButtonDisabled: Bool = false,
         challenge: Challenge,
-        cameraPosition: LivenessCaptureDevicePosition
+        cameraPosition: LivenessCamera
     ) {
         self.onBegin = onBegin
         self.beginCheckButtonDisabled = beginCheckButtonDisabled

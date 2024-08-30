@@ -37,8 +37,3 @@ struct LivenessCaptureDevice {
         }
     }
 }
-
-public enum LivenessCaptureDevicePosition {
-    case front
-    case back
-}
