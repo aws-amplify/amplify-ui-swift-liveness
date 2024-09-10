@@ -38,12 +38,12 @@ final class CredentialsProviderTestCase: XCTestCase {
         let viewModel = FaceLivenessDetectionViewModel(
             faceDetector: faceDetector,
             faceInOvalMatching: .init(instructor: .init()),
-            captureSession: captureSession,
             videoChunker: videoChunker,
             closeButtonAction: {},
             sessionID: UUID().uuidString,
             isPreviewScreenEnabled: false,
-            cameraPosition: .front
+            challengeOptions: .init(faceMovementChallengeOption: .init(camera: .front),
+                                    faceMovementAndLightChallengeOption: .init())
         )
 
         self.videoChunker = videoChunker
@@ -67,7 +67,8 @@ final class CredentialsProviderTestCase: XCTestCase {
             sessionID: UUID().uuidString,
             credentialsProvider: credentialsProvider,
             region: "us-east-1",
-            cameraPosition: .front,
+            challengeOptions: .init(faceMovementChallengeOption: .init(camera: .front), 
+                                    faceMovementAndLightChallengeOption: .init()),
             isPresented: .constant(true),
             onCompletion: { _ in }
         )
@@ -104,7 +105,8 @@ final class CredentialsProviderTestCase: XCTestCase {
             sessionID: UUID().uuidString,
             credentialsProvider: credentialsProvider,
             region: "us-east-1",
-            cameraPosition: .front,
+            challengeOptions: .init(faceMovementChallengeOption: .init(camera: .front),
+                                    faceMovementAndLightChallengeOption: .init()),
             isPresented: .constant(true),
             onCompletion: { _ in }
         )

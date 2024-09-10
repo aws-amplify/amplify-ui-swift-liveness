@@ -110,7 +110,7 @@ struct InstructionContainerView: View {
                 )
             }
         case .faceMatched:
-            if let challenge = viewModel.challenge,
+            if let challenge = viewModel.challengeReceived,
                case .faceMovementAndLightChallenge = challenge.type {
                 InstructionView(
                     text: LocalizedStrings.challenge_instruction_hold_still,

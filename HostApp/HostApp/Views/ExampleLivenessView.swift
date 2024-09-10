@@ -23,7 +23,8 @@ struct ExampleLivenessView: View {
             FaceLivenessDetectorView(
                 sessionID: viewModel.sessionID,
                 region: "us-east-1",
-                challengeOption: .faceMovementAndLightChallenge,
+                challengeOptions: .init(faceMovementChallengeOption: FaceMovementChallengeOption(camera: .front),
+                                        faceMovementAndLightChallengeOption: FaceMovementAndLightChallengeOption()),
                 isPresented:  Binding(
                     get: { viewModel.presentationState == .liveness },
                     set: { _ in }
@@ -47,6 +48,10 @@ struct ExampleLivenessView: View {
                             viewModel.presentationState = .error(.countdownFaceTooClose)
                         case .failure(.invalidSignature):
                             viewModel.presentationState = .error(.invalidSignature)
+                        case .failure(.faceInOvalMatchExceededTimeLimitError):
+                            viewModel.presentationState = .error(.faceInOvalMatchExceededTimeLimitError)
+                        case .failure(.internalServer):
+                            viewModel.presentationState = .error(.internalServer)
                         case .failure(.cameraNotAvailable):
                             viewModel.presentationState = .error(.cameraNotAvailable)
                         case .failure(.validation):

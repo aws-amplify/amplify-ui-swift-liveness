@@ -21,7 +21,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     @Published var livenessState: LivenessStateMachine
 
     weak var livenessViewControllerDelegate: FaceLivenessViewControllerPresenter?
-    let captureSession: LivenessCaptureSession
+    var captureSession: LivenessCaptureSession?
     var closeButtonAction: () -> Void
     let videoChunker: VideoChunker
     let sessionID: String
@@ -35,7 +35,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     var hasSentFirstVideo = false
     var layerRectConverted: (CGRect) -> CGRect = { $0 }
     var sessionConfiguration: FaceLivenessSession.SessionConfiguration?
-    var challenge: Challenge?
+    var challengeReceived: Challenge?
     var normalizeFace: (DetectedFace) -> DetectedFace = { $0 }
     var provideSingleFrame: ((UIImage) -> Void)?
     var cameraViewRect = CGRect.zero
@@ -44,8 +44,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     var initialClientEvent: InitialClientEvent?
     var faceMatchedTimestamp: UInt64?
     var noFitStartTime: Date?
-    let cameraPosition: LivenessCamera
-    let challengeOption: ChallengeOption
+    let challengeOptions: ChallengeOptions
     
     static var attemptCount: Int = 0
     static var attemptIdTimeStamp: Date = Date()
@@ -61,25 +60,21 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     init(
         faceDetector: FaceDetector,
         faceInOvalMatching: FaceInOvalMatching,
-        captureSession: LivenessCaptureSession,
         videoChunker: VideoChunker,
         stateMachine: LivenessStateMachine = .init(state: .initial),
         closeButtonAction: @escaping () -> Void,
         sessionID: String,
         isPreviewScreenEnabled: Bool,
-        cameraPosition: LivenessCamera,
-        challengeOption: ChallengeOption
+        challengeOptions: ChallengeOptions
     ) {
         self.closeButtonAction = closeButtonAction
         self.videoChunker = videoChunker
         self.livenessState = stateMachine
         self.sessionID = sessionID
-        self.captureSession = captureSession
         self.faceDetector = faceDetector
         self.faceInOvalMatching = faceInOvalMatching
         self.isPreviewScreenEnabled = isPreviewScreenEnabled
-        self.cameraPosition = cameraPosition
-        self.challengeOption = challengeOption
+        self.challengeOptions = challengeOptions
 
         self.closeButtonAction = { [weak self] in
             guard let self else { return }
@@ -129,7 +124,8 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         
         livenessService?.register(
             listener: { [weak self] _challenge in
-                self?.challenge = _challenge
+                self?.challengeReceived = _challenge
+                self?.configureCaptureSession(challenge: _challenge)
                 onChallengeTypeReceived(_challenge)
             },
             on: .challenge)
@@ -144,16 +140,16 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     }
 
     func startSession() {
-        captureSession.startSession()
+        captureSession?.startSession()
     }
 
     func stopRecording() {
-        captureSession.stopRunning()
+        captureSession?.stopRunning()
     }
 
     func configureCamera(withinFrame frame: CGRect) -> CALayer? {
         do {
-            let avLayer = try captureSession.configureCamera(frame: frame)
+            let avLayer = try captureSession?.configureCamera(frame: frame)
             DispatchQueue.main.async {
                 self.livenessState.checkIsFacePrepared()
             }
@@ -209,7 +205,8 @@ class FaceLivenessDetectionViewModel: ObservableObject {
             try livenessService?.initializeLivenessStream(
                 withSessionID: sessionID,
                 userAgent: UserAgentValues.standard().userAgentString,
-                challenges: [challengeOption.challenge],
+                challenges: [challengeOptions.faceMovementChallengeOption.challenge,
+                             challengeOptions.faceMovementAndLightChallengeOption.challenge],
                 options: .init(
                     attemptCount: Self.attemptCount,
                     preCheckViewEnabled: isPreviewScreenEnabled)
@@ -258,7 +255,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         videoStartTime: UInt64
     ) {
         guard initialClientEvent == nil else { return }
-        guard let challenge else { return }
+        guard let challengeReceived else { return }
         
         videoChunker.start()
 
@@ -278,8 +275,8 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         do {
             try livenessService?.send(
                 .initialFaceDetected(event: _initialClientEvent, 
-                                     challenge: .init(version: challenge.version,
-                                                      type: challenge.type)),
+                                     challenge: .init(version: challengeReceived.version,
+                                                      type: challengeReceived.type)),
                 eventDate: { .init() }
             )
         } catch {
@@ -298,7 +295,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
             let sessionConfiguration,
             let initialClientEvent,
             let faceMatchedTimestamp,
-            let challenge
+            let challengeReceived
         else { return }
 
         let finalClientEvent = FinalClientEvent(
@@ -313,8 +310,8 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         do {
             try livenessService?.send(
                 .final(event: finalClientEvent,
-                       challenge: .init(version: challenge.version,
-                                            type: challenge.type)),
+                       challenge: .init(version: challengeReceived.version,
+                                            type: challengeReceived.type)),
                 eventDate: { .init() }
             )
 
@@ -406,6 +403,29 @@ class FaceLivenessDetectionViewModel: ObservableObject {
             hasSentFirstVideo = true
         }
         return data
+    }
+    
+    func configureCaptureSession(challenge: Challenge) {
+        let cameraPosition: LivenessCamera
+        switch challenge.type {
+        case .faceMovementChallenge:
+            cameraPosition = challengeOptions.faceMovementChallengeOption.camera
+        case .faceMovementAndLightChallenge:
+            cameraPosition = challengeOptions.faceMovementAndLightChallengeOption.camera
+        }
+        
+        let avCaptureDevice = AVCaptureDevice.default(
+                                .builtInWideAngleCamera,
+                                for: .video,
+                                position: cameraPosition == .front ? .front : .back)
+
+        self.captureSession = LivenessCaptureSession(
+            captureDevice: .init(avCaptureDevice: avCaptureDevice),
+            outputDelegate: OutputSampleBufferCapturer(
+                faceDetector: self.faceDetector,
+                videoChunker: self.videoChunker
+            )
+        )
     }
 }
 

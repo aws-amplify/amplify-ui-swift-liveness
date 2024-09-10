@@ -29,12 +29,12 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
         let viewModel = FaceLivenessDetectionViewModel(
             faceDetector: faceDetector,
             faceInOvalMatching: .init(instructor: .init()),
-            captureSession: captureSession,
             videoChunker: videoChunker,
             closeButtonAction: {},
             sessionID: UUID().uuidString,
             isPreviewScreenEnabled: false,
-            cameraPosition: .front
+            challengeOptions: .init(faceMovementChallengeOption: .init(camera: .front),
+                                    faceMovementAndLightChallengeOption: .init())
         )
 
         self.videoChunker = videoChunker
@@ -116,7 +116,7 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
     /// Then: The end state of this flow is `.recording(ovalDisplayed: false)`
     func testTransitionToRecordingState() async throws {
         viewModel.livenessService = self.livenessService
-        viewModel.challenge = Challenge(version: "2.0.0", type: .faceMovementAndLightChallenge)
+        viewModel.challengeReceived = Challenge(version: "2.0.0", type: .faceMovementAndLightChallenge)
         
         let face = FaceLivenessSession.OvalMatchChallenge.Face(
             distanceThreshold: 0.32,
