@@ -10,11 +10,12 @@ import FaceLiveness
 import Amplify
 
 class ExampleLivenessViewModel: ObservableObject {
-    @Published var presentationState = PresentationState.liveness
+    @Published var presentationState: PresentationState = .liveness(.front)
     let sessionID: String
 
-    init(sessionID: String) {
+    init(sessionID: String, presentationState: PresentationState = .liveness(.front)) {
         self.sessionID = sessionID
+        self.presentationState = presentationState
     }
 
     func fetchLivenessResult() async throws -> LivenessResultContentView.Result {
@@ -30,6 +31,6 @@ class ExampleLivenessViewModel: ObservableObject {
     }
 
     enum PresentationState: Equatable {
-        case liveness, result, error(FaceLivenessDetectionError)
+        case liveness(LivenessCamera), result, error(FaceLivenessDetectionError)
     }
 }

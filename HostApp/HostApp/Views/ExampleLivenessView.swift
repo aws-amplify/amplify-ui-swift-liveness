@@ -9,24 +9,28 @@ import SwiftUI
 import FaceLiveness
 
 struct ExampleLivenessView: View {
-    @Binding var isPresented: Bool
+    @Binding var containerViewState: ContainerViewState
     @ObservedObject var viewModel: ExampleLivenessViewModel
 
-    init(sessionID: String, isPresented: Binding<Bool>) {
-        self.viewModel = .init(sessionID: sessionID)
-        self._isPresented = isPresented
+    init(sessionID: String, containerViewState: Binding<ContainerViewState>) {
+        self._containerViewState = containerViewState
+        if case let .liveness(selectedCamera) = _containerViewState.wrappedValue {
+            self.viewModel = .init(sessionID: sessionID, presentationState: .liveness(selectedCamera))
+        } else {
+            self.viewModel = .init(sessionID: sessionID)
+        }
     }
 
     var body: some View {
         switch viewModel.presentationState {
-        case .liveness:
+        case .liveness(let camera):
             FaceLivenessDetectorView(
                 sessionID: viewModel.sessionID,
                 region: "us-east-1",
-                challengeOptions: .init(faceMovementChallengeOption: FaceMovementChallengeOption(camera: .front),
+                challengeOptions: .init(faceMovementChallengeOption: FaceMovementChallengeOption(camera: camera),
                                         faceMovementAndLightChallengeOption: FaceMovementAndLightChallengeOption()),
                 isPresented:  Binding(
-                    get: { viewModel.presentationState == .liveness },
+                    get: { viewModel.presentationState == .liveness(camera) },
                     set: { _ in }
                 ),
                 onCompletion: { result in
@@ -35,11 +39,11 @@ struct ExampleLivenessView: View {
                         case .success:
                             withAnimation { viewModel.presentationState = .result }
                         case .failure(.sessionNotFound), .failure(.cameraPermissionDenied), .failure(.accessDenied):
-                            viewModel.presentationState = .liveness
-                            isPresented = false
+                            viewModel.presentationState = .liveness(camera)
+                            containerViewState = .startSession
                         case .failure(.userCancelled):
-                            viewModel.presentationState = .liveness
-                            isPresented = false
+                            viewModel.presentationState = .liveness(camera)
+                            containerViewState = .startSession
                         case .failure(.sessionTimedOut):
                             viewModel.presentationState = .error(.sessionTimedOut)
                         case .failure(.socketClosed):
@@ -64,11 +68,11 @@ struct ExampleLivenessView: View {
                     }
                 }
             )
-            .id(isPresented)
+            .id(containerViewState)
         case .result:
             LivenessResultView(
                 sessionID: viewModel.sessionID,
-                onTryAgain: { isPresented = false },
+                onTryAgain: { containerViewState = .startSession },
                 content: {
                     LivenessResultContentView(fetchResults: viewModel.fetchLivenessResult)
                 }
@@ -77,7 +81,7 @@ struct ExampleLivenessView: View {
         case .error(let detectionError):
             LivenessResultView(
                 sessionID: viewModel.sessionID,
-                onTryAgain: { isPresented = false },
+                onTryAgain: { containerViewState = .startSession },
                 content: {
                     switch detectionError {
                     case .socketClosed:
