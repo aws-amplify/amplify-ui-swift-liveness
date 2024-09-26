@@ -60,6 +60,7 @@ extension LivenessCheckErrorContentView {
         name: "The camera could not be started.",
         description: "There might be a hardware issue with the camera."
     )
+
 }
 
 struct LivenessCheckErrorContentView_Previews: PreviewProvider {

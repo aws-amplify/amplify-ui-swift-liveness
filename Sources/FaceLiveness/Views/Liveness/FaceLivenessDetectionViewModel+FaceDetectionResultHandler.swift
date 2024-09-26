@@ -113,7 +113,7 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
                 self.faceMatchedTimestamp = Date().timestampMilliseconds
                 
                 // next step after face match
-                switch self.challenge?.type {
+                switch self.challengeReceived?.type {
                 case .faceMovementAndLightChallenge:
                     if let colorSequences = colorSequences {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
@@ -146,7 +146,7 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
         DispatchQueue.main.async {
             self.livenessState
                 .unrecoverableStateEncountered(.timedOut)
-            self.captureSession.stopRunning()
+            self.captureSession?.stopRunning()
         }
     }
 }

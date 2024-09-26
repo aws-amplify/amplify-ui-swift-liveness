@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/aws-amplify/amplify-swift",
       "state" : {
-        "branch" : "feat/no-light-support",
-        "revision" : "614be628cb01188e519bb0e9e4d90bd83703d139"
+        "branch" : "test/no-light-support",
+        "revision" : "cdee9437c8bae4be8198a9860d09cd79fdb044ba"
       }
     },
     {
