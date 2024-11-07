@@ -10,7 +10,7 @@ import SwiftUI
 struct InstructionView: View {
     let text: String
     let backgroundColor: Color
-    var textColor: Color = .livenessLabel
+    var textColor: Color = Color.livenessLabel
     var font: Font = .body
     
     var body: some View {

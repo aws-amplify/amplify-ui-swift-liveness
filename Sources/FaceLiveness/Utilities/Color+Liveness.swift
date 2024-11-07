@@ -5,51 +5,56 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+// sample Usage
+// import AmplifyUILiveness
+
+//  Modify colors in the client app
+// ThemeManager.shared.setLivenessPrimaryBackground(
+//	 light: .red, // Example light color
+//	 dark: .blue  // Example dark color
+// )
+
+//  Access modified color
+//	let modifiedColor = Color.livenessPrimaryBackground
+
+
 import SwiftUI
 
 extension Color {
-    static let livenessPrimaryBackground = Color.dynamicColors(
-        light: .hex("#047D95"),
-        dark: .hex("#7DD6E8")
-    )
+	public static var livenessPrimaryBackground: Color {
+		return ThemeManager.shared.livenessPrimaryBackground
+	}
 
-    static let livenessPrimaryLabel = Color.dynamicColors(
-        light: .white,
-        dark: .hex("#0D1926")
-    )
+	public static var livenessPrimaryLabel: Color {
+		return ThemeManager.shared.livenessPrimaryLabel
+	}
 
-    static let livenessBackground = Color.dynamicColors(
-        light: .white,
-        dark: .hex("#0D1926")
-    )
+	public static var livenessBackground: Color {
+		return ThemeManager.shared.livenessBackground
+	}
 
-    static let livenessLabel = Color.dynamicColors(
-        light: .black,
-        dark: .white
-    )
+	public static var livenessLabel: Color {
+		return ThemeManager.shared.livenessLabel
+	}
 
-    static let livenessErrorBackground = Color.dynamicColors(
-        light: .hex("#950404"),
-        dark: .hex("#EF8F8F")
-    )
+	public static var livenessErrorBackground: Color {
+		return ThemeManager.shared.livenessErrorBackground
+	}
 
-    static let livenessErrorLabel = Color.dynamicColors(
-        light: .white,
-        dark: .black
-    )
+	public static var livenessErrorLabel: Color {
+		return ThemeManager.shared.livenessErrorLabel
+	}
 
-    static let livenessWarningBackground = Color.dynamicColors(
-        light: .hex("#B8CEF9"),
-        dark: .hex("#663300")
-    )
+	public static var livenessWarningBackground: Color {
+		return ThemeManager.shared.livenessWarningBackground
+	}
 
-    static let livenessWarningLabel = Color.dynamicColors(
-        light: .hex("#002266"),
-        dark: .hex("#EFBF8F")
-    )
-    
-    static let livenessPreviewBorder = Color.dynamicColors(
-        light: .hex("#AEB3B7"), 
-        dark: .white
-    )
+	public static var livenessWarningLabel: Color {
+		return ThemeManager.shared.livenessWarningLabel
+	}
+
+	public static var livenessPreviewBorder: Color {
+		return ThemeManager.shared.livenessPreviewBorder
+	}
 }
+
