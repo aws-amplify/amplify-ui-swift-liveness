@@ -60,39 +60,39 @@ public class ThemeManager {
 extension ThemeManager {
 	
 	// Public functions to modify the colors
-	public func setLivenessPrimaryBackground(light: UIColor, dark: UIColor) {
+	public func setLivenessPrimaryBackground(light: Color, dark: Color) {
 		livenessPrimaryBackground = Color.dynamicColors(light: light, dark: dark)
 	}
 	
-	public func setLivenessPrimaryLabel(light: UIColor, dark: UIColor) {
+	public func setLivenessPrimaryLabel(light: Color, dark: Color) {
 		livenessPrimaryLabel = Color.dynamicColors(light: light, dark: dark)
 	}
 	
-	public func setLivenessBackground(light: UIColor, dark: UIColor) {
+	public func setLivenessBackground(light: Color, dark: Color) {
 		livenessBackground = Color.dynamicColors(light: light, dark: dark)
 	}
 	
-	public func setLivenessLabel(light: UIColor, dark: UIColor) {
+	public func setLivenessLabel(light: Color, dark: Color) {
 		livenessLabel = Color.dynamicColors(light: light, dark: dark)
 	}
 	
-	public func setLivenessErrorBackground(light: UIColor, dark: UIColor) {
+	public func setLivenessErrorBackground(light: Color, dark: Color) {
 		livenessErrorBackground = Color.dynamicColors(light: light, dark: dark)
 	}
 	
-	public func setLivenessErrorLabel(light: UIColor, dark: UIColor) {
+	public func setLivenessErrorLabel(light: Color, dark: Color) {
 		livenessErrorLabel = Color.dynamicColors(light: light, dark: dark)
 	}
 	
-	public func setLivenessWarningBackground(light: UIColor, dark: UIColor) {
+	public func setLivenessWarningBackground(light: Color, dark: Color) {
 		livenessWarningBackground = Color.dynamicColors(light: light, dark: dark)
 	}
 	
-	public func setLivenessWarningLabel(light: UIColor, dark: UIColor) {
+	public func setLivenessWarningLabel(light: Color, dark: Color) {
 		livenessWarningLabel = Color.dynamicColors(light: light, dark: dark)
 	}
 	
-	public func setLivenessPreviewBorder(light: UIColor, dark: UIColor) {
+	public func setLivenessPreviewBorder(light: Color, dark: Color) {
 		livenessPreviewBorder = Color.dynamicColors(light: light, dark: dark)
 	}
 	// Add similar functions for other colors as needed...

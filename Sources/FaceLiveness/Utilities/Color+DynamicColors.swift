@@ -9,13 +9,13 @@ import UIKit
 import SwiftUI
 
 extension Color {
-    static func dynamicColors(light: UIColor, dark: UIColor) -> Color {
+    static func dynamicColors(light: Color, dark: Color) -> Color {
         Color(
             UIColor(
                 dynamicProvider: { traitCollection in
                     switch traitCollection.userInterfaceStyle {
-                    case .dark: return dark
-                    default: return light
+                    case .dark: return UIColor(dark)
+                    default: return UIColor(light)
                     }
                 }
             )
