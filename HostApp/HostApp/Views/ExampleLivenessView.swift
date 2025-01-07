@@ -48,8 +48,12 @@ struct ExampleLivenessView: View {
                             viewModel.presentationState = .error(.invalidSignature)
                         case .failure(.cameraNotAvailable):
                             viewModel.presentationState = .error(.cameraNotAvailable)
-                        default:
-                            viewModel.presentationState = .liveness
+                        case .failure(.validation):
+                            viewModel.presentationState = .error(.validation)
+                        case .failure(.faceInOvalMatchExceededTimeLimitError):
+                            viewModel.presentationState = .error(.faceInOvalMatchExceededTimeLimitError)
+                        case .failure(_):
+                            viewModel.presentationState = .error(.unknown)
                         }
                     }
                 }
