@@ -13,7 +13,7 @@ let package = Package(
             targets: ["FaceLiveness"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/aws-amplify/amplify-swift", branch: "fix/liveness-websocketsession-delegatequeue")
+        .package(url: "https://github.com/aws-amplify/amplify-swift", exact: "2.45.4")
     ],
     targets: [
         .target(
