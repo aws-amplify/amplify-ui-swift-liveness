@@ -40,5 +40,5 @@ runs:
           sudo xcode-select -s $XCODE_PATH
         fi
         xcodebuild -version
-        xcodebuild build -scheme $SCHEME -sdk '${{ inputs.sdk }}' -destination '${{ inputs.destination }}' ${{ inputs.other_flags }} | xcpretty --simple --color --report junit && exit ${PIPESTATUS[0]}
+        xcodebuild build -scheme $SCHEME -sdk '${{ inputs.sdk }}' -destination '${{ inputs.destination }}' ${{ inputs.other_flags }} | xcbeautify --renderer github-actions && exit ${PIPESTATUS[0]}
       shell: bash

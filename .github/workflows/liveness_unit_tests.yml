@@ -27,5 +27,5 @@ jobs:
         with:
           scheme: FaceLiveness
           token: ${{ secrets.CODECOV_TOKEN }}
-          destination: 'platform=iOS Simulator,name=iPhone 14,OS=latest'
+          destination: 'platform=iOS Simulator,name=iPhone 15,OS=latest'
           generate_coverage: true
