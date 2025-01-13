@@ -30,7 +30,7 @@ jobs:
         uses: ./.github/composite_actions/run_xcodebuild
         with:
           scheme: FaceLiveness
-          destination: 'platform=iOS Simulator,name=iPhone 14,OS=latest'
+          destination: 'platform=iOS Simulator,name=iPhone 15,OS=latest'
 
   confirm-pass:
     runs-on: ubuntu-latest
