@@ -27,6 +27,7 @@ struct HostAppApp: App {
 
     init() {
         do {
+            Amplify.Logging.logLevel = .verbose
             let auth = AWSCognitoAuthPlugin()
             let api = AWSAPIPlugin()
             try Amplify.add(plugin: auth)
