@@ -1,0 +1,44 @@
+name: Build | Amplify UI Swift Liveness 
+on:
+  workflow_call:
+    inputs:
+      identifier:
+        required: true
+        type: string
+  workflow_dispatch:
+  push:
+    branches-ignore:
+      - main
+      - release
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ inputs.identifier || github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.ref_name != 'main'}}
+
+jobs:
+  build-amplify-ui-swift-liveness:
+    runs-on: macos-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 #v3.5.3
+        with:
+          persist-credentials: false
+      - name: Build Amplify Swift Liveness UI
+        uses: ./.github/composite_actions/run_xcodebuild
+        with:
+          scheme: FaceLiveness
+          destination: 'platform=iOS Simulator,name=iPhone 15,OS=latest'
+
+  confirm-pass:
+    runs-on: ubuntu-latest
+    name: Confirm Passing Build Steps
+    if: ${{ !cancelled() }}
+    needs: [ build-amplify-ui-swift-liveness ]
+    env:
+      EXIT_CODE: ${{ contains(needs.*.result, 'failure') && 1 || 0 }}
+    steps:
+      - run: exit $EXIT_CODE
+

@@ -1,0 +1,51 @@
+//
+// Copyright Amazon.com Inc. or its affiliates.
+// All Rights Reserved.
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+
+"amplify_ui_liveness_get_ready_page_title" = "Liveness Check";
+"amplify_ui_liveness_get_ready_photosensitivity_title" = "Photosensitivity Warning";
+"amplify_ui_liveness_get_ready_photosensitivity_description" = "This check flashes different colors. Use caution if you are photosensitive.";
+"amplify_ui_liveness_get_ready_photosensitivity_icon_a11y" = "Photosensitivity Information";
+"amplify_ui_liveness_get_ready_photosensitivity_dialog_title" = "Photosensitivity warning";
+"amplify_ui_liveness_get_ready_photosensitivity_dialog_description" = "Some people may experience epileptic seizures when exposed to colored lights. Use caution if you, or anyone in your family, have an epileptic condition.";
+"amplify_ui_liveness_get_ready_begin_check" = "Start video check";
+
+"amplify_ui_liveness_challenge_recording_indicator_label" = "REC";
+"amplify_ui_liveness_challenge_instruction_hold_face_during_countdown" = "Hold face position during countdown.";
+"amplify_ui_liveness_challenge_instruction_hold_face_during_freshness" = "Hold face in oval for colored lights.";
+"amplify_ui_liveness_challenge_instruction_move_face_back" = "Move back";
+"amplify_ui_liveness_challenge_instruction_move_face_closer" = "Move closer";
+"amplify_ui_liveness_challenge_instruction_move_face_in_front_of_camera" = "Move face in front of camera";
+"amplify_ui_liveness_challenge_instruction_multiple_faces_detected" = "Only one face per check";
+"amplify_ui_liveness_challenge_instruction_hold_still" = "Hold still";
+
+"amplify_ui_liveness_challenge_connecting" = "Connecting...";
+"amplify_ui_liveness_challenge_verifying" = "Verifying";
+"amplify_ui_liveness_challenge_cancel_a11y" = "Cancel Challenge";
+
+"amplify_ui_liveness_camera_setting_alert_title" = "Change Your Camera Settings";
+"amplify_ui_liveness_camera_setting_alert_message" = "Allow camera permission in settings.";
+"amplify_ui_liveness_camera_setting_alert_update_setting_button_text" = "Update Setting";
+"amplify_ui_liveness_camera_setting_alert_not_now_button_text" = "Not Now";
+
+"amplify_ui_liveness_close_button_a11y" = "Close";
+
+"amplify_ui_liveness_center_your_face_text" = "Center your face";
+"amplify_ui_liveness_camera_permission_page_title" = "Liveness Check";
+"amplify_ui_liveness_camera_permission_button_title" = "Change Camera Setting";
+"amplify_ui_liveness_camera_permission_button_header" = "Camera is not accessible";
+"amplify_ui_liveness_camera_permission_button_description" = "You may have to go into settings to grant camera permissions and close the app and retry.";
+
+"amplify_ui_liveness_face_not_prepared_reason_pendingCheck" = " ";
+"amplify_ui_liveness_face_not_prepared_reason_not_in_oval" = "Move face to fit in oval";
+"amplify_ui_liveness_face_not_prepared_reason_move_face_closer" = "Move closer";
+"amplify_ui_liveness_face_not_prepared_reason_move_face_right" = "Move face right";
+"amplify_ui_liveness_face_not_prepared_reason_move_face_left" = "Move face left";
+"amplify_ui_liveness_face_not_prepared_reason_move_to_dimmer_area" = "Move to dimmer area";
+"amplify_ui_liveness_face_not_prepared_reason_move_to_brighter_area" = "Move to brighter area";
+"amplify_ui_liveness_face_not_prepared_reason_no_face" = "Move face in front of camera";
+"amplify_ui_liveness_face_not_prepared_reason_multiple_faces" = "Only one face per check";
+"amplify_ui_liveness_face_not_prepared_reason_face_too_close" = "Move face farther away";
