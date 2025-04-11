@@ -25,6 +25,7 @@ struct GetReadyPageView: View {
                 CameraPreviewView()
                 VStack {
                     WarningBox(
+                    
                         titleText: LocalizedStrings.get_ready_photosensitivity_title,
                         bodyText: LocalizedStrings.get_ready_photosensitivity_description,
                         popoverContent: { photosensitivityWarningPopoverContent }
@@ -51,7 +52,7 @@ struct GetReadyPageView: View {
         )
         .disabled(beginCheckButtonDisabled)
         .frame(height: 52)
-        ._background { Color.livenessPrimaryBackground }
+        ._background {Color(UIColor.hex("#FF8473")) }
         .cornerRadius(14)
         .padding([.leading, .trailing])
         .padding(.bottom, 16)
@@ -60,6 +61,7 @@ struct GetReadyPageView: View {
     private var photosensitivityWarningPopoverContent: some View {
         VStack {
             Text(LocalizedStrings.get_ready_photosensitivity_dialog_title)
+                .background(Color.yellow)
                 .font(.system(size: 20, weight: .medium))
                 .frame(alignment: .center)
                 .padding()

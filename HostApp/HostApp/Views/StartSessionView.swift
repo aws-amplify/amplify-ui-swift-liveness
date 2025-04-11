@@ -41,7 +41,7 @@ struct StartSessionView: View {
                         showAlert = err != nil
                     }
                 },
-                enabled: viewModel.isSignedIn
+                enabled: true
             )
             .alert(isPresented: $showAlert) {
                 Alert(

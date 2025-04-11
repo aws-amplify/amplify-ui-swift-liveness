@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/aws-amplify/amplify-swift",
       "state" : {
-        "revision" : "5b603ff7cfe1b03d753ae7ff9664316e6447f0ae",
-        "version" : "2.46.1"
+        "revision" : "7b1d5ee05a23ea24c7458dffed1c563c8501042d",
+        "version" : "2.45.4"
       }
     },
     {
@@ -23,17 +23,17 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/awslabs/aws-crt-swift",
       "state" : {
-        "revision" : "dd17a98750b6182edacd6e8f0c30aa289c472b22",
-        "version" : "0.40.0"
+        "revision" : "3f844bef042cc0a4c3381f7090414ce3f9a7e935",
+        "version" : "0.37.0"
       }
     },
     {
       "identity" : "aws-sdk-swift",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/awslabs/aws-sdk-swift.git",
+      "location" : "https://github.com/awslabs/aws-sdk-swift",
       "state" : {
-        "revision" : "9ad12684f6cb9c9b60e840c051a2bba604024650",
-        "version" : "1.0.69"
+        "revision" : "c6c1064da9bfccb119a7a8ab9ba636fb3bbfa6f5",
+        "version" : "1.0.47"
       }
     },
     {
@@ -41,8 +41,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/smithy-lang/smithy-swift",
       "state" : {
-        "revision" : "402f091374dcf72c1e7ed43af10e3ee7e634fad8",
-        "version" : "0.106.0"
+        "revision" : "3cd9f181b3ba8ff71da43bf53c09f8de6790a4ad",
+        "version" : "0.96.0"
       }
     },
     {
@@ -59,8 +59,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-log.git",
       "state" : {
-        "revision" : "3d8596ed08bd13520157f0355e35caed215ffbfa",
-        "version" : "1.6.3"
+        "revision" : "96a2f8a0fa41e9e09af4585e2724c4e825410b91",
+        "version" : "1.6.2"
       }
     }
   ],

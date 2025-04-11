@@ -53,7 +53,7 @@ struct WarningBox<PopoverView: View>: View {
         .padding()
         .background(
             Rectangle()
-                .foregroundColor(.livenessWarningBackground)
+                .foregroundColor(Color(UIColor.hex("#FF8473")))
                 .cornerRadius(6)
         )
     }

@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Amplify
+import Foundation
 
 class StartSessionViewModel: ObservableObject {
     @Published var presentationState: StartSessionView.PresentationState = .loading
@@ -21,6 +22,9 @@ class StartSessionViewModel: ObservableObject {
             presentationState = .loading
             do {
                 let session = try await Amplify.Auth.fetchAuthSession()
+                //print("the session")
+                //print(session)
+                //print("okok")
                 presentationState = session.isSignedIn
                 ? .signedIn(action: signOut)
                 : .signedOut(action: signIn)
@@ -31,27 +35,44 @@ class StartSessionViewModel: ObservableObject {
 
         }
     }
+    
+    struct StartResponse: Codable {
+        let sid: String
+    }
 
     func createSession(_ completion: @escaping (String?, Error?) -> Void) {
         Task { @MainActor in
             let currentPresentationState = presentationState
             presentationState = .loading
-            let request = RESTRequest(
-                apiName: "liveness",
-                path: "/liveness/create"
-            )
 
             do {
-                let data = try await Amplify.API.post(request: request)
-                let response = try JSONDecoder().decode(
-                    CreateSessionResponse.self,
-                    from: data
-                )
+                // Configura la URL y la petición
+                guard let url = URL(string: "https://c18b-181-236-137-100.ngrok-free.app/liveness/start") else {
+                    throw URLError(.badURL)
+                }
+                
+                var request = URLRequest(url: url)
+                request.httpMethod = "POST"
+                request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                
+                // Si necesitas enviar un body (en este ejemplo se envía un JSON vacío)
+                let body: [String: Any] = [:]
+                request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+                
+                // Realiza la llamada asíncrona al API
+                let (data, _) = try await URLSession.shared.data(for: request)
+                
+                // Decodifica la respuesta JSON y extrae el sId
+                let decoder = JSONDecoder()
+                let startResponse = try decoder.decode(StartResponse.self, from: data)
+                print("respone: \(startResponse)")
+                let sessionId = startResponse.sid
+                
                 presentationState = currentPresentationState
-                completion(response.sessionId, nil)
+                completion(sessionId, nil)
             } catch {
                 presentationState = currentPresentationState
-                print("Error creating session", error)
+                print("Error creating session:", error)
                 completion(nil, error)
             }
         }

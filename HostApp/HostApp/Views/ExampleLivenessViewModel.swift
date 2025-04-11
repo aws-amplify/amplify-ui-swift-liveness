@@ -18,14 +18,21 @@ class ExampleLivenessViewModel: ObservableObject {
     }
 
     func fetchLivenessResult() async throws -> LivenessResultContentView.Result {
-        let request = RESTRequest(
-            apiName: "liveness",
-            path: "/liveness/\(sessionID)"
-        )
-
-        let data = try await Amplify.API.get(request: request)
-        let result = try JSONDecoder().decode(LivenessResult.self, from: data)
-        let score = LivenessResultContentView.Result(livenessResult: result)
+        guard let url = URL(string: "https://c18b-181-236-137-100.ngrok-free.app/liveness/result/\(sessionID)") else {
+            throw URLError(.badURL)
+        }
+        
+        // Configura la petición GET
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        // Realiza la llamada asíncrona al endpoint
+        let (data, _) = try await URLSession.shared.data(for: request)
+        
+        // Decodifica la respuesta en el modelo LivenessResultContentView.Result
+        let livenessResult = try JSONDecoder().decode(LivenessResult.self, from: data)
+        let score = LivenessResultContentView.Result(livenessResult: livenessResult)
         return score
     }
 

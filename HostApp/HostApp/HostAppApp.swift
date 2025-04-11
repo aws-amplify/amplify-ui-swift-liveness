@@ -31,7 +31,7 @@ struct HostAppApp: App {
             let auth = AWSCognitoAuthPlugin()
             let api = AWSAPIPlugin()
             try Amplify.add(plugin: auth)
-            try Amplify.add(plugin: api)
+            //try Amplify.add(plugin: api)
             try Amplify.configure()
         } catch {
             print("Error configuring Amplify", error)
