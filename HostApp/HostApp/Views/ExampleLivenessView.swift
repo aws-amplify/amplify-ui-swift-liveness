@@ -8,7 +8,6 @@
 import SwiftUI
 import FaceLiveness
 
-
 struct ExampleLivenessView: View {
     @Binding var isPresented: Bool
     @ObservedObject var viewModel: ExampleLivenessViewModel
@@ -17,7 +16,6 @@ struct ExampleLivenessView: View {
         self.viewModel = .init(sessionID: sessionID)
         self._isPresented = isPresented
     }
-    
 
     var body: some View {
         switch viewModel.presentationState {
