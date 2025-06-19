@@ -342,7 +342,7 @@ public struct ChallengeOptions {
     let faceMovementAndLightChallengeOption: FaceMovementAndLightChallengeOption
     
     public init(faceMovementChallengeOption: FaceMovementChallengeOption,
-                faceMovementAndLightChallengeOption: FaceMovementAndLightChallengeOption) {
+                faceMovementAndLightChallengeOption: FaceMovementAndLightChallengeOption = .init()) {
         self.faceMovementChallengeOption = faceMovementChallengeOption
         self.faceMovementAndLightChallengeOption = faceMovementAndLightChallengeOption
     }

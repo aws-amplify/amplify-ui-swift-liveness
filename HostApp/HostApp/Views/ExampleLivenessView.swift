@@ -27,8 +27,7 @@ struct ExampleLivenessView: View {
             FaceLivenessDetectorView(
                 sessionID: viewModel.sessionID,
                 region: "us-east-1",
-                challengeOptions: .init(faceMovementChallengeOption: FaceMovementChallengeOption(camera: camera),
-                                        faceMovementAndLightChallengeOption: FaceMovementAndLightChallengeOption()),
+                challengeOptions: .init(faceMovementChallengeOption: FaceMovementChallengeOption(camera: camera)),
                 isPresented:  Binding(
                     get: { viewModel.presentationState == .liveness(camera) },
                     set: { _ in }
