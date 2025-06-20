@@ -80,9 +80,9 @@ struct GetReadyPageView: View {
 
 struct GetReadyPageView_Previews: PreviewProvider {
     static var previews: some View {
-        GetReadyPageView(onBegin: {}, 
-                         challenge: .init(version: "2.0.0",
-                                              type: .faceMovementAndLightChallenge),
-                         cameraPosition: .front)
+        GetReadyPageView(
+            onBegin: {},
+            challenge: .init(version: "2.0.0", type: .faceMovementAndLightChallenge),
+            cameraPosition: .front)
     }
 }
