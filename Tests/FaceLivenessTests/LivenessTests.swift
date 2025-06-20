@@ -71,7 +71,7 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
     /// Then: The end state of this flow is `.faceMatched`
     func testHappyPathToMatchedFace() async throws {
         viewModel.livenessService = self.livenessService
-        viewModel.challenge = Challenge(version: "2.0.0", type: .faceMovementAndLightChallenge)
+        viewModel.challengeReceived = Challenge(version: "2.0.0", type: .faceMovementAndLightChallenge)
 
         viewModel.livenessState.checkIsFacePrepared()
         XCTAssertEqual(viewModel.livenessState.state, .pendingFacePreparedConfirmation(.pendingCheck))
