@@ -131,6 +131,7 @@
 				9070FFBD285112B5009867D5 /* HostAppUITests */,
 				9070FFA1285112B4009867D5 /* Products */,
 				90215EED291E9FB60050F2AD /* Frameworks */,
+				A5A9AF5054D0FF13505B212A /* AmplifyConfig */,
 			);
 			sourceTree = "<group>";
 		};
@@ -211,6 +212,15 @@
 				90FDF2A4299BDF3E0002CE7D /* CreateSessionResponse.swift */,
 			);
 			path = Model;
+			sourceTree = "<group>";
+		};
+		A5A9AF5054D0FF13505B212A /* AmplifyConfig */ = {
+			isa = PBXGroup;
+			children = (
+				973619242BA378690003A590 /* awsconfiguration.json */,
+				973619232BA378690003A590 /* amplifyconfiguration.json */,
+			);
+			name = AmplifyConfig;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

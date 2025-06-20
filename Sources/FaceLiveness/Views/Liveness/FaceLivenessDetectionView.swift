@@ -20,6 +20,7 @@ public struct FaceLivenessDetectorView: View {
     @State var displayingCameraPermissionsNeededAlert = false
 
     let disableStartView: Bool
+    let challengeOptions: ChallengeOptions
     let onCompletion: (Result<Void, FaceLivenessDetectionError>) -> Void
 
     let sessionTask: Task<FaceLivenessSession, Error>
@@ -29,12 +30,14 @@ public struct FaceLivenessDetectorView: View {
         credentialsProvider: AWSCredentialsProvider? = nil,
         region: String,
         disableStartView: Bool = false,
+        challengeOptions: ChallengeOptions,
         isPresented: Binding<Bool>,
         onCompletion: @escaping (Result<Void, FaceLivenessDetectionError>) -> Void
     ) {        
         self.disableStartView = disableStartView
         self._isPresented = isPresented
         self.onCompletion = onCompletion
+        self.challengeOptions = challengeOptions
 
         self.sessionTask = Task {
             let session = try await AWSPredictionsPlugin.startFaceLivenessSession(
@@ -57,29 +60,15 @@ public struct FaceLivenessDetectorView: View {
             assetWriterInput: LivenessAVAssetWriterInput()
         )
 
-        let avCpatureDevice = AVCaptureDevice.DiscoverySession(
-            deviceTypes: [.builtInWideAngleCamera],
-            mediaType: .video,
-            position: .front
-        ).devices.first
-
-        let captureSession = LivenessCaptureSession(
-            captureDevice: .init(avCaptureDevice: avCpatureDevice),
-            outputDelegate: OutputSampleBufferCapturer(
-                faceDetector: faceDetector,
-                videoChunker: videoChunker
-            )
-        )
-
         self._viewModel = StateObject(
             wrappedValue: .init(
                 faceDetector: faceDetector,
                 faceInOvalMatching: faceInOvalStateMatching,
-                captureSession: captureSession,
                 videoChunker: videoChunker,
                 closeButtonAction: { onCompletion(.failure(.userCancelled)) },
                 sessionID: sessionID,
-                isPreviewScreenEnabled: !disableStartView
+                isPreviewScreenEnabled: !disableStartView,
+                challengeOptions: challengeOptions
             )
         )
     }
@@ -89,6 +78,7 @@ public struct FaceLivenessDetectorView: View {
         credentialsProvider: AWSCredentialsProvider? = nil,
         region: String,
         disableStartView: Bool = false,
+        challengeOptions: ChallengeOptions,
         isPresented: Binding<Bool>,
         onCompletion: @escaping (Result<Void, FaceLivenessDetectionError>) -> Void,
         captureSession: LivenessCaptureSession
@@ -96,6 +86,7 @@ public struct FaceLivenessDetectorView: View {
         self.disableStartView = disableStartView
         self._isPresented = isPresented
         self.onCompletion = onCompletion
+        self.challengeOptions = challengeOptions
 
         self.sessionTask = Task {
             let session = try await AWSPredictionsPlugin.startFaceLivenessSession(
@@ -115,11 +106,11 @@ public struct FaceLivenessDetectorView: View {
             wrappedValue: .init(
                 faceDetector: captureSession.outputSampleBufferCapturer!.faceDetector,
                 faceInOvalMatching: faceInOvalStateMatching,
-                captureSession: captureSession,
                 videoChunker: captureSession.outputSampleBufferCapturer!.videoChunker,
                 closeButtonAction: { onCompletion(.failure(.userCancelled)) },
                 sessionID: sessionID,
-                isPreviewScreenEnabled: !disableStartView
+                isPreviewScreenEnabled: !disableStartView,
+                challengeOptions: challengeOptions
             )
         )
     }
@@ -164,23 +155,32 @@ public struct FaceLivenessDetectorView: View {
                 .onAppear {
                     Task {
                         do {
+                            let cameraPosition: LivenessCamera
+                            switch challenge.type {
+                            case .faceMovementAndLightChallenge:
+                                cameraPosition = challengeOptions.faceMovementAndLightChallengeOption.camera
+                            case .faceMovementChallenge:
+                                cameraPosition = challengeOptions.faceMovementChallengeOption.camera
+                            }
+                            
                             let newState = disableStartView
                             ? DisplayState.displayingLiveness
-                            : DisplayState.displayingGetReadyView(challenge)
+                            : DisplayState.displayingGetReadyView(challenge, cameraPosition)
                             guard self.displayState != newState else { return }
                             self.displayState = newState
                         }
                     }
                 }
 
-        case .displayingGetReadyView(let challenge):
+        case .displayingGetReadyView(let challenge, let cameraPosition):
             GetReadyPageView(
                 onBegin: {
                     guard displayState != .displayingLiveness else { return }
                     displayState = .displayingLiveness
                 },
                 beginCheckButtonDisabled: false,
-                challenge: challenge
+                challenge: challenge,
+                cameraPosition: cameraPosition
             )
             .onAppear {
                 DispatchQueue.main.async {
@@ -246,7 +246,7 @@ public struct FaceLivenessDetectorView: View {
             for: .video,
             completionHandler: { accessGranted in
                 guard accessGranted == true else { return }
-                guard let challenge = viewModel.challenge else { return }
+                guard let challenge = viewModel.challengeReceived else { return }
                 displayState = .awaitingLivenessSession(challenge)
             }
         )
@@ -265,7 +265,7 @@ public struct FaceLivenessDetectorView: View {
         case .restricted, .denied:
             alertCameraAccessNeeded()
         case .authorized:
-            guard let challenge = viewModel.challenge else { return }
+            guard let challenge = viewModel.challengeReceived else { return }
             displayState = .awaitingLivenessSession(challenge)
         @unknown default:
             break
@@ -276,7 +276,7 @@ public struct FaceLivenessDetectorView: View {
 enum DisplayState: Equatable {
     case awaitingChallengeType
     case awaitingLivenessSession(Challenge)
-    case displayingGetReadyView(Challenge)
+    case displayingGetReadyView(Challenge, LivenessCamera)
     case displayingLiveness
     case awaitingCameraPermission
     
@@ -286,8 +286,8 @@ enum DisplayState: Equatable {
             return true
         case (let .awaitingLivenessSession(c1), let .awaitingLivenessSession(c2)):
             return c1.type == c2.type && c1.version == c2.version
-        case (let .displayingGetReadyView(c1), let .displayingGetReadyView(c2)):
-            return c1.type == c2.type && c1.version == c2.version
+        case (let .displayingGetReadyView(c1, position1), let .displayingGetReadyView(c2, position2)):
+            return c1.type == c2.type && c1.version == c2.version && position1 == position2
         case (.displayingLiveness, .displayingLiveness):
             return true
         case (.awaitingCameraPermission, .awaitingCameraPermission):
@@ -329,5 +329,41 @@ private func map(detectionCompletion: @escaping (Result<Void, FaceLivenessDetect
         default:
             detectionCompletion(.failure(.unknown))
         }
+    }
+}
+
+public enum LivenessCamera {
+    case front
+    case back
+}
+
+public struct ChallengeOptions {
+    let faceMovementChallengeOption: FaceMovementChallengeOption
+    let faceMovementAndLightChallengeOption: FaceMovementAndLightChallengeOption
+    
+    public init(faceMovementChallengeOption: FaceMovementChallengeOption,
+                faceMovementAndLightChallengeOption: FaceMovementAndLightChallengeOption = .init()) {
+        self.faceMovementChallengeOption = faceMovementChallengeOption
+        self.faceMovementAndLightChallengeOption = faceMovementAndLightChallengeOption
+    }
+}
+
+public struct FaceMovementChallengeOption {
+    let challenge: Challenge
+    let camera: LivenessCamera
+    
+    public init(camera: LivenessCamera) {
+        self.challenge = .init(version: "1.0.0", type: .faceMovementChallenge)
+        self.camera = camera
+    }
+}
+
+public struct FaceMovementAndLightChallengeOption {
+    let challenge: Challenge
+    let camera: LivenessCamera
+    
+    public init() {
+        self.challenge = .init(version: "2.0.0", type: .faceMovementAndLightChallenge)
+        self.camera = .front
     }
 }

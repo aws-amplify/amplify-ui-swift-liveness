@@ -12,7 +12,7 @@ struct StartSessionView: View {
     @EnvironmentObject var sceneDelegate: SceneDelegate
     @ObservedObject var viewModel = StartSessionViewModel()
     @Binding var sessionID: String
-    @Binding var isPresentingContainerView: Bool
+    @Binding var containerViewState: ContainerViewState
     @State private var showAlert = false
 
     var body: some View {
@@ -26,7 +26,7 @@ struct StartSessionView: View {
             )
 
             button(
-                text: "Create Liveness Session",
+                text: "Create Liveness Session (front camera)",
                 backgroundColor: .dynamicColors(
                     light: .hex("#047D95"),
                     dark: .hex("#7dd6e8")
@@ -35,7 +35,7 @@ struct StartSessionView: View {
                     viewModel.createSession { sessionId, err in
                         if let sessionId = sessionId {
                             sessionID = sessionId
-                            isPresentingContainerView = true
+                            containerViewState = .liveness(.front)
                         }
 
                         showAlert = err != nil
@@ -50,7 +50,38 @@ struct StartSessionView: View {
                     dismissButton: .default(
                                     Text("OK"),
                                     action: {
-                                        isPresentingContainerView = false
+                                        containerViewState = .startSession
+                                    }
+                    )
+                )
+            }
+            
+            button(
+                text: "Create Liveness Session (back camera)",
+                backgroundColor: .dynamicColors(
+                    light: .hex("#047D95"),
+                    dark: .hex("#7dd6e8")
+                ),
+                action: {
+                    viewModel.createSession { sessionId, err in
+                        if let sessionId = sessionId {
+                            sessionID = sessionId
+                            containerViewState = .liveness(.back)
+                        }
+
+                        showAlert = err != nil
+                    }
+                },
+                enabled: viewModel.isSignedIn
+            )
+            .alert(isPresented: $showAlert) {
+                Alert(
+                    title: Text("Error Creating Liveness Session"),
+                    message: Text("Unable to create a liveness session id.  Please try again."),
+                    dismissButton: .default(
+                                    Text("OK"),
+                                    action: {
+                                        containerViewState = .startSession
                                     }
                     )
                 )
