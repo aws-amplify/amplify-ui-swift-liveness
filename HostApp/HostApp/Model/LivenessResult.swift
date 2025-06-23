@@ -12,7 +12,7 @@ struct LivenessResult: Codable {
     let auditImageBytes: String?
     let confidenceScore: Double
     let isLive: Bool
-    let challenge: Challenge?
+    let challenge: Event?
 }
 
 extension LivenessResult: CustomDebugStringConvertible {
@@ -22,8 +22,17 @@ extension LivenessResult: CustomDebugStringConvertible {
             - confidenceScore: \(confidenceScore)
             - isLive: \(isLive)
             - auditImageBytes: \(auditImageBytes == nil ? "nil" : "<placeholder>")
-            - challengeType: \(String(describing: challenge?.type))
-            - challengeVersion: \(String(describing: challenge?.version))
+            - challenge: type: \(String(describing: challenge?.type)) + " version: " + \(String(describing: challenge?.version))
         """
+    }
+}
+
+struct Event: Codable {
+    let version: String
+    let type: ChallengeType
+
+    enum CodingKeys: String, CodingKey {
+        case version = "Version"
+        case type = "Type"
     }
 }

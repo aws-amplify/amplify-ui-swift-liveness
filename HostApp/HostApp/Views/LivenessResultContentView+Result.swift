@@ -16,7 +16,7 @@ extension LivenessResultContentView {
         let valueBackgroundColor: Color
         let auditImage: Data?
         let isLive: Bool
-        let challenge: Challenge?
+        let challenge: Event?
         
         init(livenessResult: LivenessResult) {
             guard livenessResult.confidenceScore > 0 else {

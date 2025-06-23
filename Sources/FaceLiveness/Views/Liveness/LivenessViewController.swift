@@ -105,7 +105,7 @@ final class _LivenessViewController: UIViewController {
     var initialFace: FaceDetection?
     var videoStartTimeStamp: UInt64?
     var faceMatchStartTime: UInt64?
-    var faceGuideRect: CGRect?
+    var faceGuideRect: CGRect!
     var freshnessEventsComplete = false
     var videoSentCount = 0
     var hasSentFinalEvent = false
@@ -175,9 +175,8 @@ extension _LivenessViewController: FaceLivenessViewControllerPresenter {
     }
     
     func completeNoLightCheck() {
-        guard let faceGuideRect = self.faceGuideRect else { return }
         self.viewModel.completeNoLightCheck(
-            faceGuide: faceGuideRect
+            faceGuide: faceGuideRect!
         )
     }
 }

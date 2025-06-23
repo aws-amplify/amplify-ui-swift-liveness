@@ -27,13 +27,6 @@ final class CredentialsProviderTestCase: XCTestCase {
             assetWriterDelegate: VideoChunker.AssetWriterDelegate(),
             assetWriterInput: LivenessAVAssetWriterInput()
         )
-        let captureSession = LivenessCaptureSession(
-            captureDevice: .init(avCaptureDevice: nil),
-            outputDelegate: OutputSampleBufferCapturer(
-                faceDetector: faceDetector,
-                videoChunker: videoChunker
-            )
-        )
 
         let viewModel = FaceLivenessDetectionViewModel(
             faceDetector: faceDetector,

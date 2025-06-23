@@ -18,13 +18,6 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
             assetWriterDelegate: VideoChunker.AssetWriterDelegate(),
             assetWriterInput: LivenessAVAssetWriterInput()
         )
-        let captureSession = LivenessCaptureSession(
-            captureDevice: .init(avCaptureDevice: nil),
-            outputDelegate: OutputSampleBufferCapturer(
-                faceDetector: faceDetector,
-                videoChunker: videoChunker
-            )
-        )
 
         let viewModel = FaceLivenessDetectionViewModel(
             faceDetector: faceDetector,
@@ -71,7 +64,7 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
     /// Then: The end state of this flow is `.faceMatched`
     func testHappyPathToMatchedFace() async throws {
         viewModel.livenessService = self.livenessService
-        viewModel.challengeReceived = Challenge(version: "2.0.0", type: .faceMovementAndLightChallenge)
+        viewModel.challengeReceived = .faceMovementAndLightChallenge("2.0.0")
 
         viewModel.livenessState.checkIsFacePrepared()
         XCTAssertEqual(viewModel.livenessState.state, .pendingFacePreparedConfirmation(.pendingCheck))
@@ -116,7 +109,7 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
     /// Then: The end state of this flow is `.recording(ovalDisplayed: false)`
     func testTransitionToRecordingState() async throws {
         viewModel.livenessService = self.livenessService
-        viewModel.challengeReceived = Challenge(version: "2.0.0", type: .faceMovementAndLightChallenge)
+        viewModel.challengeReceived = .faceMovementChallenge("1.0.0")
         
         let face = FaceLivenessSession.OvalMatchChallenge.Face(
             distanceThreshold: 0.32,
@@ -136,7 +129,7 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
                                                                iouHeightThreshold: 0.1,
                                                                ovalFitTimeout: 1)
         
-        viewModel.sessionConfiguration = .init(ovalMatchChallenge: .init(faceDetectionThreshold: 0.7,
+        viewModel.sessionConfiguration = .faceMovement(.init(faceDetectionThreshold: 0.7,
                                                                          face: face,
                                                                          oval: oval))
 

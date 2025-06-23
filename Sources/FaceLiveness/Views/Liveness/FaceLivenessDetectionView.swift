@@ -125,11 +125,32 @@ public struct FaceLivenessDetectorView: View {
                         let session = try await sessionTask.value
                         viewModel.livenessService = session
                         viewModel.registerServiceEvents(onChallengeTypeReceived: { challenge in
-                            self.displayState = DisplayState.awaitingLivenessSession(challenge)
+                            self.displayState = DisplayState.awaitingCameraPermission(challenge)
                         })
                         viewModel.initializeLivenessStream()
+                    } catch let error as FaceLivenessDetectionError {
+                        switch error {
+                        case .unknown:
+                            viewModel.livenessState.unrecoverableStateEncountered(.unknown)
+                        case .sessionTimedOut,
+                             .faceInOvalMatchExceededTimeLimitError,
+                             .countdownFaceTooClose,
+                             .countdownMultipleFaces,
+                             .countdownNoFace:
+                            viewModel.livenessState.unrecoverableStateEncountered(.timedOut)
+                        case .cameraPermissionDenied:
+                            viewModel.livenessState.unrecoverableStateEncountered(.missingVideoPermission)
+                        case .userCancelled:
+                            viewModel.livenessState.unrecoverableStateEncountered(.userCancelled)
+                        case .socketClosed:
+                            viewModel.livenessState.unrecoverableStateEncountered(.socketClosed)
+                        case .cameraNotAvailable:
+                            viewModel.livenessState.unrecoverableStateEncountered(.cameraNotAvailable)
+                        default:
+                            viewModel.livenessState.unrecoverableStateEncountered(.couldNotOpenStream)
+                        }
                     } catch {
-                        throw FaceLivenessDetectionError.accessDenied
+                        viewModel.livenessState.unrecoverableStateEncountered(.couldNotOpenStream)
                     }
                     
                     DispatchQueue.main.async {
@@ -150,28 +171,30 @@ public struct FaceLivenessDetectorView: View {
                     break
                 }
             }
+        case .awaitingCameraPermission(let challenge):
+            CameraPermissionView(displayingCameraPermissionsNeededAlert: $displayingCameraPermissionsNeededAlert)
+                .onAppear {
+                    checkCameraPermission(for: challenge)
+                }
         case .awaitingLivenessSession(let challenge):
             Color.clear
                 .onAppear {
                     Task {
-                        do {
-                            let cameraPosition: LivenessCamera
-                            switch challenge.type {
-                            case .faceMovementAndLightChallenge:
-                                cameraPosition = challengeOptions.faceMovementAndLightChallengeOption.camera
-                            case .faceMovementChallenge:
-                                cameraPosition = challengeOptions.faceMovementChallengeOption.camera
-                            }
-                            
-                            let newState = disableStartView
-                            ? DisplayState.displayingLiveness
-                            : DisplayState.displayingGetReadyView(challenge, cameraPosition)
-                            guard self.displayState != newState else { return }
-                            self.displayState = newState
+                        let cameraPosition: LivenessCamera
+                        switch challenge {
+                        case .faceMovementAndLightChallenge:
+                            cameraPosition = challengeOptions.faceMovementAndLightChallengeOption.camera
+                        case .faceMovementChallenge:
+                            cameraPosition = challengeOptions.faceMovementChallengeOption.camera
                         }
+                        
+                        let newState = disableStartView
+                        ? DisplayState.displayingLiveness
+                        : DisplayState.displayingGetReadyView(challenge, cameraPosition)
+                        guard self.displayState != newState else { return }
+                        self.displayState = newState
                     }
                 }
-
         case .displayingGetReadyView(let challenge, let cameraPosition):
             GetReadyPageView(
                 onBegin: {
@@ -218,11 +241,6 @@ public struct FaceLivenessDetectorView: View {
                     break
                 }
             }
-        case .awaitingCameraPermission:
-            CameraPermissionView(displayingCameraPermissionsNeededAlert: $displayingCameraPermissionsNeededAlert)
-                .onAppear {
-                    checkCameraPermission()
-                }
         }
     }
 
@@ -232,7 +250,7 @@ public struct FaceLivenessDetectorView: View {
             return .userCancelled
         case .timedOut:
             return .faceInOvalMatchExceededTimeLimitError
-        case .socketClosed:
+        case .couldNotOpenStream, .socketClosed:
             return .socketClosed
         case .cameraNotAvailable:
             return .cameraNotAvailable
@@ -241,31 +259,28 @@ public struct FaceLivenessDetectorView: View {
         }
     }
 
-    private func requestCameraPermission() {
+    private func requestCameraPermission(for challenge: Challenge) {
         AVCaptureDevice.requestAccess(
             for: .video,
             completionHandler: { accessGranted in
                 guard accessGranted == true else { return }
-                guard let challenge = viewModel.challengeReceived else { return }
                 displayState = .awaitingLivenessSession(challenge)
             }
         )
-
     }
 
     private func alertCameraAccessNeeded() {
         displayingCameraPermissionsNeededAlert = true
     }
     
-    private func checkCameraPermission() {
+    private func checkCameraPermission(for challenge: Challenge) {
         let cameraAuthorizationStatus = AVCaptureDevice.authorizationStatus(for: .video)
         switch cameraAuthorizationStatus {
         case .notDetermined:
-            requestCameraPermission()
+            requestCameraPermission(for: challenge)
         case .restricted, .denied:
             alertCameraAccessNeeded()
         case .authorized:
-            guard let challenge = viewModel.challengeReceived else { return }
             displayState = .awaitingLivenessSession(challenge)
         @unknown default:
             break
@@ -275,19 +290,19 @@ public struct FaceLivenessDetectorView: View {
 
 enum DisplayState: Equatable {
     case awaitingChallengeType
+    case awaitingCameraPermission(Challenge)
     case awaitingLivenessSession(Challenge)
     case displayingGetReadyView(Challenge, LivenessCamera)
     case displayingLiveness
-    case awaitingCameraPermission
     
     static func == (lhs: DisplayState, rhs: DisplayState) -> Bool {
         switch (lhs, rhs) {
         case (.awaitingChallengeType, .awaitingChallengeType):
             return true
         case (let .awaitingLivenessSession(c1), let .awaitingLivenessSession(c2)):
-            return c1.type == c2.type && c1.version == c2.version
+            return c1 == c2
         case (let .displayingGetReadyView(c1, position1), let .displayingGetReadyView(c2, position2)):
-            return c1.type == c2.type && c1.version == c2.version && position1 == position2
+            return c1 == c2 && position1 == position2
         case (.displayingLiveness, .displayingLiveness):
             return true
         case (.awaitingCameraPermission, .awaitingCameraPermission):
@@ -353,7 +368,7 @@ public struct FaceMovementChallengeOption {
     let camera: LivenessCamera
     
     public init(camera: LivenessCamera) {
-        self.challenge = .init(version: "1.0.0", type: .faceMovementChallenge)
+        self.challenge = .faceMovementChallenge("1.0.0")
         self.camera = camera
     }
 }
@@ -363,7 +378,7 @@ public struct FaceMovementAndLightChallengeOption {
     let camera: LivenessCamera
     
     public init() {
-        self.challenge = .init(version: "2.0.0", type: .faceMovementAndLightChallenge)
+        self.challenge = .faceMovementAndLightChallenge("2.0.0")
         self.camera = .front
     }
 }

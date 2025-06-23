@@ -37,7 +37,7 @@ struct GetReadyPageView: View {
                         popoverContent: { photosensitivityWarningPopoverContent }
                     )
                     .accessibilityElement(children: .combine)
-                    .opacity(challenge.type == .faceMovementAndLightChallenge ? 1.0 : 0.0)
+                    .opacity(challenge == Challenge.faceMovementAndLightChallenge("2.0.0") ? 1.0 : 0.0)
                     Text(LocalizedStrings.preview_center_your_face_text)
                         .font(.title)
                         .multilineTextAlignment(.center)
@@ -82,7 +82,7 @@ struct GetReadyPageView_Previews: PreviewProvider {
     static var previews: some View {
         GetReadyPageView(
             onBegin: {},
-            challenge: .init(version: "2.0.0", type: .faceMovementAndLightChallenge),
+            challenge: .faceMovementAndLightChallenge("2.0.0"),
             cameraPosition: .front)
     }
 }

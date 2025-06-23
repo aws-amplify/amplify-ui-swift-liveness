@@ -50,11 +50,20 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     static var attemptIdTimeStamp: Date = Date()
     
     var noFitTimeoutInterval: TimeInterval {
-        if let sessionTimeoutMilliSec = sessionConfiguration?.ovalMatchChallenge.oval.ovalFitTimeout {
-            return TimeInterval(sessionTimeoutMilliSec/1_000)
-        } else {
+        guard let sessionConfiguration = sessionConfiguration else {
             return defaultNoFitTimeoutInterval
         }
+        
+        let ovalMatchChallenge: FaceLivenessSession.OvalMatchChallenge
+        switch sessionConfiguration{
+        case .faceMovement(let challenge):
+            ovalMatchChallenge = challenge
+        case .faceMovementAndLight(_, let challenge):
+            ovalMatchChallenge = challenge
+        }
+        
+        let sessionTimeoutMilliSec = ovalMatchChallenge.oval.ovalFitTimeout
+        return TimeInterval(sessionTimeoutMilliSec/1_000)
     }
     
     init(
@@ -166,9 +175,17 @@ class FaceLivenessDetectionViewModel: ObservableObject {
 
     func drawOval(onComplete: @escaping () -> Void) {
         guard livenessState.state == .recording(ovalDisplayed: false),
-              let ovalParameters = sessionConfiguration?.ovalMatchChallenge.oval
-        else { return }
-
+              let sessionConfiguration = sessionConfiguration else { return }
+        
+        let ovalMatchChallenge: FaceLivenessSession.OvalMatchChallenge
+        switch sessionConfiguration {
+        case .faceMovement(let challenge):
+            ovalMatchChallenge = challenge
+        case .faceMovementAndLight(_, let challenge):
+            ovalMatchChallenge = challenge
+        }
+        
+        let ovalParameters = ovalMatchChallenge.oval
         let scaleRatio = cameraViewRect.width / videoSize.width
         let rect = CGRect(
             x: ovalParameters.boundingBox.x,
@@ -275,8 +292,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         do {
             try livenessService?.send(
                 .initialFaceDetected(event: _initialClientEvent, 
-                                     challenge: .init(version: challengeReceived.version,
-                                                      type: challengeReceived.type)),
+                                     challenge: challengeReceived),
                 eventDate: { .init() }
             )
         } catch {
@@ -310,8 +326,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         do {
             try livenessService?.send(
                 .final(event: finalClientEvent,
-                       challenge: .init(version: challengeReceived.version,
-                                            type: challengeReceived.type)),
+                       challenge: challengeReceived),
                 eventDate: { .init() }
             )
 
@@ -407,7 +422,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     
     func configureCaptureSession(challenge: Challenge) {
         let cameraPosition: LivenessCamera
-        switch challenge.type {
+        switch challenge {
         case .faceMovementChallenge:
             cameraPosition = challengeOptions.faceMovementChallengeOption.camera
         case .faceMovementAndLightChallenge:

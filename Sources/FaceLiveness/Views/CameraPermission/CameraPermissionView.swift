@@ -17,7 +17,7 @@ struct CameraPermissionView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading) {
+        VStack(alignment: .center) {
             Spacer()
             VStack {
                 Text(LocalizedStrings.camera_permission_change_setting_header)

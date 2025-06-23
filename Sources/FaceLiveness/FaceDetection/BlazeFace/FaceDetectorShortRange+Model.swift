@@ -114,14 +114,19 @@ extension FaceDetectorShortRange {
             
             let blazeFaceDetectionThreshold: Float
             if let sessionConfiguration = faceDetectionSessionConfiguration?.sessionConfiguration {
-                blazeFaceDetectionThreshold = Float(sessionConfiguration.ovalMatchChallenge.faceDetectionThreshold)
+                switch sessionConfiguration {
+                case .faceMovement(let ovalMatchChallenge):
+                    blazeFaceDetectionThreshold = Float(ovalMatchChallenge.faceDetectionThreshold)
+                case .faceMovementAndLight(_, let ovalMatchChallenge):
+                    blazeFaceDetectionThreshold = Float(ovalMatchChallenge.faceDetectionThreshold)
+                }
             } else {
                 blazeFaceDetectionThreshold = confidenceScoreThreshold
             }
 
             var passingConfidenceScoresIndices = confidenceScores
                 .enumerated()
-                .filter { $0.element >=  blazeFaceDetectionThreshold}
+                .filter { $0.element >= blazeFaceDetectionThreshold}
                 .sorted(by: {
                     $0.element > $1.element
                 })
