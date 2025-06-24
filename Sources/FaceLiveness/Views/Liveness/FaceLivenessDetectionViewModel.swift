@@ -40,7 +40,6 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     var provideSingleFrame: ((UIImage) -> Void)?
     var cameraViewRect = CGRect.zero
     var ovalRect = CGRect.zero
-    var faceGuideRect: CGRect!
     var initialClientEvent: InitialClientEvent?
     var faceMatchedTimestamp: UInt64?
     var noFitStartTime: Date?
@@ -303,7 +302,6 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     }
 
     func sendFinalEvent(
-        targetFaceRect: CGRect,
         viewSize: CGSize,
         faceMatchedEnd: UInt64
     ) {
@@ -345,7 +343,6 @@ class FaceLivenessDetectionViewModel: ObservableObject {
 
     func sendFinalVideoEvent() {
         sendFinalEvent(
-            targetFaceRect: faceGuideRect,
             viewSize: videoSize,
             faceMatchedEnd: Date().timestampMilliseconds
         )
@@ -355,17 +352,15 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         }
     }
 
-    func handleFreshnessComplete(faceGuide: CGRect) {
+    func handleFreshnessComplete() {
         DispatchQueue.main.async {
             self.livenessState.completedDisplayingFreshness()
-            self.faceGuideRect = faceGuide
         }
     }
     
-    func completeNoLightCheck(faceGuide: CGRect) {
+    func completeNoLightCheck() {
         DispatchQueue.main.async {
             self.livenessState.completedNoLightCheck()
-            self.faceGuideRect = faceGuide
         }
     }
 
