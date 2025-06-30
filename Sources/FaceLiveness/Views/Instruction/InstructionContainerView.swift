@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Combine
+@_spi(PredictionsFaceLiveness) import AWSPredictionsPlugin
 
 struct InstructionContainerView: View {
     @ObservedObject var viewModel: FaceLivenessDetectionViewModel
@@ -97,13 +98,29 @@ struct InstructionContainerView: View {
                     argument: LocalizedStrings.challenge_verifying
                 )
             }
-        case .faceMatched:
+        case .completedNoLightCheck:
             InstructionView(
-                text: LocalizedStrings.challenge_instruction_hold_still,
-                backgroundColor: .livenessPrimaryBackground,
-                textColor: .livenessPrimaryLabel,
-                font: .title
+                text: LocalizedStrings.challenge_verifying,
+                backgroundColor: .livenessBackground
             )
+            .onAppear {
+                UIAccessibility.post(
+                    notification: .announcement,
+                    argument: LocalizedStrings.challenge_verifying
+                )
+            }
+        case .faceMatched:
+            if let challenge = viewModel.challengeReceived,
+               case .faceMovementAndLightChallenge = challenge {
+                InstructionView(
+                    text: LocalizedStrings.challenge_instruction_hold_still,
+                    backgroundColor: .livenessPrimaryBackground,
+                    textColor: .livenessPrimaryLabel,
+                    font: .title
+                )
+            } else {
+                EmptyView()
+            }
         default:
             EmptyView()
         }
