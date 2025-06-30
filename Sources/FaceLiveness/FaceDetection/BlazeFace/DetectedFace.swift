@@ -6,6 +6,7 @@
 //
 
 import Foundation
+@_spi(PredictionsFaceLiveness) import AWSPredictionsPlugin
 
 struct DetectedFace {
     var boundingBox: CGRect
@@ -19,7 +20,8 @@ struct DetectedFace {
 
     let confidence: Float
 
-    func boundingBoxFromLandmarks(ovalRect: CGRect) -> CGRect {
+    func boundingBoxFromLandmarks(ovalRect: CGRect,
+                                  ovalMatchChallenge: FaceLivenessSession.OvalMatchChallenge) -> CGRect {
         let alpha = 2.0
         let gamma = 1.8
         let ow = (alpha * pupilDistance + gamma * faceHeight) / 2
@@ -34,7 +36,7 @@ struct DetectedFace {
         }
         
         let faceWidth = ow
-        let faceHeight = 1.618 * faceWidth
+        let faceHeight = ovalMatchChallenge.oval.heightWidthRatio * faceWidth
         let faceBoxBottom = boundingBox.maxY
         let faceBoxTop = faceBoxBottom - faceHeight
         let faceBoxLeft = min(cx - ow / 2, rightEar.x)
