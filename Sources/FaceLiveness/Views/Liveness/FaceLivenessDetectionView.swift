@@ -78,7 +78,7 @@ public struct FaceLivenessDetectorView: View {
         credentialsProvider: AWSCredentialsProvider? = nil,
         region: String,
         disableStartView: Bool = false,
-        challengeOptions: ChallengeOptions,
+        challengeOptions: ChallengeOptions = .init(),
         isPresented: Binding<Bool>,
         onCompletion: @escaping (Result<Void, FaceLivenessDetectionError>) -> Void,
         captureSession: LivenessCaptureSession
