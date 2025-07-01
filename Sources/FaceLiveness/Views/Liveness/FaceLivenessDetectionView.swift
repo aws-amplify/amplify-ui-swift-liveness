@@ -30,7 +30,7 @@ public struct FaceLivenessDetectorView: View {
         credentialsProvider: AWSCredentialsProvider? = nil,
         region: String,
         disableStartView: Bool = false,
-        challengeOptions: ChallengeOptions,
+        challengeOptions: ChallengeOptions = .init(),
         isPresented: Binding<Bool>,
         onCompletion: @escaping (Result<Void, FaceLivenessDetectionError>) -> Void
     ) {        
@@ -78,7 +78,7 @@ public struct FaceLivenessDetectorView: View {
         credentialsProvider: AWSCredentialsProvider? = nil,
         region: String,
         disableStartView: Bool = false,
-        challengeOptions: ChallengeOptions,
+        challengeOptions: ChallengeOptions = .init(),
         isPresented: Binding<Bool>,
         onCompletion: @escaping (Result<Void, FaceLivenessDetectionError>) -> Void,
         captureSession: LivenessCaptureSession
@@ -356,7 +356,7 @@ public struct ChallengeOptions {
     let faceMovementChallengeOption: FaceMovementChallengeOption
     let faceMovementAndLightChallengeOption: FaceMovementAndLightChallengeOption
     
-    public init(faceMovementChallengeOption: FaceMovementChallengeOption,
+    public init(faceMovementChallengeOption: FaceMovementChallengeOption = .init(camera: .front),
                 faceMovementAndLightChallengeOption: FaceMovementAndLightChallengeOption = .init()) {
         self.faceMovementChallengeOption = faceMovementChallengeOption
         self.faceMovementAndLightChallengeOption = faceMovementAndLightChallengeOption
