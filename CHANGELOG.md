@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.4.0 (2025-06-30)
+
+### Features
+
+- add no-light/facemovementonly challenge and back camera support  (#131)
+
+## 1.3.5 (2025-03-18)
+
+## 1.3.4 (2025-01-13)
+
 ## 1.3.3 (2024-09-24)
 
 ## 1.3.2 (2024-08-20)

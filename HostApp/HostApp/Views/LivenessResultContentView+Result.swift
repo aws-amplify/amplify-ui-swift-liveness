@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+@_spi(PredictionsFaceLiveness) import AWSPredictionsPlugin
 
 extension LivenessResultContentView {
     struct Result {
@@ -15,6 +16,7 @@ extension LivenessResultContentView {
         let valueBackgroundColor: Color
         let auditImage: Data?
         let isLive: Bool
+        let challenge: Event?
         
         init(livenessResult: LivenessResult) {
             guard livenessResult.confidenceScore > 0 else {
@@ -24,6 +26,7 @@ extension LivenessResultContentView {
                 valueBackgroundColor = .clear
                 auditImage = nil
                 isLive = false
+                challenge = nil
                 return
             }
             isLive = livenessResult.isLive
@@ -41,6 +44,7 @@ extension LivenessResultContentView {
             auditImage = livenessResult.auditImageBytes.flatMap{
                 Data(base64Encoded: $0)
             }
+            challenge = livenessResult.challenge
         }
     }
 

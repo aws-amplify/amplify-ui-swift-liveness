@@ -6,23 +6,30 @@
 //
 
 import SwiftUI
+@_spi(PredictionsFaceLiveness) import AWSPredictionsPlugin
 
 struct GetReadyPageView: View {
     let beginCheckButtonDisabled: Bool
     let onBegin: () -> Void
-
+    let challenge: Challenge
+    let cameraPosition: LivenessCamera
+    
     init(
         onBegin: @escaping () -> Void,
-        beginCheckButtonDisabled: Bool = false
+        beginCheckButtonDisabled: Bool = false,
+        challenge: Challenge,
+        cameraPosition: LivenessCamera
     ) {
         self.onBegin = onBegin
         self.beginCheckButtonDisabled = beginCheckButtonDisabled
+        self.challenge = challenge
+        self.cameraPosition = cameraPosition
     }
 
     var body: some View {
         VStack {
             ZStack {
-                CameraPreviewView()
+                CameraPreviewView(model: CameraPreviewViewModel(cameraPosition: cameraPosition))
                 VStack {
                     WarningBox(
                         titleText: LocalizedStrings.get_ready_photosensitivity_title,
@@ -30,6 +37,7 @@ struct GetReadyPageView: View {
                         popoverContent: { photosensitivityWarningPopoverContent }
                     )
                     .accessibilityElement(children: .combine)
+                    .opacity(challenge == Challenge.faceMovementAndLightChallenge("2.0.0") ? 1.0 : 0.0)
                     Text(LocalizedStrings.preview_center_your_face_text)
                         .font(.title)
                         .multilineTextAlignment(.center)
@@ -72,6 +80,9 @@ struct GetReadyPageView: View {
 
 struct GetReadyPageView_Previews: PreviewProvider {
     static var previews: some View {
-        GetReadyPageView(onBegin: {})
+        GetReadyPageView(
+            onBegin: {},
+            challenge: .faceMovementAndLightChallenge("2.0.0"),
+            cameraPosition: .front)
     }
 }

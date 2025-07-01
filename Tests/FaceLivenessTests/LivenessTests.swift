@@ -18,21 +18,16 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
             assetWriterDelegate: VideoChunker.AssetWriterDelegate(),
             assetWriterInput: LivenessAVAssetWriterInput()
         )
-        let captureSession = LivenessCaptureSession(
-            captureDevice: .init(avCaptureDevice: nil),
-            outputDelegate: OutputSampleBufferCapturer(
-                faceDetector: faceDetector,
-                videoChunker: videoChunker
-            )
-        )
 
         let viewModel = FaceLivenessDetectionViewModel(
             faceDetector: faceDetector,
             faceInOvalMatching: .init(instructor: .init()),
-            captureSession: captureSession,
             videoChunker: videoChunker,
             closeButtonAction: {},
-            sessionID: UUID().uuidString
+            sessionID: UUID().uuidString,
+            isPreviewScreenEnabled: false,
+            challengeOptions: .init(faceMovementChallengeOption: .init(camera: .front),
+                                    faceMovementAndLightChallengeOption: .init())
         )
 
         self.videoChunker = videoChunker
@@ -69,6 +64,7 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
     /// Then: The end state of this flow is `.faceMatched`
     func testHappyPathToMatchedFace() async throws {
         viewModel.livenessService = self.livenessService
+        viewModel.challengeReceived = .faceMovementAndLightChallenge("2.0.0")
 
         viewModel.livenessState.checkIsFacePrepared()
         XCTAssertEqual(viewModel.livenessState.state, .pendingFacePreparedConfirmation(.pendingCheck))
@@ -104,15 +100,38 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
             "setResultHandler(detectionResultHandler:) (FaceLivenessDetectionViewModel)"
         ])
         XCTAssertEqual(livenessService.interactions, [
-            "initializeLivenessStream(withSessionID:userAgent:)"
+                    "initializeLivenessStream(withSessionID:userAgent:challenges:options:)"
         ])
     }
     
     /// Given:  A `FaceLivenessDetectionViewModel`
     /// When: The viewModel is processes a single face result with a face distance less than the inital face distance
-    /// Then: The end state of this flow is `.recording(ovalDisplayed: false)` and initializeLivenessStream(withSessionID:userAgent:) is called
+    /// Then: The end state of this flow is `.recording(ovalDisplayed: false)`
     func testTransitionToRecordingState() async throws {
         viewModel.livenessService = self.livenessService
+        viewModel.challengeReceived = .faceMovementChallenge("1.0.0")
+        
+        let face = FaceLivenessSession.OvalMatchChallenge.Face(
+            distanceThreshold: 0.32,
+            distanceThresholdMax: 0.1,
+            distanceThresholdMin: 0.1,
+            iouWidthThreshold: 0.1,
+            iouHeightThreshold: 0.1
+        )
+        
+        let oval = FaceLivenessSession.OvalMatchChallenge.Oval(boundingBox: .init(x: 0.1,
+                                                                                  y: 0.1,
+                                                                                  width: 0.1,
+                                                                                  height: 0.1),
+                                                               heightWidthRatio: 1.618,
+                                                               iouThreshold: 0.1,
+                                                               iouWidthThreshold: 0.1,
+                                                               iouHeightThreshold: 0.1,
+                                                               ovalFitTimeout: 1)
+        
+        viewModel.sessionConfiguration = .faceMovement(.init(faceDetectionThreshold: 0.7,
+                                                                         face: face,
+                                                                         oval: oval))
 
         viewModel.livenessState.checkIsFacePrepared()
         XCTAssertEqual(viewModel.livenessState.state, .pendingFacePreparedConfirmation(.pendingCheck))
@@ -135,9 +154,6 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
         XCTAssertEqual(viewModel.livenessState.state, .recording(ovalDisplayed: false))
         XCTAssertEqual(faceDetector.interactions, [
             "setResultHandler(detectionResultHandler:) (FaceLivenessDetectionViewModel)"
-        ])
-        XCTAssertEqual(livenessService.interactions, [
-            "initializeLivenessStream(withSessionID:userAgent:)"
         ])
     }
     
@@ -173,5 +189,56 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
         self.viewModel.handleNoFaceDetected()
         try await Task.sleep(seconds: 1)
         XCTAssertEqual(self.viewModel.livenessState.state,  .encounteredUnrecoverableError(.timedOut))
+    }
+    
+    /// Given:  A `FaceLivenessDetectionViewModel`
+    /// When: The initializeLivenessStream() is called for the first time and then called again after 3 seconds
+    /// Then: The attempt count is incremented
+    func testAttemptCountIncrementFirstTime() async throws {
+        viewModel.livenessService = self.livenessService
+        self.viewModel.initializeLivenessStream()
+        XCTAssertEqual(livenessService.interactions, [
+                    "initializeLivenessStream(withSessionID:userAgent:challenges:options:)"
+        ])
+        
+        XCTAssertEqual(FaceLivenessDetectionViewModel.attemptCount, 1)
+        try await Task.sleep(seconds: 3)
+        
+        self.viewModel.initializeLivenessStream()
+        XCTAssertEqual(livenessService.interactions, [
+                    "initializeLivenessStream(withSessionID:userAgent:challenges:options:)",
+                    "initializeLivenessStream(withSessionID:userAgent:challenges:options:)"
+        ])
+        XCTAssertEqual(FaceLivenessDetectionViewModel.attemptCount, 2)
+    }
+    
+    /// Given:  A `FaceLivenessDetectionViewModel`
+    /// When: The attempt count is 4, last attempt time was < 5 minutes and initializeLivenessStream() is called
+    /// Then: The attempt count is incremented
+    func testAttemptCountIncrement() async throws {
+        viewModel.livenessService = self.livenessService
+        FaceLivenessDetectionViewModel.attemptCount = 4
+        FaceLivenessDetectionViewModel.attemptIdTimeStamp = Date().addingTimeInterval(-180)
+        self.viewModel.initializeLivenessStream()
+        XCTAssertEqual(livenessService.interactions, [
+                    "initializeLivenessStream(withSessionID:userAgent:challenges:options:)"
+        ])
+        
+        XCTAssertEqual(FaceLivenessDetectionViewModel.attemptCount, 5)
+    }
+    
+    /// Given:  A `FaceLivenessDetectionViewModel`
+    /// When: The attempt count is 4, last attempt time was > 5 minutes and initializeLivenessStream() is called
+    /// Then: The attempt count is not incremented and reset to 1
+    func testAttemptCountReset() async throws {
+        viewModel.livenessService = self.livenessService
+        FaceLivenessDetectionViewModel.attemptCount = 4
+        FaceLivenessDetectionViewModel.attemptIdTimeStamp = Date().addingTimeInterval(-305)
+        self.viewModel.initializeLivenessStream()
+        XCTAssertEqual(livenessService.interactions, [
+                    "initializeLivenessStream(withSessionID:userAgent:challenges:options:)"
+        ])
+        
+        XCTAssertEqual(FaceLivenessDetectionViewModel.attemptCount, 1)
     }
 }

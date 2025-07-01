@@ -6,25 +6,32 @@
 //
 
 import SwiftUI
+import FaceLiveness
 
 struct RootView: View {
     @EnvironmentObject var sceneDelegate: SceneDelegate
     @State var sessionID = ""
-    @State var isPresentingContainerView = false
+    @State var containerViewState = ContainerViewState.startSession
 
     var body: some View {
-        if isPresentingContainerView {
+        switch containerViewState {
+        case .liveness:
             ExampleLivenessView(
                 sessionID: sessionID,
-                isPresented: $isPresentingContainerView
+                containerViewState: $containerViewState
             )
-        } else {
+        case .startSession:
             StartSessionView(
                 sessionID: $sessionID,
-                isPresentingContainerView: $isPresentingContainerView
+                containerViewState: $containerViewState
             )
             .background(Color.dynamicColors(light: .white, dark: .secondarySystemBackground))
             .edgesIgnoringSafeArea(.all)
         }
     }
+}
+
+enum ContainerViewState: Hashable {
+    case liveness(LivenessCamera)
+    case startSession
 }

@@ -12,7 +12,7 @@ struct StartSessionView: View {
     @EnvironmentObject var sceneDelegate: SceneDelegate
     @ObservedObject var viewModel = StartSessionViewModel()
     @Binding var sessionID: String
-    @Binding var isPresentingContainerView: Bool
+    @Binding var containerViewState: ContainerViewState
     @State private var showAlert = false
 
     var body: some View {
@@ -35,7 +35,8 @@ struct StartSessionView: View {
                     viewModel.createSession { sessionId, err in
                         if let sessionId = sessionId {
                             sessionID = sessionId
-                            isPresentingContainerView = true
+                            // modify camera preference for `FaceMovementChallenge`
+                            containerViewState = .liveness(.front)
                         }
 
                         showAlert = err != nil
@@ -50,7 +51,7 @@ struct StartSessionView: View {
                     dismissButton: .default(
                                     Text("OK"),
                                     action: {
-                                        isPresentingContainerView = false
+                                        containerViewState = .startSession
                                     }
                     )
                 )
