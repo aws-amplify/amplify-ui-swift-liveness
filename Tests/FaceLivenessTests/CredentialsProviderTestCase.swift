@@ -27,21 +27,16 @@ final class CredentialsProviderTestCase: XCTestCase {
             assetWriterDelegate: VideoChunker.AssetWriterDelegate(),
             assetWriterInput: LivenessAVAssetWriterInput()
         )
-        let captureSession = LivenessCaptureSession(
-            captureDevice: .init(avCaptureDevice: nil),
-            outputDelegate: OutputSampleBufferCapturer(
-                faceDetector: faceDetector,
-                videoChunker: videoChunker
-            )
-        )
 
         let viewModel = FaceLivenessDetectionViewModel(
             faceDetector: faceDetector,
             faceInOvalMatching: .init(instructor: .init()),
-            captureSession: captureSession,
             videoChunker: videoChunker,
             closeButtonAction: {},
-            sessionID: UUID().uuidString
+            sessionID: UUID().uuidString,
+            isPreviewScreenEnabled: false,
+            challengeOptions: .init(faceMovementChallengeOption: .init(camera: .front),
+                                    faceMovementAndLightChallengeOption: .init())
         )
 
         self.videoChunker = videoChunker
@@ -65,6 +60,8 @@ final class CredentialsProviderTestCase: XCTestCase {
             sessionID: UUID().uuidString,
             credentialsProvider: credentialsProvider,
             region: "us-east-1",
+            challengeOptions: .init(faceMovementChallengeOption: .init(camera: .front), 
+                                    faceMovementAndLightChallengeOption: .init()),
             isPresented: .constant(true),
             onCompletion: { _ in }
         )
@@ -101,6 +98,8 @@ final class CredentialsProviderTestCase: XCTestCase {
             sessionID: UUID().uuidString,
             credentialsProvider: credentialsProvider,
             region: "us-east-1",
+            challengeOptions: .init(faceMovementChallengeOption: .init(camera: .front),
+                                    faceMovementAndLightChallengeOption: .init()),
             isPresented: .constant(true),
             onCompletion: { _ in }
         )

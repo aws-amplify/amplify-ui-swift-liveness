@@ -27,15 +27,28 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
                 }
             }
         case .singleFace(let face):
+            guard let sessionConfiguration = sessionConfiguration else { return }
+            
+            let ovalMatchChallenge: FaceLivenessSession.OvalMatchChallenge
+            var colorChallenge: FaceLivenessSession.ColorChallenge?
+            switch sessionConfiguration {
+            case .faceMovement(let ovalChallenge):
+                ovalMatchChallenge = ovalChallenge
+            case .faceMovementAndLight(let colorSeqChallenge, let ovalChallenge):
+                colorChallenge = colorSeqChallenge
+                ovalMatchChallenge = ovalChallenge
+            }
+            
             var normalizedFace = normalizeFace(face)
-            normalizedFace.boundingBox = normalizedFace.boundingBoxFromLandmarks(ovalRect: ovalRect)
+            normalizedFace.boundingBox = normalizedFace.boundingBoxFromLandmarks(
+                ovalRect: ovalRect,
+                ovalMatchChallenge: ovalMatchChallenge)
 
             switch livenessState.state {
             case .pendingFacePreparedConfirmation:
-                if face.faceDistance <= initialFaceDistanceThreshold {
+                if face.faceDistance <= ovalMatchChallenge.face.distanceThreshold {
                         DispatchQueue.main.async {
                             self.livenessState.awaitingRecording()
-                            self.initializeLivenessStream()
                         }
                         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                             self.livenessState.beginRecording()
@@ -55,27 +68,26 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
                     )
                 })
             case .recording(ovalDisplayed: true):
-                guard let sessionConfiguration = sessionConfiguration else { return }
                 let instruction = faceInOvalMatching.faceMatchState(
                     for: normalizedFace.boundingBox,
                     in: ovalRect,
-                    challengeConfig: sessionConfiguration.ovalMatchChallenge
+                    challengeConfig: ovalMatchChallenge
                 )
 
                 handleInstruction(
                     instruction,
-                    colorSequences: sessionConfiguration.colorChallenge.colors
+                    colorSequences: colorChallenge?.colors
                 )
             case .awaitingFaceInOvalMatch:
-                guard let sessionConfiguration = sessionConfiguration else { return }
                 let instruction = faceInOvalMatching.faceMatchState(
                     for: normalizedFace.boundingBox,
                     in: ovalRect,
-                    challengeConfig: sessionConfiguration.ovalMatchChallenge
+                    challengeConfig: ovalMatchChallenge
                 )
+
                 handleInstruction(
                     instruction,
-                    colorSequences: sessionConfiguration.colorChallenge.colors
+                    colorSequences: colorChallenge?.colors
                 )
             default: break
 
@@ -104,16 +116,28 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
 
     func handleInstruction(
         _ instruction: Instructor.Instruction,
-        colorSequences: [FaceLivenessSession.DisplayColor]
+        colorSequences: [FaceLivenessSession.DisplayColor]?
     ) {
         DispatchQueue.main.async {
             switch instruction {
             case .match:
                 self.livenessState.faceMatched()
                 self.faceMatchedTimestamp = Date().timestampMilliseconds
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                    self.livenessViewControllerDelegate?.displayFreshness(colorSequences: colorSequences)
+                
+                // next step after face match
+                switch self.challengeReceived{
+                case .faceMovementAndLightChallenge:
+                    if let colorSequences = colorSequences {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                            self.livenessViewControllerDelegate?.displayFreshness(colorSequences: colorSequences)
+                        }
+                    }
+                case .faceMovementChallenge:
+                    self.livenessViewControllerDelegate?.completeNoLightCheck()
+                default:
+                    break
                 }
+
                 let generator = UINotificationFeedbackGenerator()
                 generator.notificationOccurred(.success)
                 self.noFitStartTime = nil
@@ -134,7 +158,7 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
         DispatchQueue.main.async {
             self.livenessState
                 .unrecoverableStateEncountered(.timedOut)
-            self.captureSession.stopRunning()
+            self.captureSession?.stopRunning()
         }
     }
 }
