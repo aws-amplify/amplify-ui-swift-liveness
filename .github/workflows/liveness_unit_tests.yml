@@ -12,6 +12,9 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+
 jobs:
   test-iOS:
     name: Liveness iOS Unit Tests
@@ -27,5 +30,5 @@ jobs:
         with:
           scheme: FaceLiveness
           token: ${{ secrets.CODECOV_TOKEN }}
-          destination: 'platform=iOS Simulator,name=iPhone 15,OS=latest'
+          destination: 'platform=iOS Simulator,name=iPhone 16 Pro Max,OS=18.5'
           generate_coverage: true
