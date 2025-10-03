@@ -180,4 +180,8 @@ extension URLSessionWebSocketTask.CloseCode {
     static let viewClosure = URLSessionWebSocketTask.CloseCode(rawValue: 4004)
     static let unexpectedRuntimeError = URLSessionWebSocketTask.CloseCode(rawValue: 4005)
     static let missingVideoPermission = URLSessionWebSocketTask.CloseCode(rawValue: 4006)
+    
+    func isKnownLivenessError() -> Bool {
+        return (4001...4006).contains(self.rawValue)
+    }
 }
