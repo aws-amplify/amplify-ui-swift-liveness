@@ -223,7 +223,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
             try livenessService?.initializeLivenessStream(
                 withSessionID: sessionID,
                 userAgent: UserAgentValues.standard().userAgentString,
-                challenges: [//challengeOptions.faceMovementChallengeOption.challenge,
+                challenges: [challengeOptions.faceMovementChallengeOption.challenge,
                              challengeOptions.faceMovementAndLightChallengeOption.challenge],
                 options: .init(
                     attemptCount: Self.attemptCount,
