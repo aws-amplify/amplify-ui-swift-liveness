@@ -6,7 +6,7 @@
       "location" : "https://github.com/aws-amplify/amplify-swift",
       "state" : {
         "branch" : "fix/liveness-service-exception-callback",
-        "revision" : "304e2f8b5c96001a2d07a73725409f1acb619913"
+        "revision" : "4c96097c55f837bb944fb06e6e18be2147ed99f5"
       }
     },
     {
@@ -95,8 +95,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-argument-parser.git",
       "state" : {
-        "revision" : "309a47b2b1d9b5e991f36961c983ecec72275be3",
-        "version" : "1.6.1"
+        "revision" : "cdd0ef3755280949551dc26dee5de9ddeda89f54",
+        "version" : "1.6.2"
       }
     },
     {

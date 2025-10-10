@@ -117,7 +117,8 @@ class FaceLivenessDetectionViewModel: ObservableObject {
                 }
             case .unexpectedClosure(let error):
                 DispatchQueue.main.async {
-                    // known liveness errors already set `livenessState`
+                    // known liveness/rekognition service exceptions set the `livenessState` and
+                    // invoke onCompletion() callback directly
                     guard !error.isKnownLivenessError() else { return }
                     self?.livenessState.unrecoverableStateEncountered(.socketClosed)
                 }
@@ -222,7 +223,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
             try livenessService?.initializeLivenessStream(
                 withSessionID: sessionID,
                 userAgent: UserAgentValues.standard().userAgentString,
-                challenges: [challengeOptions.faceMovementChallengeOption.challenge,
+                challenges: [//challengeOptions.faceMovementChallengeOption.challenge,
                              challengeOptions.faceMovementAndLightChallengeOption.challenge],
                 options: .init(
                     attemptCount: Self.attemptCount,
