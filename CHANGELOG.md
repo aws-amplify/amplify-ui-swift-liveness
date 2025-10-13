@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.3 (2025-10-13)
+
+### Bug Fixes
+
+- avoid invoking onCompletion handler twice for non-service errors (#214)
+
 ## 1.4.2 (2025-07-17)
 
 ## 1.4.1 (2025-07-01)
