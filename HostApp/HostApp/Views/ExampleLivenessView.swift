@@ -93,6 +93,8 @@ struct ExampleLivenessView: View {
                         LivenessCheckErrorContentView.invalidSignature
                     case .cameraNotAvailable:
                         LivenessCheckErrorContentView.cameraNotAvailable
+                    case .validation:
+                        LivenessCheckErrorContentView.validation
                     default:
                         LivenessCheckErrorContentView.unexpected
                     }

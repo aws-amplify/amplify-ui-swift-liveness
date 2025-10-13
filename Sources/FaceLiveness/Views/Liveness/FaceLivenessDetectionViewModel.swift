@@ -115,10 +115,12 @@ class FaceLivenessDetectionViewModel: ObservableObject {
                 DispatchQueue.main.async {
                     self?.livenessState.complete()
                 }
-            case .unexpectedClosure:
+            case .unexpectedClosure(let error):
                 DispatchQueue.main.async {
-                    self?.livenessState
-                        .unrecoverableStateEncountered(.socketClosed)
+                    // known liveness/rekognition service exceptions set the `livenessState` and
+                    // invoke onCompletion() callback directly
+                    guard !error.isKnownLivenessError() else { return }
+                    self?.livenessState.unrecoverableStateEncountered(.socketClosed)
                 }
             }
         })

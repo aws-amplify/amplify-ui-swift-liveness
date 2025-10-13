@@ -55,6 +55,11 @@ extension LivenessCheckErrorContentView {
         name: "The signature on the request is invalid.",
         description: "Ensure the device time is correct and try again."
     )
+    
+    static let validation = LivenessCheckErrorContentView(
+        name: "The input fails to satisfy the constraints specified by the service.",
+        description: "Please try again."
+    )
 
     static let cameraNotAvailable = LivenessCheckErrorContentView(
         name: "The camera could not be started.",
