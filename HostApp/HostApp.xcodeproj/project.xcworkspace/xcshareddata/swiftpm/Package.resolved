@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/aws-amplify/amplify-swift",
       "state" : {
-        "branch" : "fix/liveness-service-exception-callback",
-        "revision" : "4c96097c55f837bb944fb06e6e18be2147ed99f5"
+        "revision" : "c5a33cad99211150814183a2242d182dfd28fa2a",
+        "version" : "2.51.2"
       }
     },
     {
