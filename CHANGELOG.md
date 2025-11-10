@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.4 (2025-11-10)
+
+### Bug Fixes
+
+- capture weak self reference in dispatchqueue execute blocks (#220)
+
 ## 1.4.3 (2025-10-13)
 
 ### Bug Fixes
