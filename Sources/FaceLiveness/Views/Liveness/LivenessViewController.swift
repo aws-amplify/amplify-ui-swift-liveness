@@ -28,8 +28,6 @@ final class _LivenessViewController: UIViewController {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
         viewModel.livenessViewControllerDelegate = self
-
-
         viewModel.normalizeFace = { [weak self] face in
             guard let self = self else { return face }
             return DispatchQueue.main.sync {
@@ -78,8 +76,8 @@ final class _LivenessViewController: UIViewController {
         let cameraFrame = CGRect(x: x, y: y, width: width, height: height)
 
         guard let avLayer = viewModel.configureCamera(withinFrame: cameraFrame) else {
-            DispatchQueue.main.async {
-                self.viewModel.livenessState
+            DispatchQueue.main.async { [weak self] in
+                self?.viewModel.livenessState
                     .unrecoverableStateEncountered(.missingVideoPermission)
             }
             return
@@ -91,7 +89,8 @@ final class _LivenessViewController: UIViewController {
             viewModel.cameraViewRect = previewLayer.frame
         }
 
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
             self.view.layer.insertSublayer(avLayer, at: 0)
             self.view.layoutIfNeeded()
 
@@ -117,7 +116,8 @@ final class _LivenessViewController: UIViewController {
 
 extension _LivenessViewController: FaceLivenessViewControllerPresenter {
     func displaySingleFrame(uiImage: UIImage) {
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
             guard let previewLayer = self.previewLayer else { return }
             let imageView = UIImageView(image: uiImage)
             imageView.frame = previewLayer.frame
@@ -130,8 +130,8 @@ extension _LivenessViewController: FaceLivenessViewControllerPresenter {
 
     func displayFreshness(colorSequences: [FaceLivenessSession.DisplayColor]) {
         self.ovalView?.setNeedsDisplay()
-        DispatchQueue.main.async {
-            self.viewModel.livenessState.displayingFreshness()
+        DispatchQueue.main.async { [weak self] in
+            self?.viewModel.livenessState.displayingFreshness()
         }
         self.freshness.showColorSequences(
             colorSequences,
@@ -151,7 +151,8 @@ extension _LivenessViewController: FaceLivenessViewControllerPresenter {
     }
 
     func drawOvalInCanvas(_ ovalRect: CGRect) {
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
             guard let previewLayer = self.previewLayer else { return }
 
             let ovalView = OvalView(
