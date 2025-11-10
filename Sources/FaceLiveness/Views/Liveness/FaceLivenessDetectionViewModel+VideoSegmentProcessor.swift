@@ -13,8 +13,8 @@ extension FaceLivenessDetectionViewModel: VideoSegmentProcessor {
         sendVideoEvent(data: chunk, videoEventTime: .zero)
         if !hasSentFinalVideoEvent &&
             (livenessState.state == .completedDisplayingFreshness || livenessState.state == .completedNoLightCheck) {
-            DispatchQueue.global(qos: .default).asyncAfter(deadline: .now() + 0.9) {
-                self.sendFinalVideoEvent()
+            DispatchQueue.global(qos: .default).asyncAfter(deadline: .now() + 0.9) { [weak self] in
+                self?.sendFinalVideoEvent()
             }
         }
     }

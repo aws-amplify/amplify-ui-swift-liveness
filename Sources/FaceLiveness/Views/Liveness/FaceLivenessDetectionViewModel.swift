@@ -143,9 +143,9 @@ class FaceLivenessDetectionViewModel: ObservableObject {
 
     @objc func willResignActive(_ notification: Notification) {
         guard self.livenessState.state != .initial else { return }
-        DispatchQueue.main.async {
-            self.stopRecording()
-            self.livenessState.unrecoverableStateEncountered(.viewResignation)
+        DispatchQueue.main.async { [weak self] in
+            self?.stopRecording()
+            self?.livenessState.unrecoverableStateEncountered(.viewResignation)
         }
     }
 
@@ -160,12 +160,13 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     func configureCamera(withinFrame frame: CGRect) -> CALayer? {
         do {
             let avLayer = try captureSession?.configureCamera(frame: frame)
-            DispatchQueue.main.async {
-                self.livenessState.checkIsFacePrepared()
+            DispatchQueue.main.async { [weak self] in
+                self?.livenessState.checkIsFacePrepared()
             }
             return avLayer
         } catch {
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
                 self.livenessState.unrecoverableStateEncountered(
                     self.generateLivenessError(from: error)
                 )
@@ -203,8 +204,8 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         )
 
         livenessViewControllerDelegate?.drawOvalInCanvas(normalizedOvalRect)
-        DispatchQueue.main.async {
-            self.livenessState.ovalDisplayed()
+        DispatchQueue.main.async { [weak self] in
+            self?.livenessState.ovalDisplayed()
             onComplete()
         }
         ovalRect = normalizedOvalRect
@@ -230,8 +231,8 @@ class FaceLivenessDetectionViewModel: ObservableObject {
                     preCheckViewEnabled: isPreviewScreenEnabled)
             )
         } catch {
-            DispatchQueue.main.async {
-                self.livenessState.unrecoverableStateEncountered(.couldNotOpenStream)
+            DispatchQueue.main.async { [weak self] in
+                self?.livenessState.unrecoverableStateEncountered(.couldNotOpenStream)
             }
         }
     }
@@ -253,8 +254,8 @@ class FaceLivenessDetectionViewModel: ObservableObject {
                 eventDate: { .init() }
             )
         } catch {
-            DispatchQueue.main.async {
-                self.livenessState.unrecoverableStateEncountered(.unknown)
+            DispatchQueue.main.async { [weak self] in
+                self?.livenessState.unrecoverableStateEncountered(.unknown)
             }
         }
     }
@@ -297,8 +298,8 @@ class FaceLivenessDetectionViewModel: ObservableObject {
                 eventDate: { .init() }
             )
         } catch {
-            DispatchQueue.main.async {
-                self.livenessState.unrecoverableStateEncountered(.unknown)
+            DispatchQueue.main.async { [weak self] in
+                self?.livenessState.unrecoverableStateEncountered(.unknown)
             }
         }
     }
@@ -337,8 +338,8 @@ class FaceLivenessDetectionViewModel: ObservableObject {
             hasSentFinalVideoEvent = true
 
         } catch {
-            DispatchQueue.main.async {
-                self.livenessState.unrecoverableStateEncountered(.unknown)
+            DispatchQueue.main.async { [weak self] in
+                self?.livenessState.unrecoverableStateEncountered(.unknown)
             }
         }
     }
@@ -355,14 +356,14 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     }
 
     func handleFreshnessComplete() {
-        DispatchQueue.main.async {
-            self.livenessState.completedDisplayingFreshness()
+        DispatchQueue.main.async { [weak self] in
+            self?.livenessState.completedDisplayingFreshness()
         }
     }
     
     func completeNoLightCheck() {
-        DispatchQueue.main.async {
-            self.livenessState.completedNoLightCheck()
+        DispatchQueue.main.async { [weak self] in
+            self?.livenessState.completedNoLightCheck()
         }
     }
 
@@ -379,8 +380,8 @@ class FaceLivenessDetectionViewModel: ObservableObject {
                 eventDate: { eventDate }
             )
         } catch {
-            DispatchQueue.main.async {
-                self.livenessState.unrecoverableStateEncountered(.unknown)
+            DispatchQueue.main.async { [weak self] in
+                self?.livenessState.unrecoverableStateEncountered(.unknown)
             }
         }
     }
