@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/aws-amplify/amplify-swift",
       "state" : {
-        "branch" : "fix/liveness-memory-leaks",
-        "revision" : "130f41521b43e4c92bc660ad6d145b8379aa4918"
+        "revision" : "2fe27275101dcb945b9198f16b6285055c1dab5e",
+        "version" : "2.51.5"
       }
     },
     {
