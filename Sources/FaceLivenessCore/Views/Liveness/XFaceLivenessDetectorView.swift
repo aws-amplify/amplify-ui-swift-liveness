@@ -1,11 +1,13 @@
 //
-// Copyright Amazon.com Inc. or its affiliates.
-// All Rights Reserved.
+//  XFaceLivenessDetectorView.swift
+//  XFaceLiveness
 //
-// SPDX-License-Identifier: Apache-2.0
+//  Created by Ruslan Serebriakov on 3/17/26.
+//  Copyright © 2026 X Corp. All rights reserved.
 //
 
 import SwiftUI
+import UIKit
 import AWSClientRuntime
 import protocol AWSPluginsCore.AWSCredentialsProvider
 import AWSPredictionsPlugin
@@ -13,10 +15,10 @@ import AVFoundation
 import Amplify
 @_spi(PredictionsFaceLiveness) import AWSPredictionsPlugin
 
-public struct FaceLivenessDetectorView: View {
+public struct XFaceLivenessDetectorView: View {
     @StateObject var viewModel: FaceLivenessDetectionViewModel
     @Binding var isPresented: Bool
-    @State var displayState: DisplayState = .awaitingChallengeType
+    @State var displayState: XDisplayState = .awaitingChallengeType
     @State var displayingCameraPermissionsNeededAlert = false
 
     let disableStartView: Bool
@@ -33,7 +35,7 @@ public struct FaceLivenessDetectorView: View {
         challengeOptions: ChallengeOptions = .init(),
         isPresented: Binding<Bool>,
         onCompletion: @escaping (Result<Void, FaceLivenessDetectionError>) -> Void
-    ) {        
+    ) {
         self.disableStartView = disableStartView
         self._isPresented = isPresented
         self.onCompletion = onCompletion
@@ -44,7 +46,7 @@ public struct FaceLivenessDetectorView: View {
                 withID: sessionID,
                 credentialsProvider: credentialsProvider,
                 region: region,
-                completion: map(detectionCompletion: onCompletion)
+                completion: xMapDetectionCompletion(onCompletion)
             )
             return session
         }
@@ -72,7 +74,7 @@ public struct FaceLivenessDetectorView: View {
             )
         )
     }
-    
+
     init(
         sessionID: String,
         credentialsProvider: AWSCredentialsProvider? = nil,
@@ -93,7 +95,7 @@ public struct FaceLivenessDetectorView: View {
                 withID: sessionID,
                 credentialsProvider: credentialsProvider,
                 region: region,
-                completion: map(detectionCompletion: onCompletion)
+                completion: xMapDetectionCompletion(onCompletion)
             )
             return session
         }
@@ -118,14 +120,14 @@ public struct FaceLivenessDetectorView: View {
     public var body: some View {
         switch displayState {
         case .awaitingChallengeType:
-            LoadingPageView()
+            XLoadingOverlayView()
             .onAppear {
                 Task {
                     do {
                         let session = try await sessionTask.value
                         viewModel.livenessService = session
                         viewModel.registerServiceEvents(onChallengeTypeReceived: { challenge in
-                            self.displayState = DisplayState.awaitingCameraPermission(challenge)
+                            self.displayState = XDisplayState.awaitingCameraPermission(challenge)
                         })
                         viewModel.initializeLivenessStream()
                     } catch let error as FaceLivenessDetectionError {
@@ -152,7 +154,7 @@ public struct FaceLivenessDetectorView: View {
                     } catch {
                         viewModel.livenessState.unrecoverableStateEncountered(.couldNotOpenStream)
                     }
-                    
+
                     DispatchQueue.main.async {
                         if let faceDetector = viewModel.faceDetector as? FaceDetectorShortRange.Model {
                             faceDetector.setFaceDetectionSessionConfigurationWrapper(configuration: viewModel)
@@ -166,52 +168,39 @@ public struct FaceLivenessDetectorView: View {
                     let closeCode = error.webSocketCloseCode ?? .normalClosure
                     viewModel.livenessService?.closeSocket(with: closeCode)
                     isPresented = false
-                    onCompletion(.failure(mapError(error)))
+                    onCompletion(.failure(xMapError(error)))
                 default:
                     break
                 }
             }
         case .awaitingCameraPermission(let challenge):
-            CameraPermissionView(displayingCameraPermissionsNeededAlert: $displayingCameraPermissionsNeededAlert)
+            XLoadingOverlayView()
+                .alert(isPresented: $displayingCameraPermissionsNeededAlert) {
+                    Alert(
+                        title: Text("Camera Access Required"),
+                        message: Text("Please enable camera access in Settings to use Face Liveness."),
+                        primaryButton: .default(Text("Settings")) {
+                            if let url = URL(string: UIApplication.openSettingsURLString) {
+                                UIApplication.shared.open(url)
+                            }
+                        },
+                        secondaryButton: .cancel()
+                    )
+                }
                 .onAppear {
                     checkCameraPermission(for: challenge)
                 }
-        case .awaitingLivenessSession(let challenge):
-            Color.clear
+        case .awaitingLivenessSession:
+            XLoadingOverlayView()
                 .onAppear {
                     Task {
-                        let cameraPosition: LivenessCamera
-                        switch challenge {
-                        case .faceMovementAndLightChallenge:
-                            cameraPosition = challengeOptions.faceMovementAndLightChallengeOption.camera
-                        case .faceMovementChallenge:
-                            cameraPosition = challengeOptions.faceMovementChallengeOption.camera
-                        }
-                        
-                        let newState = disableStartView
-                        ? DisplayState.displayingLiveness
-                        : DisplayState.displayingGetReadyView(challenge, cameraPosition)
+                        let newState = XDisplayState.displayingLiveness
                         guard self.displayState != newState else { return }
                         self.displayState = newState
                     }
                 }
-        case .displayingGetReadyView(let challenge, let cameraPosition):
-            GetReadyPageView(
-                onBegin: {
-                    guard displayState != .displayingLiveness else { return }
-                    displayState = .displayingLiveness
-                },
-                beginCheckButtonDisabled: false,
-                challenge: challenge,
-                cameraPosition: cameraPosition
-            )
-            .onAppear {
-                DispatchQueue.main.async {
-                    UIScreen.main.brightness = 1.0
-                }
-            }
         case .displayingLiveness:
-            _FaceLivenessDetectionView(
+            XFaceLivenessDetectionView(
                 viewModel: viewModel,
                 videoView: {
                     CameraView(
@@ -236,7 +225,7 @@ public struct FaceLivenessDetectorView: View {
                     let closeCode = error.webSocketCloseCode ?? .normalClosure
                     viewModel.livenessService?.closeSocket(with: closeCode)
                     isPresented = false
-                    onCompletion(.failure(mapError(error)))
+                    onCompletion(.failure(xMapError(error)))
                 default:
                     break
                 }
@@ -244,7 +233,7 @@ public struct FaceLivenessDetectorView: View {
         }
     }
 
-    func mapError(_ livenessError: LivenessStateMachine.LivenessError) -> FaceLivenessDetectionError {
+    private func xMapError(_ livenessError: LivenessStateMachine.LivenessError) -> FaceLivenessDetectionError {
         switch livenessError {
         case .userCancelled, .viewResignation:
             return .userCancelled
@@ -272,7 +261,7 @@ public struct FaceLivenessDetectorView: View {
     private func alertCameraAccessNeeded() {
         displayingCameraPermissionsNeededAlert = true
     }
-    
+
     private func checkCameraPermission(for challenge: Challenge) {
         let cameraAuthorizationStatus = AVCaptureDevice.authorizationStatus(for: .video)
         switch cameraAuthorizationStatus {
@@ -288,21 +277,66 @@ public struct FaceLivenessDetectorView: View {
     }
 }
 
-enum DisplayState: Equatable {
+// MARK: - X Loading Overlay View
+
+/// A dark-themed loading view that shows the same UI as the detection view
+/// (oval cutout with instruction pill) to ensure smooth visual transition
+struct XLoadingOverlayView: View {
+    private let ovalWidth: CGFloat = 250
+    private let ovalHeight: CGFloat = 344
+    
+    var body: some View {
+        GeometryReader { geometry in
+            let ovalCenter = CGPoint(
+                x: geometry.size.width / 2,
+                y: geometry.size.height * 0.42
+            )
+            let ovalSize = CGSize(width: ovalWidth, height: ovalHeight)
+            let ovalTopY = ovalCenter.y - ovalHeight / 2
+            
+            ZStack {
+                // Black background
+                Color.black
+                    .ignoresSafeArea()
+                
+                // Dark overlay with oval cutout
+                XOvalCutoutOverlay(ovalSize: ovalSize, ovalCenter: ovalCenter)
+                    .fill(Color.black, style: FillStyle(eoFill: true))
+                
+                // White oval stroke
+                Ellipse()
+                    .stroke(Color.white, lineWidth: 4)
+                    .frame(width: ovalWidth, height: ovalHeight)
+                    .position(ovalCenter)
+                
+                // Instruction pill - positioned 30px above the oval
+                Text("Put your face in the circle")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundColor(.black)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 10)
+                    .background(Capsule().fill(Color.white))
+                    .position(x: geometry.size.width / 2, y: ovalTopY - 30)
+            }
+        }
+        .preferredColorScheme(.dark)
+    }
+}
+
+// MARK: - X Display State
+
+enum XDisplayState: Equatable {
     case awaitingChallengeType
     case awaitingCameraPermission(Challenge)
     case awaitingLivenessSession(Challenge)
-    case displayingGetReadyView(Challenge, LivenessCamera)
     case displayingLiveness
-    
-    static func == (lhs: DisplayState, rhs: DisplayState) -> Bool {
+
+    static func == (lhs: XDisplayState, rhs: XDisplayState) -> Bool {
         switch (lhs, rhs) {
         case (.awaitingChallengeType, .awaitingChallengeType):
             return true
         case (let .awaitingLivenessSession(c1), let .awaitingLivenessSession(c2)):
             return c1 == c2
-        case (let .displayingGetReadyView(c1, position1), let .displayingGetReadyView(c2, position2)):
-            return c1 == c2 && position1 == position2
         case (.displayingLiveness, .displayingLiveness):
             return true
         case (.awaitingCameraPermission, .awaitingCameraPermission):
@@ -313,12 +347,9 @@ enum DisplayState: Equatable {
     }
 }
 
-enum InstructionState {
-    case none
-    case display(text: String)
-}
+// MARK: - Helper
 
-private func map(detectionCompletion: @escaping (Result<Void, FaceLivenessDetectionError>) -> Void) -> ((Result<Void, FaceLivenessSessionError>) -> Void) {
+private func xMapDetectionCompletion(_ detectionCompletion: @escaping (Result<Void, FaceLivenessDetectionError>) -> Void) -> ((Result<Void, FaceLivenessSessionError>) -> Void) {
     { result in
         switch result {
         case .success:
@@ -344,41 +375,5 @@ private func map(detectionCompletion: @escaping (Result<Void, FaceLivenessDetect
         default:
             detectionCompletion(.failure(.unknown))
         }
-    }
-}
-
-public enum LivenessCamera {
-    case front
-    case back
-}
-
-public struct ChallengeOptions {
-    let faceMovementChallengeOption: FaceMovementChallengeOption
-    let faceMovementAndLightChallengeOption: FaceMovementAndLightChallengeOption
-    
-    public init(faceMovementChallengeOption: FaceMovementChallengeOption = .init(camera: .front),
-                faceMovementAndLightChallengeOption: FaceMovementAndLightChallengeOption = .init()) {
-        self.faceMovementChallengeOption = faceMovementChallengeOption
-        self.faceMovementAndLightChallengeOption = faceMovementAndLightChallengeOption
-    }
-}
-
-public struct FaceMovementChallengeOption {
-    let challenge: Challenge
-    let camera: LivenessCamera
-    
-    public init(camera: LivenessCamera) {
-        self.challenge = .faceMovementChallenge("1.0.0")
-        self.camera = camera
-    }
-}
-
-public struct FaceMovementAndLightChallengeOption {
-    let challenge: Challenge
-    let camera: LivenessCamera
-    
-    public init() {
-        self.challenge = .faceMovementAndLightChallenge("2.0.0")
-        self.camera = .front
     }
 }
