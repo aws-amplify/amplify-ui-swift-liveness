@@ -11,18 +11,22 @@ import AWSPredictionsPlugin
 
 struct CameraView: UIViewControllerRepresentable {
     @ObservedObject var faceLivenessDetectionViewModel: FaceLivenessDetectionViewModel
+    let ovalStyle: FaceLivenessTheme.OvalStyle
 
     init(
-        faceLivenessDetectionViewModel: FaceLivenessDetectionViewModel
+        faceLivenessDetectionViewModel: FaceLivenessDetectionViewModel,
+        ovalStyle: FaceLivenessTheme.OvalStyle = .init()
     ) {
         self.faceLivenessDetectionViewModel = faceLivenessDetectionViewModel
+        self.ovalStyle = ovalStyle
     }
 
     func makeUIViewController(
         context: Context
     ) -> _LivenessViewController {
         let livenessViewController = _LivenessViewController(
-            viewModel: faceLivenessDetectionViewModel
+            viewModel: faceLivenessDetectionViewModel,
+            ovalStyle: ovalStyle
         )
         return livenessViewController
     }
