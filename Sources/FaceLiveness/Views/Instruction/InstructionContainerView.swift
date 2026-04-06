@@ -11,15 +11,15 @@ import Combine
 
 struct InstructionContainerView: View {
     @ObservedObject var viewModel: FaceLivenessDetectionViewModel
+    @Environment(\.livenessTheme) var theme
 
     var body: some View {
         switch viewModel.livenessState.state {
         case .displayingFreshness:
-            InstructionView(
+            themedInstructionView(
                 text: LocalizedStrings.challenge_instruction_hold_still,
-                backgroundColor: .livenessPrimaryBackground,
-                textColor: .livenessPrimaryLabel,
-                font: .title
+                defaultBackgroundColor: theme.colors.primary,
+                defaultTextColor: theme.colors.onPrimary
             )
             .onAppear {
                 UIAccessibility.post(
@@ -29,11 +29,10 @@ struct InstructionContainerView: View {
             }
 
         case .awaitingFaceInOvalMatch(.faceTooClose, _):
-            InstructionView(
+            themedInstructionView(
                 text: LocalizedStrings.challenge_instruction_move_face_back,
-                backgroundColor: .livenessErrorBackground,
-                textColor: .livenessErrorLabel,
-                font: .title
+                defaultBackgroundColor: theme.colors.error,
+                defaultTextColor: theme.colors.onError
             )
             .onAppear {
                 UIAccessibility.post(
@@ -43,27 +42,27 @@ struct InstructionContainerView: View {
             }
 
         case .awaitingFaceInOvalMatch(let reason, let percentage):
-            InstructionView(
+            themedInstructionView(
                 text: .init(reason.localizedValue),
-                backgroundColor: .livenessPrimaryBackground,
-                textColor: .livenessPrimaryLabel,
-                font: .title
+                defaultBackgroundColor: theme.colors.primary,
+                defaultTextColor: theme.colors.onPrimary
             )
 
-            ProgressBarView(
-                emptyColor: .white,
-                borderColor: .hex("#AEB3B7"),
-                fillColor: .livenessPrimaryBackground,
-                indicatorColor: .livenessPrimaryBackground,
-                percentage: percentage
-            )
-            .frame(width: 200, height: 30)
+            if theme.components.showProgressBar {
+                ProgressBarView(
+                    emptyColor: .white,
+                    borderColor: .hex("#AEB3B7"),
+                    fillColor: theme.colors.primary,
+                    indicatorColor: theme.colors.primary,
+                    percentage: percentage
+                )
+                .frame(width: 200, height: 30)
+            }
         case .recording(ovalDisplayed: true):
-            InstructionView(
+            themedInstructionView(
                 text: LocalizedStrings.challenge_instruction_move_face_closer,
-                backgroundColor: .livenessPrimaryBackground,
-                textColor: .livenessPrimaryLabel,
-                font: .title
+                defaultBackgroundColor: theme.colors.primary,
+                defaultTextColor: theme.colors.onPrimary
             )
             .onAppear {
                 UIAccessibility.post(
@@ -72,25 +71,27 @@ struct InstructionContainerView: View {
                 )
             }
 
-            ProgressBarView(
-                emptyColor: .white,
-                borderColor: .hex("#AEB3B7"),
-                fillColor: .livenessPrimaryBackground,
-                indicatorColor: .livenessPrimaryBackground,
-                percentage: 0.2
-            )
-            .frame(width: 200, height: 30)
+            if theme.components.showProgressBar {
+                ProgressBarView(
+                    emptyColor: .white,
+                    borderColor: .hex("#AEB3B7"),
+                    fillColor: theme.colors.primary,
+                    indicatorColor: theme.colors.primary,
+                    percentage: 0.2
+                )
+                .frame(width: 200, height: 30)
+            }
         case .pendingFacePreparedConfirmation(let reason):
-            InstructionView(
+            themedInstructionView(
                 text: .init(reason.localizedValue),
-                backgroundColor: .livenessPrimaryBackground,
-                textColor: .livenessPrimaryLabel,
-                font: .title
+                defaultBackgroundColor: theme.colors.primary,
+                defaultTextColor: theme.colors.onPrimary
             )
         case .completedDisplayingFreshness:
-            InstructionView(
+            themedInstructionView(
                 text: LocalizedStrings.challenge_verifying,
-                backgroundColor: .livenessBackground
+                defaultBackgroundColor: theme.colors.background,
+                defaultTextColor: theme.colors.onBackground
             )
             .onAppear {
                 UIAccessibility.post(
@@ -99,9 +100,10 @@ struct InstructionContainerView: View {
                 )
             }
         case .completedNoLightCheck:
-            InstructionView(
+            themedInstructionView(
                 text: LocalizedStrings.challenge_verifying,
-                backgroundColor: .livenessBackground
+                defaultBackgroundColor: theme.colors.background,
+                defaultTextColor: theme.colors.onBackground
             )
             .onAppear {
                 UIAccessibility.post(
@@ -112,11 +114,10 @@ struct InstructionContainerView: View {
         case .faceMatched:
             if let challenge = viewModel.challengeReceived,
                case .faceMovementAndLightChallenge = challenge {
-                InstructionView(
+                themedInstructionView(
                     text: LocalizedStrings.challenge_instruction_hold_still,
-                    backgroundColor: .livenessPrimaryBackground,
-                    textColor: .livenessPrimaryLabel,
-                    font: .title
+                    defaultBackgroundColor: theme.colors.primary,
+                    defaultTextColor: theme.colors.onPrimary
                 )
             } else {
                 EmptyView()
@@ -124,5 +125,23 @@ struct InstructionContainerView: View {
         default:
             EmptyView()
         }
+    }
+
+    /// Creates an ``InstructionView`` using theme overrides when set,
+    /// falling back to the provided per-state default colors.
+    private func themedInstructionView(
+        text: String,
+        defaultBackgroundColor: Color,
+        defaultTextColor: Color
+    ) -> InstructionView {
+        InstructionView(
+            text: text,
+            backgroundColor: theme.instruction.backgroundColor ?? defaultBackgroundColor,
+            textColor: theme.instruction.textColor ?? defaultTextColor,
+            font: theme.instruction.font,
+            useCapsuleShape: theme.instruction.useCapsuleShape,
+            cornerRadius: theme.instruction.cornerRadius,
+            padding: theme.instruction.padding
+        )
     }
 }
