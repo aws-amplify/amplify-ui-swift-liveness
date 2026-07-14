@@ -32,3 +32,4 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           destination: 'platform=iOS Simulator,name=iPhone 16 Pro Max,OS=18.5'
           generate_coverage: true
+          other_flags: '-skipPackagePluginValidation'

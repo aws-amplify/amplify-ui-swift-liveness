@@ -31,6 +31,7 @@ jobs:
         with:
           scheme: FaceLiveness
           destination: 'platform=iOS Simulator,name=iPhone 16 Pro Max,OS=18.5'
+          other_flags: '-skipPackagePluginValidation'
 
   confirm-pass:
     runs-on: ubuntu-latest
