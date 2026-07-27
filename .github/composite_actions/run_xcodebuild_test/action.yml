@@ -17,6 +17,11 @@ inputs:
     required: false
     type: string
     default: 'platform=iOS Simulator,name=iPhone 13,OS=latest'
+  # Only used to locate the build products directory when generating the coverage
+  # report. It is intentionally not passed to xcodebuild as `-sdk`, because that
+  # overrides SDKROOT for every target in the package graph -- including host
+  # tools such as smithy-swift's SmithyCodegenCLI, which then fail to build.
+  # `-destination` already selects the correct SDK.
   sdk:
     required: false
     type: string
@@ -53,7 +58,7 @@ runs:
         fi
         xcode-select -p
         xcodebuild -version
-        xcodebuild test -scheme $SCHEME -sdk '${{ inputs.sdk }}' -destination '${{ inputs.destination }}' ${{ inputs.other_flags }} $coverageFlags | xcbeautify --renderer github-actions && exit ${PIPESTATUS[0]}
+        xcodebuild test -scheme $SCHEME -destination '${{ inputs.destination }}' ${{ inputs.other_flags }} $coverageFlags | xcbeautify --renderer github-actions && exit ${PIPESTATUS[0]}
       shell: bash
 
     - name: Generate Coverage report
