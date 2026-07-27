@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.5 (2026-07-27)
+
+### Bug Fixes
+
+- update amplify dependency for url signing fix (#231)
+
 ## 1.4.4 (2025-11-10)
 
 ### Bug Fixes
