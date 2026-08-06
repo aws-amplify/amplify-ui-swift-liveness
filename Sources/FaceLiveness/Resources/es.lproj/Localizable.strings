@@ -1,0 +1,51 @@
+//
+// Copyright Amazon.com Inc. or its affiliates.
+// All Rights Reserved.
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+
+"amplify_ui_liveness_get_ready_page_title" = "Verificación de vida";
+"amplify_ui_liveness_get_ready_photosensitivity_title" = "Advertencia de fotosensibilidad";
+"amplify_ui_liveness_get_ready_photosensitivity_description" = "Esta verificación muestra destellos de colores. Tenga precaución si es fotosensible.";
+"amplify_ui_liveness_get_ready_photosensitivity_icon_a11y" = "Información sobre fotosensibilidad";
+"amplify_ui_liveness_get_ready_photosensitivity_dialog_title" = "Advertencia de fotosensibilidad";
+"amplify_ui_liveness_get_ready_photosensitivity_dialog_description" = "Algunas personas pueden sufrir convulsiones epilépticas al exponerse a luces de colores. Tenga precaución si usted o algún familiar padece epilepsia.";
+"amplify_ui_liveness_get_ready_begin_check" = "Iniciar verificación de video";
+
+"amplify_ui_liveness_challenge_recording_indicator_label" = "REC";
+"amplify_ui_liveness_challenge_instruction_hold_face_during_countdown" = "Mantenga la posición del rostro durante la cuenta regresiva.";
+"amplify_ui_liveness_challenge_instruction_hold_face_during_freshness" = "Mantenga el rostro en el óvalo para las luces de colores.";
+"amplify_ui_liveness_challenge_instruction_move_face_back" = "Aléjese";
+"amplify_ui_liveness_challenge_instruction_move_face_closer" = "Acérquese";
+"amplify_ui_liveness_challenge_instruction_move_face_in_front_of_camera" = "Coloque el rostro frente a la cámara";
+"amplify_ui_liveness_challenge_instruction_multiple_faces_detected" = "Solo un rostro por verificación";
+"amplify_ui_liveness_challenge_instruction_hold_still" = "No se mueva";
+
+"amplify_ui_liveness_challenge_connecting" = "Conectando...";
+"amplify_ui_liveness_challenge_verifying" = "Verificando";
+"amplify_ui_liveness_challenge_cancel_a11y" = "Cancelar desafío";
+
+"amplify_ui_liveness_camera_setting_alert_title" = "Cambiar la configuración de la cámara";
+"amplify_ui_liveness_camera_setting_alert_message" = "Permita el acceso a la cámara en la configuración.";
+"amplify_ui_liveness_camera_setting_alert_update_setting_button_text" = "Actualizar configuración";
+"amplify_ui_liveness_camera_setting_alert_not_now_button_text" = "Ahora no";
+
+"amplify_ui_liveness_close_button_a11y" = "Cerrar";
+
+"amplify_ui_liveness_center_your_face_text" = "Centre su rostro";
+"amplify_ui_liveness_camera_permission_page_title" = "Verificación de vida";
+"amplify_ui_liveness_camera_permission_button_title" = "Cambiar configuración de la cámara";
+"amplify_ui_liveness_camera_permission_button_header" = "La cámara no está disponible";
+"amplify_ui_liveness_camera_permission_button_description" = "Es posible que deba ir a la configuración para otorgar permisos de cámara, cerrar la aplicación y volver a intentarlo.";
+
+"amplify_ui_liveness_face_not_prepared_reason_pendingCheck" = " ";
+"amplify_ui_liveness_face_not_prepared_reason_not_in_oval" = "Coloque el rostro dentro del óvalo";
+"amplify_ui_liveness_face_not_prepared_reason_move_face_closer" = "Acérquese";
+"amplify_ui_liveness_face_not_prepared_reason_move_face_right" = "Mueva el rostro hacia la derecha";
+"amplify_ui_liveness_face_not_prepared_reason_move_face_left" = "Mueva el rostro hacia la izquierda";
+"amplify_ui_liveness_face_not_prepared_reason_move_to_dimmer_area" = "Muévase a un área menos iluminada";
+"amplify_ui_liveness_face_not_prepared_reason_move_to_brighter_area" = "Muévase a un área más iluminada";
+"amplify_ui_liveness_face_not_prepared_reason_no_face" = "Coloque el rostro frente a la cámara";
+"amplify_ui_liveness_face_not_prepared_reason_multiple_faces" = "Solo un rostro por verificación";
+"amplify_ui_liveness_face_not_prepared_reason_face_too_close" = "Aleje el rostro";
