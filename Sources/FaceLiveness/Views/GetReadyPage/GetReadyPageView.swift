@@ -13,7 +13,8 @@ struct GetReadyPageView: View {
     let onBegin: () -> Void
     let challenge: Challenge
     let cameraPosition: LivenessCamera
-    
+    @Environment(\.livenessTheme) var theme
+
     init(
         onBegin: @escaping () -> Void,
         beginCheckButtonDisabled: Bool = false,
@@ -53,13 +54,13 @@ struct GetReadyPageView: View {
             action: onBegin,
             label: {
                 Text(LocalizedStrings.get_ready_begin_check)
-                    .foregroundColor(.livenessPrimaryLabel)
+                    .foregroundColor(theme.colors.onPrimary)
                     .frame(maxWidth: .infinity)
             }
         )
         .disabled(beginCheckButtonDisabled)
         .frame(height: 52)
-        ._background { Color.livenessPrimaryBackground }
+        ._background { theme.colors.primary }
         .cornerRadius(14)
         .padding([.leading, .trailing])
         .padding(.bottom, 16)

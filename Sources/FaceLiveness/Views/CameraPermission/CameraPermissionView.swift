@@ -9,6 +9,7 @@ import SwiftUI
 
 struct CameraPermissionView: View {
     @Binding var displayingCameraPermissionsNeededAlert: Bool
+    @Environment(\.livenessTheme) var theme
 
     init(
         displayingCameraPermissionsNeededAlert: Binding<Bool> = .constant(false)
@@ -60,12 +61,12 @@ struct CameraPermissionView: View {
             action: goToSettingsAppPage,
             label: {
                 Text(LocalizedStrings.camera_permission_change_setting_button_title)
-                    .foregroundColor(.livenessPrimaryLabel)
+                    .foregroundColor(theme.colors.onPrimary)
                     .frame(maxWidth: .infinity)
             }
         )
         .frame(height: 52)
-        ._background { Color.livenessPrimaryBackground }
+        ._background { theme.colors.primary }
         .cornerRadius(14)
         .padding([.leading, .trailing])
         .padding(.bottom, 16)

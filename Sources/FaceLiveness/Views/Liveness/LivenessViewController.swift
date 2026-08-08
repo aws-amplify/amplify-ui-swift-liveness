@@ -13,6 +13,7 @@ import Amplify
 
 final class _LivenessViewController: UIViewController {
     let viewModel: FaceLivenessDetectionViewModel
+    let ovalStyle: FaceLivenessTheme.OvalStyle
     var previewLayer: CALayer?
 
     let faceShapeLayer = CAShapeLayer()
@@ -23,9 +24,11 @@ final class _LivenessViewController: UIViewController {
     var readyForOval = false
 
     init(
-        viewModel: FaceLivenessDetectionViewModel
+        viewModel: FaceLivenessDetectionViewModel,
+        ovalStyle: FaceLivenessTheme.OvalStyle = .init()
     ) {
         self.viewModel = viewModel
+        self.ovalStyle = ovalStyle
         super.init(nibName: nil, bundle: nil)
         viewModel.livenessViewControllerDelegate = self
         viewModel.normalizeFace = { [weak self] face in
@@ -129,7 +132,15 @@ extension _LivenessViewController: FaceLivenessViewControllerPresenter {
     }
 
     func displayFreshness(colorSequences: [FaceLivenessSession.DisplayColor]) {
-        self.ovalView?.setNeedsDisplay()
+        // Force white backgrounds during the freshness color check.
+        // The AWS backend validates the visible overlay colors, which are
+        // semi-transparent (alpha 0.75–0.9). If the background behind them
+        // is anything other than white, the blended color will differ and
+        // the liveness check may fail.
+        view.backgroundColor = .white
+        ovalView?.forceWhiteFill = true
+        ovalView?.setNeedsDisplay()
+
         DispatchQueue.main.async { [weak self] in
             self?.viewModel.livenessState.displayingFreshness()
         }
@@ -145,6 +156,11 @@ extension _LivenessViewController: FaceLivenessViewControllerPresenter {
                 guard let self else { return }
                 self.freshnessView.removeFromSuperview()
 
+                // Revert to normal background after freshness completes
+                self.view.backgroundColor = .black
+                self.ovalView?.forceWhiteFill = false
+                self.ovalView?.setNeedsDisplay()
+
                 self.viewModel.handleFreshnessComplete()
             }
         )
@@ -157,7 +173,10 @@ extension _LivenessViewController: FaceLivenessViewControllerPresenter {
 
             let ovalView = OvalView(
                 frame: previewLayer.frame,
-                ovalFrame: ovalRect
+                ovalFrame: ovalRect,
+                maskColor: self.ovalStyle.maskColor,
+                strokeColor: self.ovalStyle.strokeColor,
+                strokeWidth: self.ovalStyle.strokeWidth
             )
             self.ovalView = ovalView
             ovalView.center = previewLayer.position

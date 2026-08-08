@@ -10,9 +10,26 @@ import UIKit
 
 class OvalView: UIView {
     let ovalFrame: CGRect
+    let maskColor: UIColor
+    let ovalStrokeColor: UIColor
+    let ovalStrokeWidth: CGFloat
 
-    init(frame: CGRect, ovalFrame: CGRect) {
+    /// When `true`, forces white mask fill regardless of ``maskColor``.
+    /// Used during the freshness color check to ensure the overlay colors
+    /// blend correctly against a known white background.
+    var forceWhiteFill = false
+
+    init(
+        frame: CGRect,
+        ovalFrame: CGRect,
+        maskColor: UIColor = UIColor.white.withAlphaComponent(0.9),
+        strokeColor: UIColor = .white,
+        strokeWidth: CGFloat = 8
+    ) {
         self.ovalFrame = ovalFrame
+        self.maskColor = maskColor
+        self.ovalStrokeColor = strokeColor
+        self.ovalStrokeWidth = strokeWidth
         super.init(frame: frame)
         backgroundColor = .clear
     }
@@ -22,13 +39,21 @@ class OvalView: UIView {
         let oval = UIBezierPath(ovalIn: ovalFrame)
         mask.append(oval.reversing())
 
-        UIColor.white.withAlphaComponent(0.9).setFill()
+        let fillColor = forceWhiteFill ? UIColor.white : maskColor
+        fillColor.setFill()
         mask.fill()
 
         UIColor.clear.setFill()
-        UIColor.white.setStroke()
-        oval.lineWidth = 8
+        ovalStrokeColor.setStroke()
+        oval.lineWidth = ovalStrokeWidth
         oval.stroke()
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        if traitCollection.hasDifferentColorAppearance(comparedTo: previousTraitCollection) {
+            setNeedsDisplay()
+        }
     }
 
     required init?(coder: NSCoder) { nil }

@@ -14,6 +14,7 @@ struct CameraPreviewView: View {
     private static let previewYPositionRatio = 0.6
     
     @StateObject var model: CameraPreviewViewModel
+    @Environment(\.livenessTheme) var theme
     
     init(model: CameraPreviewViewModel = CameraPreviewViewModel(cameraPosition: .front)) {
         self._model = StateObject(wrappedValue: model)
@@ -33,7 +34,7 @@ struct CameraPreviewView: View {
                     })
             GeometryReader { geometry in
                 Ellipse()
-                    .stroke(Color.livenessPreviewBorder, style: StrokeStyle(lineWidth: 3))
+                    .stroke(theme.colors.previewBorder, style: StrokeStyle(lineWidth: 3))
                     .frame(width: geometry.size.width*Self.previewWidthRatio,
                            height: geometry.size.height*Self.previewHeightRatio)
                     .position(x: geometry.size.width*Self.previewXPositionRatio,
