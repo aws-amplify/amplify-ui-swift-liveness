@@ -29,7 +29,7 @@ struct GetReadyPageView: View {
     var body: some View {
         VStack {
             ZStack {
-                CameraPreviewView(model: CameraPreviewViewModel(cameraPosition: cameraPosition))
+                CameraPreviewView(cameraPosition: cameraPosition)
                 VStack {
                     WarningBox(
                         titleText: LocalizedStrings.get_ready_photosensitivity_title,

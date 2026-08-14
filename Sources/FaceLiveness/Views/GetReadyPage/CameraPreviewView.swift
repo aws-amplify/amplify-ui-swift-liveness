@@ -15,8 +15,8 @@ struct CameraPreviewView: View {
     
     @StateObject var model: CameraPreviewViewModel
     
-    init(model: CameraPreviewViewModel = CameraPreviewViewModel(cameraPosition: .front)) {
-        self._model = StateObject(wrappedValue: model)
+    init(cameraPosition: LivenessCamera) {
+        self._model = StateObject(wrappedValue: CameraPreviewViewModel(cameraPosition: cameraPosition))
     }
     
     var body: some View {
@@ -47,6 +47,6 @@ struct CameraPreviewView: View {
 
 struct CameraPreviewView_Previews: PreviewProvider {
     static var previews: some View {
-        CameraPreviewView()
+        CameraPreviewView(cameraPosition: .front)
     }
 }
