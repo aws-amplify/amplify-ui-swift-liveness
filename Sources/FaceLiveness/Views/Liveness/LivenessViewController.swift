@@ -150,6 +150,17 @@ extension _LivenessViewController: FaceLivenessViewControllerPresenter {
         )
     }
 
+    func stopFreshness() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.freshness.cancel()
+            // Clear the colors but leave the view in the hierarchy so that, if the face
+            // returns and re-matches, `displayFreshness(colorSequences:)` can restart the
+            // flash on the same view.
+            self.freshnessView.clearColors()
+        }
+    }
+
     func drawOvalInCanvas(_ ovalRect: CGRect) {
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }

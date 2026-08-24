@@ -65,6 +65,11 @@ extension LivenessCheckErrorContentView {
         name: "The camera could not be started.",
         description: "There might be a hardware issue with the camera."
     )
+
+    static let sessionInterrupted = LivenessCheckErrorContentView(
+        name: "Check interrupted",
+        description: "The liveness check was interrupted, e.g. by an incoming call or the app being backgrounded. Please try again."
+    )
 }
 
 struct LivenessCheckErrorContentView_Previews: PreviewProvider {

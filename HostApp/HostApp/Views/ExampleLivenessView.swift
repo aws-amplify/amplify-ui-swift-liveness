@@ -43,6 +43,10 @@ struct ExampleLivenessView: View {
                         case .failure(.userCancelled):
                             viewModel.presentationState = .liveness(camera)
                             containerViewState = .startSession
+                        case .failure(.sessionInterrupted):
+                            // The check was interrupted (e.g. incoming call, backgrounding)
+                            // rather than deliberately cancelled.
+                            viewModel.presentationState = .error(.sessionInterrupted)
                         case .failure(.sessionTimedOut):
                             viewModel.presentationState = .error(.sessionTimedOut)
                         case .failure(.socketClosed):
@@ -87,6 +91,8 @@ struct ExampleLivenessView: View {
                         LivenessCheckErrorContentView.sessionTimeOut
                     case .sessionTimedOut:
                         LivenessCheckErrorContentView.faceMatchTimeOut
+                    case .faceInOvalMatchExceededTimeLimitError:
+                        LivenessCheckErrorContentView.faceMatchTimeOut
                     case .countdownNoFace, .countdownFaceTooClose, .countdownMultipleFaces:
                         LivenessCheckErrorContentView.failedDuringCountdown
                     case .invalidSignature:
@@ -95,6 +101,8 @@ struct ExampleLivenessView: View {
                         LivenessCheckErrorContentView.cameraNotAvailable
                     case .validation:
                         LivenessCheckErrorContentView.validation
+                    case .sessionInterrupted:
+                        LivenessCheckErrorContentView.sessionInterrupted
                     default:
                         LivenessCheckErrorContentView.unexpected
                     }

@@ -132,6 +132,15 @@ public struct FaceLivenessDetectionError: Error, Equatable {
         recoverySuggestion: "There might be a hardware issue."
     )
 
+    public static let sessionInterrupted = FaceLivenessDetectionError(
+        code: 19,
+        message: "The face liveness check was interrupted.",
+        recoverySuggestion: """
+        The session ended because liveness check was interrupted, e.g. by an incoming call, \
+        the app being backgrounded, or a system alert. Retry the face liveness check.
+        """
+    )
+
     public static func == (lhs: FaceLivenessDetectionError, rhs: FaceLivenessDetectionError) -> Bool {
         lhs.code == rhs.code
     }

@@ -11,6 +11,7 @@ import UIKit
 protocol FaceLivenessViewControllerPresenter: AnyObject {
     func drawOvalInCanvas(_ ovalRect: CGRect)
     func displayFreshness(colorSequences: [FaceLivenessSession.DisplayColor])
+    func stopFreshness()
     func displaySingleFrame(uiImage: UIImage)
     func completeNoLightCheck()
 }

@@ -47,6 +47,20 @@ struct LivenessStateMachine {
         state = .awaitingFaceInOvalMatch(reason, percentage)
     }
 
+    /// Surfaces a `.noFace` / `.multipleFaces` reason once the check is already active
+    /// (the oval is displayed, we're awaiting an oval match, or the freshness flash is
+    /// showing). This keeps the on-screen instruction in sync when the face is lost mid-check
+    /// instead of leaving a stale one, and — when it interrupts freshness — sends the flow back
+    /// to oval matching so a returning face re-matches and the freshness check restarts.
+    mutating func faceNotMatched(reason: FaceNotPreparedReason) {
+        switch state {
+        case .recording(ovalDisplayed: true), .awaitingFaceInOvalMatch, .displayingFreshness:
+            state = .awaitingFaceInOvalMatch(reason, 0)
+        default:
+            break
+        }
+    }
+
     mutating func awaitingRecording() {
         guard case .pendingFacePreparedConfirmation = state else { return }
         state = .waitForRecording
@@ -90,10 +104,18 @@ struct LivenessStateMachine {
     }
 
     var shouldDisplayRecordingIcon: Bool {
+        // Only show the REC indicator while the session is actively capturing:
+        // from when the oval is displayed through the freshness (color) check.
+        // Everything else — including `.waitForRecording` (before the oval) and the
+        // post-challenge verifying states — is not capturing, so the icon stays hidden.
         switch state {
-        case .initial, .pendingFacePreparedConfirmation, .encounteredUnrecoverableError:
+        case .recording(ovalDisplayed: true),
+             .awaitingFaceInOvalMatch,
+             .faceMatched,
+             .displayingFreshness:
+            return true
+        default:
             return false
-        default: return true
         }
     }
 

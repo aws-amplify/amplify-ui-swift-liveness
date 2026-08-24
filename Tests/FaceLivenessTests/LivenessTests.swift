@@ -191,6 +191,103 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
         XCTAssertEqual(self.viewModel.livenessState.state,  .encounteredUnrecoverableError(.timedOut))
     }
     
+    /// Given:  A `FaceLivenessDetectionViewModel` with the oval displayed (`.recording(ovalDisplayed: true)`)
+    /// When: The viewModel processes a `.noFace` result
+    /// Then: The instruction updates to the `.noFace` reason instead of leaving a stale one
+    func testNoFaceDuringActiveCheckUpdatesInstruction() async throws {
+        viewModel.livenessService = self.livenessService
+        viewModel.livenessState = .init(state: .recording(ovalDisplayed: true))
+
+        viewModel.process(newResult: .noFace)
+        try await Task.sleep(seconds: 1)
+
+        XCTAssertEqual(viewModel.livenessState.state, .awaitingFaceInOvalMatch(.noFace, 0))
+    }
+
+    /// Given:  A `FaceLivenessDetectionViewModel` awaiting an oval match
+    /// When: The viewModel processes a `.multipleFaces` result
+    /// Then: The instruction updates to the `.multipleFaces` reason
+    func testMultipleFacesDuringActiveCheckUpdatesInstruction() async throws {
+        viewModel.livenessService = self.livenessService
+        viewModel.livenessState = .init(state: .awaitingFaceInOvalMatch(.moveFaceCloser, 0.5))
+
+        viewModel.process(newResult: .multipleFaces)
+        try await Task.sleep(seconds: 1)
+
+        XCTAssertEqual(viewModel.livenessState.state, .awaitingFaceInOvalMatch(.multipleFaces, 0))
+    }
+
+    /// Given:  A `FaceLivenessDetectionViewModel` showing the freshness (color) flash
+    /// When: The viewModel processes a `.noFace` result
+    /// Then: It falls back to oval matching so a returning face can re-match and restart freshness
+    func testNoFaceDuringFreshnessFallsBackToOvalMatch() async throws {
+        viewModel.livenessService = self.livenessService
+        viewModel.livenessState = .init(state: .displayingFreshness)
+
+        viewModel.process(newResult: .noFace)
+        try await Task.sleep(seconds: 1)
+
+        XCTAssertEqual(viewModel.livenessState.state, .awaitingFaceInOvalMatch(.noFace, 0))
+    }
+
+    /// Given:  A `FaceLivenessDetectionViewModel` with the oval displayed
+    /// When: The viewModel processes `.noFace` results continuously past the oval-fit timeout
+    /// Then: The end state is `.encounteredUnrecoverableError(.timedOut)` (client-side timeout)
+    func testNoFaceDuringActiveCheckAdvancesTimeout() async throws {
+        viewModel.livenessService = self.livenessService
+        viewModel.livenessState = .init(state: .recording(ovalDisplayed: true))
+
+        viewModel.process(newResult: .noFace)
+        try await Task.sleep(seconds: 6)
+        XCTAssertNotEqual(viewModel.livenessState.state, .encounteredUnrecoverableError(.timedOut))
+        try await Task.sleep(seconds: 2)
+        viewModel.process(newResult: .noFace)
+        try await Task.sleep(seconds: 1)
+        XCTAssertEqual(viewModel.livenessState.state, .encounteredUnrecoverableError(.timedOut))
+    }
+
+    /// Given:  A `FaceLivenessDetectionViewModel` in a non-capturing state
+    /// When: `shouldDisplayRecordingIcon` is read
+    /// Then: The REC indicator is only shown while actively capturing (oval displayed through freshness)
+    func testShouldDisplayRecordingIcon() {
+        let capturing: [LivenessStateMachine.State] = [
+            .recording(ovalDisplayed: true),
+            .awaitingFaceInOvalMatch(.moveFaceCloser, 0.5),
+            .faceMatched,
+            .displayingFreshness
+        ]
+        for state in capturing {
+            XCTAssertTrue(
+                LivenessStateMachine(state: state).shouldDisplayRecordingIcon,
+                "Expected REC indicator to show for \(state)"
+            )
+        }
+
+        let notCapturing: [LivenessStateMachine.State] = [
+            .initial,
+            .pendingFacePreparedConfirmation(.pendingCheck),
+            .waitForRecording,
+            .recording(ovalDisplayed: false),
+            .completedDisplayingFreshness,
+            .completedNoLightCheck,
+            .completed,
+            .encounteredUnrecoverableError(.timedOut)
+        ]
+        for state in notCapturing {
+            XCTAssertFalse(
+                LivenessStateMachine(state: state).shouldDisplayRecordingIcon,
+                "Expected REC indicator to be hidden for \(state)"
+            )
+        }
+    }
+
+    /// Given:  The public `FaceLivenessDetectionError` values
+    /// When: Comparing `.sessionInterrupted` against `.userCancelled`
+    /// Then: They are distinct so integrators can tell an interruption apart from a cancel
+    func testSessionInterruptedDistinctFromUserCancelled() {
+        XCTAssertNotEqual(FaceLivenessDetectionError.sessionInterrupted, .userCancelled)
+    }
+
     /// Given:  A `FaceLivenessDetectionViewModel`
     /// When: The initializeLivenessStream() is called for the first time and then called again after 3 seconds
     /// Then: The attempt count is incremented

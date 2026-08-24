@@ -15,17 +15,9 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
     func process(newResult: FaceDetectionResult) {
         switch newResult {
         case .noFace:
-            if case .pendingFacePreparedConfirmation = livenessState.state {
-                DispatchQueue.main.async {
-                    self.livenessState.faceNotPrepared(reason: .noFace)
-                }
-            }
+            handleFaceUnavailable(reason: .noFace)
         case .multipleFaces:
-            if case .pendingFacePreparedConfirmation = livenessState.state {
-                DispatchQueue.main.async {
-                    self.livenessState.faceNotPrepared(reason: .multipleFaces)
-                }
-            }
+            handleFaceUnavailable(reason: .multipleFaces)
         case .singleFace(let face):
             guard let sessionConfiguration = sessionConfiguration else { return }
             
@@ -92,6 +84,40 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
             default: break
 
             }
+        }
+    }
+
+    /// Handles the camera reporting no face (or more than one face) for the current frame.
+    /// The response depends on how far the check has progressed:
+    /// - Before the check is active (`.pendingFacePreparedConfirmation`) we just update the
+    ///   "get ready" instruction, as before.
+    /// - Once the oval is displayed / we're awaiting an oval match, we surface the matching
+    ///   instruction ("Move face in front of camera" / multiple-faces) and keep the oval-fit
+    ///   deadline advancing so the session times out client-side instead of waiting on the
+    ///   service to close the socket.
+    /// - During the freshness (color) check, a face that leaves can no longer produce a valid
+    ///   color sequence, so we stop the color flash and send the flow back to oval matching
+    ///   (without forcing a failure). A returning face then re-matches and the freshness check
+    ///   restarts; if no face returns, the oval-fit timer resolves it via the normal timeout.
+    private func handleFaceUnavailable(reason: LivenessStateMachine.FaceNotPreparedReason) {
+        switch livenessState.state {
+        case .pendingFacePreparedConfirmation:
+            DispatchQueue.main.async {
+                self.livenessState.faceNotPrepared(reason: reason)
+            }
+        case .recording(ovalDisplayed: true), .awaitingFaceInOvalMatch:
+            DispatchQueue.main.async {
+                self.livenessState.faceNotMatched(reason: reason)
+                self.handleNoFaceDetected()
+            }
+        case .displayingFreshness:
+            DispatchQueue.main.async {
+                self.livenessViewControllerDelegate?.stopFreshness()
+                self.livenessState.faceNotMatched(reason: reason)
+                self.handleNoFaceDetected()
+            }
+        default:
+            break
         }
     }
 

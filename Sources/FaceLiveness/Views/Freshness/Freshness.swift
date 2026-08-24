@@ -15,6 +15,7 @@ class Freshness {
     let initialAlpha: CGFloat
     let secondaryAlpha: CGFloat
     var timer: Timer? = nil
+    private var isCancelled = false
 
     init(
         tickRate: Double = 0.01,
@@ -42,6 +43,7 @@ class Freshness {
         onComplete: @escaping () -> Void
     ) {
         self.colorSequences = colorSequences
+        self.isCancelled = false
         _showColorSequences(
             colorIndex: 0,
             previousColor: nil,
@@ -50,6 +52,16 @@ class Freshness {
             onNewColor: onNewColor,
             onComplete: onComplete
         )
+    }
+
+    /// Stops an in-progress color sequence. Any pending scrolling timer is invalidated and the
+    /// recursive color steps bail out on their next tick, so no further color events are emitted
+    /// and `onComplete` is never called. Used when the face is lost mid-freshness and the
+    /// sequence can no longer complete successfully.
+    func cancel() {
+        isCancelled = true
+        timer?.invalidate()
+        timer = nil
     }
 
 
@@ -61,6 +73,11 @@ class Freshness {
         onNewColor: @escaping (ColorEvent) -> Void,
         onComplete: @escaping () -> Void
     ) {
+        if isCancelled {
+            view.clearColors()
+            return
+        }
+
         if colorIndex >= colorSequences.count {
             view.clearColors()
             onComplete()
@@ -86,6 +103,10 @@ class Freshness {
             DispatchQueue.main.asyncAfter(
                 deadline: .now() + Double(currentFreshnessColor.duration / 1_000)
             ) {
+                guard !self.isCancelled else {
+                    view.clearColors()
+                    return
+                }
                 onNewColor(
                     .init(
                         currentColor: self.colorSequences[colorIndex + 1],
@@ -113,7 +134,12 @@ class Freshness {
                 view.oldRectangle.backgroundColor = previousColor.uiColor
             }
 
-            Timer.scheduledTimer(withTimeInterval: tickRate, repeats: true) { timer in
+            self.timer = Timer.scheduledTimer(withTimeInterval: tickRate, repeats: true) { timer in
+                guard !self.isCancelled else {
+                    timer.invalidate()
+                    view.clearColors()
+                    return
+                }
                 msElapsed += self.tickRate
                 if msElapsed >= Double(currentFreshnessColor.duration / 1_000) {
                     timer.invalidate()
