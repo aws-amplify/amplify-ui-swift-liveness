@@ -177,31 +177,15 @@ class FaceLivenessDetectionViewModel: ObservableObject {
 
     func drawOval(onComplete: @escaping () -> Void) {
         guard livenessState.state == .recording(ovalDisplayed: false),
-              let sessionConfiguration = sessionConfiguration else { return }
-        
-        let ovalMatchChallenge: FaceLivenessSession.OvalMatchChallenge
-        switch sessionConfiguration {
-        case .faceMovement(let challenge):
-            ovalMatchChallenge = challenge
-        case .faceMovementAndLight(_, let challenge):
-            ovalMatchChallenge = challenge
-        }
-        
-        let ovalParameters = ovalMatchChallenge.oval
-        let scaleRatio = cameraViewRect.width / videoSize.width
-        let rect = CGRect(
-            x: ovalParameters.boundingBox.x,
-            y: ovalParameters.boundingBox.y,
-            width: ovalParameters.boundingBox.width,
-            height: ovalParameters.boundingBox.height
-        )
+              let ovalMatchChallenge = ovalMatchChallenge else { return }
 
-        let normalizedOvalRect = CGRect(
-            x: rect.minX * scaleRatio,
-            y: rect.minY * scaleRatio,
-            width: rect.width * scaleRatio,
-            height: rect.height * scaleRatio
-        )
+        // No geometry yet. `setupAVLayer` runs in `viewDidLoad`, before the hosting view has
+        // been given its real size, so `cameraViewRect` can still be empty here. Bailing leaves
+        // the state at `.recording(ovalDisplayed: false)`, so the next detection redraws once
+        // the first layout pass has supplied a rect. Drawing now would latch a zero oval.
+        guard !cameraViewRect.isEmpty else { return }
+
+        let normalizedOvalRect = computeOvalRect(for: ovalMatchChallenge)
 
         livenessViewControllerDelegate?.drawOvalInCanvas(normalizedOvalRect)
         DispatchQueue.main.async { [weak self] in
@@ -211,6 +195,58 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         ovalRect = normalizedOvalRect
     }
 
+    /// Recomputes the oval for the current `cameraViewRect` and redraws it, leaving the state
+    /// machine untouched.
+    ///
+    /// `drawOval` only runs in `.recording(ovalDisplayed: false)`, so it cannot be reused once
+    /// the oval is on screen. This is the path taken when the view is resized mid-check, which
+    /// would otherwise leave an oval sized for the previous viewport.
+    func redrawOvalForCurrentCameraViewRect() {
+        guard ovalRect != .zero,
+              let ovalMatchChallenge = ovalMatchChallenge else { return }
+
+        // Only while the oval is actually on screen. Past the challenge there is nothing left
+        // to reposition, and the freshness view the oval is inserted beneath is gone.
+        switch livenessState.state {
+        case .recording, .awaitingFaceInOvalMatch, .faceMatched, .displayingFreshness:
+            break
+        default:
+            return
+        }
+
+        let normalizedOvalRect = computeOvalRect(for: ovalMatchChallenge)
+        guard normalizedOvalRect != ovalRect else { return }
+
+        ovalRect = normalizedOvalRect
+        livenessViewControllerDelegate?.drawOvalInCanvas(normalizedOvalRect)
+    }
+
+    private func computeOvalRect(
+        for ovalMatchChallenge: FaceLivenessSession.OvalMatchChallenge
+    ) -> CGRect {
+        let boundingBox = ovalMatchChallenge.oval.boundingBox
+        return LivenessPreviewGeometry.ovalRect(
+            forVideoOval: CGRect(
+                x: boundingBox.x,
+                y: boundingBox.y,
+                width: boundingBox.width,
+                height: boundingBox.height
+            ),
+            videoSize: videoSize,
+            previewRect: cameraViewRect
+        )
+    }
+
+    private var ovalMatchChallenge: FaceLivenessSession.OvalMatchChallenge? {
+        guard let sessionConfiguration = sessionConfiguration else { return nil }
+
+        switch sessionConfiguration {
+        case .faceMovement(let challenge):
+            return challenge
+        case .faceMovementAndLight(_, let challenge):
+            return challenge
+        }
+    }
 
     func initializeLivenessStream() {
         do {
