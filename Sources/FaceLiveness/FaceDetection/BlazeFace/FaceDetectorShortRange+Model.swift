@@ -124,12 +124,14 @@ extension FaceDetectorShortRange {
                 blazeFaceDetectionThreshold = confidenceScoreThreshold
             }
 
-            var passingConfidenceScoresIndices = confidenceScores
+            var passingConfidenceScoresIndices: [Int] = confidenceScores
                 .enumerated()
-                .filter { $0.element >= blazeFaceDetectionThreshold}
-                .sorted(by: {
-                    $0.element > $1.element
-                })
+                .filter { (pair: (offset: Int, element: Float32)) in
+                    pair.element >= blazeFaceDetectionThreshold
+                }
+                .sorted { (lhs: (offset: Int, element: Float32), rhs: (offset: Int, element: Float32)) in
+                    lhs.element > rhs.element
+                }
                 .map(\.offset)
 
             var faces = [DetectedFace]()
@@ -146,10 +148,11 @@ extension FaceDetectorShortRange {
                     )
 
                     if intersectionOverUnion >= weightedNonMaxSuppressionThreshold {
-                        overlappingOutputs.append(
-                            confidenceScores[passingConfidenceScoresIndices[index]] * landmarks[passingConfidenceScoresIndices[index]]
-                        )
-                        overlappingConfidenceScore += confidenceScores[passingConfidenceScoresIndices[index]]
+                        let confidenceScore: Float32 = confidenceScores[passingConfidenceScoresIndices[index]]
+                        let landmark: SIMD16<Float32> = landmarks[passingConfidenceScoresIndices[index]]
+                        let weightedLandmark: SIMD16<Float32> = landmark * confidenceScore
+                        overlappingOutputs.append(weightedLandmark)
+                        overlappingConfidenceScore += confidenceScore
                     } else {
                         nonOverlappingIndices.append(passingConfidenceScoresIndices[index])
                     }
