@@ -19,6 +19,7 @@ public struct FaceLivenessDetectorView: View {
     @State var displayState: DisplayState = .awaitingChallengeType
     @State var displayingCameraPermissionsNeededAlert = false
     @State private var brightnessState = BrightnessState()
+    @StateObject private var orientationObserver = InterfaceOrientationObserver()
 
     private final class BrightnessState {
         var original: CGFloat?
@@ -121,10 +122,25 @@ public struct FaceLivenessDetectorView: View {
     }
 
     public var body: some View {
-        content
-            .onDisappear {
-                restoreOriginalBrightness()
+        ZStack {
+            content
+
+            if orientationObserver.decision == .blockUntilPortrait {
+                RotateDeviceView(onClose: cancelFromRotatePrompt)
             }
+        }
+        .background(
+            InterfaceOrientationReader { orientationObserver.refresh() }
+                .frame(width: 0, height: 0)
+                .accessibilityHidden(true)
+        )
+        .onChange(of: orientationObserver.orientation) { _ in
+            interruptCheckIfOrientationUnsupported()
+            advanceIfWaitingOnPortrait()
+        }
+        .onDisappear {
+            restoreOriginalBrightness()
+        }
     }
 
     @ViewBuilder
@@ -189,23 +205,11 @@ public struct FaceLivenessDetectorView: View {
                 .onAppear {
                     checkCameraPermission(for: challenge)
                 }
-        case .awaitingLivenessSession(let challenge):
+        case .awaitingLivenessSession:
             Color.clear
                 .onAppear {
                     Task {
-                        let cameraPosition: LivenessCamera
-                        switch challenge {
-                        case .faceMovementAndLightChallenge:
-                            cameraPosition = challengeOptions.faceMovementAndLightChallengeOption.camera
-                        case .faceMovementChallenge:
-                            cameraPosition = challengeOptions.faceMovementChallengeOption.camera
-                        }
-                        
-                        let newState = disableStartView
-                        ? DisplayState.displayingLiveness
-                        : DisplayState.displayingGetReadyView(challenge, cameraPosition)
-                        guard self.displayState != newState else { return }
-                        self.displayState = newState
+                        advanceIfWaitingOnPortrait()
                     }
                 }
         case .displayingGetReadyView(let challenge, let cameraPosition):
@@ -251,6 +255,64 @@ public struct FaceLivenessDetectorView: View {
                 }
             }
         }
+    }
+
+    /// Advances from `.awaitingLivenessSession` to the get ready screen, or straight to the
+    /// check when the host disabled it, but only while the interface is portrait.
+    ///
+    /// Both of those screens show a live camera feed that is captured in portrait only, so
+    /// entering them in landscape is what produces the sideways preview. Holding here instead
+    /// keeps `RotateDeviceView` on screen and leaves the liveness session untouched, so
+    /// rotating back to portrait continues the flow rather than burning the session.
+    private func advanceIfWaitingOnPortrait() {
+        guard case .awaitingLivenessSession(let challenge) = displayState else { return }
+        guard orientationObserver.decision == .proceed else { return }
+
+        let cameraPosition: LivenessCamera
+        switch challenge {
+        case .faceMovementAndLightChallenge:
+            cameraPosition = challengeOptions.faceMovementAndLightChallengeOption.camera
+        case .faceMovementChallenge:
+            cameraPosition = challengeOptions.faceMovementChallengeOption.camera
+        }
+
+        let newState = disableStartView
+        ? DisplayState.displayingLiveness
+        : DisplayState.displayingGetReadyView(challenge, cameraPosition)
+        guard self.displayState != newState else { return }
+        self.displayState = newState
+    }
+
+    /// Ends a check that is already running when the interface leaves portrait.
+    ///
+    /// A running check streams portrait video over a socket tied to a single use session ID,
+    /// so it cannot be resumed once the interface rotates. This takes the same route the SDK
+    /// already takes when the scene deactivates: stop recording and report
+    /// `.viewResignation`, which reaches the host as `.sessionInterrupted` and dismisses the
+    /// detector. The host can present a new session once the device is back in portrait.
+    private func interruptCheckIfOrientationUnsupported() {
+        guard orientationObserver.decision == .blockUntilPortrait,
+              displayState == .displayingLiveness
+        else { return }
+
+        DispatchQueue.main.async {
+            viewModel.stopRecording()
+            viewModel.livenessState.unrecoverableStateEncountered(.viewResignation)
+        }
+    }
+
+    /// Cancels the detector from the rotate prompt.
+    ///
+    /// The prompt is reachable in states that do not observe `livenessState` (awaiting camera
+    /// permission, awaiting the session, get ready), so it dismisses directly rather than
+    /// routing through the state machine, which would set an error nothing is listening for.
+    /// Without this exit a host that only supports landscape would leave the user stuck on the
+    /// prompt.
+    private func cancelFromRotatePrompt() {
+        viewModel.stopRecording()
+        viewModel.livenessService?.closeSocket(with: .ovalFitUserClosedSession)
+        isPresented = false
+        onCompletion(.failure(.userCancelled))
     }
 
     /// Overrides the device screen brightness to maximum for the liveness check,

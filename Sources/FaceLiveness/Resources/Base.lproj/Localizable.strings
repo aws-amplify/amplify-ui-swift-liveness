@@ -33,6 +33,9 @@
 
 "amplify_ui_liveness_close_button_a11y" = "Close";
 
+"amplify_ui_liveness_orientation_prompt_title" = "Portrait orientation required";
+"amplify_ui_liveness_orientation_prompt_description" = "Rotate your device to portrait (vertical) orientation to continue.";
+
 "amplify_ui_liveness_center_your_face_text" = "Center your face";
 "amplify_ui_liveness_camera_permission_page_title" = "Liveness Check";
 "amplify_ui_liveness_camera_permission_button_title" = "Change Camera Setting";

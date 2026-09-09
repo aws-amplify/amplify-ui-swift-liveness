@@ -73,6 +73,12 @@ enum LocalizedStrings {
 
     /// en = "Close"
     static let close_button_a11y = "amplify_ui_liveness_close_button_a11y".localized()
+
+    /// en = "Portrait orientation required"
+    static let orientation_prompt_title = "amplify_ui_liveness_orientation_prompt_title".localized()
+
+    /// en = "Rotate your device to portrait (vertical) orientation to continue."
+    static let orientation_prompt_description = "amplify_ui_liveness_orientation_prompt_description".localized()
     
     /// en = "Center your face"
     static let preview_center_your_face_text = "amplify_ui_liveness_center_your_face_text".localized()
