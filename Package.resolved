@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/aws-amplify/amplify-swift",
       "state" : {
-        "revision" : "d55ded6704c23efcb39a9308b69a4cb3d365b350",
-        "version" : "2.60.2"
+        "branch" : "fix/package-indexing",
+        "revision" : "684752356eb4a8df9b316397842d3f75585fad36"
       }
     },
     {
@@ -41,8 +41,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/awslabs/aws-sdk-swift",
       "state" : {
-        "revision" : "59b5335952b825b480af0de32c48953f6607bb6e",
-        "version" : "1.7.53"
+        "revision" : "61b8c1968aeae4d42226e3b452ab864fd0b96523",
+        "version" : "1.7.60"
       }
     },
     {
@@ -50,8 +50,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/smithy-lang/smithy-swift",
       "state" : {
-        "revision" : "c3ec406867e570473e097344e64c3cfbcc5d36b9",
-        "version" : "0.238.0"
+        "revision" : "31336dfea2e448523630ea1fe4d83ddc1156de3c",
+        "version" : "0.242.0"
       }
     },
     {
@@ -120,7 +120,7 @@
     {
       "identity" : "swift-collections",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-collections",
+      "location" : "https://github.com/apple/swift-collections.git",
       "state" : {
         "revision" : "a0cb0954ecb21e4e31b0070e6ed5674e8556685a",
         "version" : "1.6.0"
