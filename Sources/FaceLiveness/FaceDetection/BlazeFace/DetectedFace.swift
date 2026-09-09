@@ -22,8 +22,8 @@ struct DetectedFace {
 
     func boundingBoxFromLandmarks(ovalRect: CGRect,
                                   ovalMatchChallenge: FaceLivenessSession.OvalMatchChallenge) -> CGRect {
-        let alpha = 2.0
-        let gamma = 1.8
+        let alpha: CGFloat = 2.0
+        let gamma: CGFloat = 1.8
         let ow = (alpha * pupilDistance + gamma * faceHeight) / 2
         var cx = (eyeCenterX + nose.x) / 2
         
@@ -36,7 +36,7 @@ struct DetectedFace {
         }
         
         let faceWidth = ow
-        let faceHeight = ovalMatchChallenge.oval.heightWidthRatio * faceWidth
+        let faceHeight = CGFloat(ovalMatchChallenge.oval.heightWidthRatio) * faceWidth
         let faceBoxBottom = boundingBox.maxY
         let faceBoxTop = faceBoxBottom - faceHeight
         let faceBoxLeft = min(cx - ow / 2, rightEar.x)

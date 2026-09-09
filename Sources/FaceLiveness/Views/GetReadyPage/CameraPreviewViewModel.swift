@@ -24,10 +24,11 @@ class CameraPreviewViewModel: NSObject, ObservableObject {
         super.init()
         setupSubscriptions()
         
+        let devicePosition: AVCaptureDevice.Position = cameraPosition == .front ? .front : .back
         let avCaptureDevice = AVCaptureDevice.DiscoverySession(
             deviceTypes: [.builtInWideAngleCamera],
             mediaType: .video,
-            position: cameraPosition == .front ? .front : .back
+            position: devicePosition
         ).devices.first
 
         let outputDelegate = CameraPreviewOutputSampleBufferDelegate { [weak self] buffer in

@@ -159,52 +159,62 @@ extension FaceDetectorShortRange {
                 }
 
                 passingConfidenceScoresIndices = nonOverlappingIndices
-                let averageResult = overlappingOutputs.reduce(SIMD16<Float32>(repeating: 0), +) / overlappingConfidenceScore
-
-                var faceResult = [SIMD2<Double>]()
-                for i in 0..<8 {
-                    let faceL = SIMD2(
-                        Double(averageResult[2 * i]),
-                        Double(averageResult[2 * i + 1])
-                    ) * simdScale - simdShift
-                    faceResult.append(faceL)
-                }
-
-                let minX = faceResult[0].x
-                let minY = faceResult[0].y
-                let maxX = faceResult[1].x
-                let maxY = faceResult[1].y
-                let rightEye = faceResult[2]
-                let leftEye = faceResult[3]
-                let nose = faceResult[4]
-                let mouth = faceResult[5]
-                let rightEar = faceResult[6]
-                let leftEar = faceResult[7]
-                
-
-
-                let boundingBox = CGRect(
-                    x: minX,
-                    y: minY,
-                    width: maxX - minX,
-                    height: maxY - minY
+                let face = detectedFace(
+                    from: overlappingOutputs,
+                    confidenceScore: overlappingConfidenceScore,
+                    scale: simdScale,
+                    shift: simdShift
                 )
-
-                let face = DetectedFace(
-                    boundingBox: boundingBox,
-                    leftEye: .init(x: leftEye.x, y: leftEye.y),
-                    rightEye: .init(x: rightEye.x, y: rightEye.y),
-                    nose: .init(x: nose.x, y: nose.y),
-                    mouth: .init(x: mouth.x, y: mouth.y),
-                    rightEar: .init(x: rightEar.x, y: rightEar.y),
-                    leftEar: .init(x: leftEar.x, y: leftEar.y),
-                    confidence: overlappingConfidenceScore / Float(overlappingOutputs.count)
-                )
-
                 faces.append(face)
             }
 
             return faces
+        }
+
+        private func detectedFace(
+            from overlappingOutputs: [SIMD16<Float32>],
+            confidenceScore overlappingConfidenceScore: Float32,
+            scale simdScale: SIMD2<Double>,
+            shift simdShift: SIMD2<Double>
+        ) -> DetectedFace {
+            let averageResult: SIMD16<Float32> = overlappingOutputs
+                .reduce(SIMD16<Float32>(repeating: 0), +) / overlappingConfidenceScore
+
+            var faceResult = [SIMD2<Double>]()
+            for i in 0..<8 {
+                let point = SIMD2(Double(averageResult[2 * i]), Double(averageResult[2 * i + 1]))
+                let faceL: SIMD2<Double> = point * simdScale - simdShift
+                faceResult.append(faceL)
+            }
+
+            let minX = faceResult[0].x
+            let minY = faceResult[0].y
+            let maxX = faceResult[1].x
+            let maxY = faceResult[1].y
+            let rightEye = faceResult[2]
+            let leftEye = faceResult[3]
+            let nose = faceResult[4]
+            let mouth = faceResult[5]
+            let rightEar = faceResult[6]
+            let leftEar = faceResult[7]
+
+            let boundingBox = CGRect(
+                x: minX,
+                y: minY,
+                width: maxX - minX,
+                height: maxY - minY
+            )
+
+            return DetectedFace(
+                boundingBox: boundingBox,
+                leftEye: .init(x: leftEye.x, y: leftEye.y),
+                rightEye: .init(x: rightEye.x, y: rightEye.y),
+                nose: .init(x: nose.x, y: nose.y),
+                mouth: .init(x: mouth.x, y: mouth.y),
+                rightEar: .init(x: rightEar.x, y: rightEar.y),
+                leftEar: .init(x: leftEar.x, y: leftEar.y),
+                confidence: overlappingConfidenceScore / Float(overlappingOutputs.count)
+            )
         }
 
         func intersectionOverUnion(_ b1: SIMD16<Float32>, _ b2: SIMD16<Float32>) -> Float {
