@@ -6,14 +6,14 @@ import PackageDescription
 let package = Package(
     name: "AmplifyUILiveness",
     defaultLocalization: "en",
-    platforms: [.iOS(.v14)],
+    platforms: [.iOS(.v15)],
     products: [
         .library(
             name: "FaceLiveness",
             targets: ["FaceLiveness"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/aws-amplify/amplify-swift", from: "2.58.5")
+        .package(url: "https://github.com/aws-amplify/amplify-swift", from: "2.60.2")
     ],
     targets: [
         .target(
