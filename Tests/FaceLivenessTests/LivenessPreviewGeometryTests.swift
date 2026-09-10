@@ -9,32 +9,9 @@ import XCTest
 @testable import FaceLiveness
 
 final class LivenessPreviewGeometryTests: XCTestCase {
-    /// The preview sizing this fix replaced: full viewport width, height derived from it, and
-    /// centred vertically. Kept here so the "no change on tall viewports" guarantee is asserted
-    /// against the old expression rather than against hand-copied numbers.
+    /// The preview sizing this fix replaced. See `LivenessGeometryFixture.legacyPreviewRect`.
     private func legacyPreviewRect(fittingIn viewport: CGSize) -> CGRect {
-        let width = viewport.width
-        let height = width / 3 * 4
-        return CGRect(
-            x: (viewport.width - width) / 2,
-            y: (viewport.height - height) / 2,
-            width: width,
-            height: height
-        )
-    }
-
-    private func assertRect(
-        _ rect: CGRect,
-        _ expected: CGRect,
-        accuracy: CGFloat = 0.0001,
-        _ message: String = "",
-        file: StaticString = #filePath,
-        line: UInt = #line
-    ) {
-        XCTAssertEqual(rect.minX, expected.minX, accuracy: accuracy, "x. \(message)", file: file, line: line)
-        XCTAssertEqual(rect.minY, expected.minY, accuracy: accuracy, "y. \(message)", file: file, line: line)
-        XCTAssertEqual(rect.width, expected.width, accuracy: accuracy, "width. \(message)", file: file, line: line)
-        XCTAssertEqual(rect.height, expected.height, accuracy: accuracy, "height. \(message)", file: file, line: line)
+        LivenessGeometryFixture.legacyPreviewRect(fittingIn: viewport)
     }
 
     // MARK: - Tall viewports: the fix must be a no-op
@@ -192,7 +169,7 @@ final class LivenessPreviewGeometryTests: XCTestCase {
         }
     }
 
-    /// Given: A viewport with no area, which is what the view reports before its first layout pass
+    /// Given: A viewport with no area, as a view reports when its host has collapsed it
     /// When: The preview rect is fitted
     /// Then: It is `.zero` rather than a NaN-bearing rect
     func testEmptyViewportIsZero() {
@@ -375,84 +352,89 @@ final class LivenessPreviewGeometryTests: XCTestCase {
         XCTAssertNotEqual(before, after)
     }
 
-    /// Given: The previous code, in which `normalizeFace` read the view's width live on every
-    ///        frame while `cameraViewRect` was captured once in `setupAVLayer`
-    /// When: The view is resized from 820x1180 to 640x904
-    /// Then: Those two rects disagree, so face landmarks were normalized in one coordinate space
-    ///       and matched against an oval built in another. Deriving both from one function of the
-    ///       current size removes the disagreement by construction.
+    /// Given: A face whose landmarks, in the detector's 0...1 coordinates, fill exactly the oval the
+    ///        service specifies, and a view that is resized from 820x1180 to 640x904
+    /// When: The face is normalized the way `normalizeFace` now does it, against the fitted preview
+    ///       size, and the oval is mapped onto the same fitted rect, before and after the resize
+    /// Then: The normalized face and the oval coincide on both sides of the resize, because both
+    ///       derive from one fitted rect. Normalizing against the new size while the oval still
+    ///       sits in the old rect, which is what a stale `cameraViewRect` produced before, does
+    ///       not: the two disagree on every edge
     func testResizeNoLongerDesyncsLandmarksFromTheOval() {
+        let videoOval = LivenessGeometryFixture.videoOval
+        let videoSize = LivenessGeometryFixture.videoSize
         let sizeAtSetup = CGSize(width: 820, height: 1180)
         let sizeAfterResize = CGSize(width: 640, height: 904)
 
-        let staleOvalSpace = legacyPreviewRect(fittingIn: sizeAtSetup).size
-        let liveLandmarkSpace = CGSize(
-            width: sizeAfterResize.width,
-            height: sizeAfterResize.width / 3 * 4
+        // the detector reports landmarks as fractions of the frame
+        let faceFillingTheOval = DetectedFace(
+            boundingBox: CGRect(
+                x: videoOval.minX / videoSize.width,
+                y: videoOval.minY / videoSize.height,
+                width: videoOval.width / videoSize.width,
+                height: videoOval.height / videoSize.height
+            ),
+            leftEye: .zero, rightEye: .zero, nose: .zero, mouth: .zero, rightEar: .zero, leftEar: .zero,
+            confidence: 1
         )
-        XCTAssertNotEqual(staleOvalSpace, liveLandmarkSpace, "the previous code desynced on resize")
 
-        let fitted = LivenessPreviewGeometry.previewRect(fittingIn: sizeAfterResize)
-        assertRect(fitted, CGRect(x: 0, y: 25.33333, width: 640, height: 853.33333), accuracy: 0.001)
-    }
-
-    /// Given: The stale initial frame the shipped code captures in `viewDidLoad`, which is the
-    ///        SCREEN size (820x1180 on an iPad 10th gen) rather than the hosting window's
-    ///        640x904, measured with a lifecycle probe
-    /// When: The rect is refitted for the real size on the first layout pass
-    /// Then: It fits the window, where the shipped code kept the 820pt width and only re-centred,
-    ///       overhanging by 90pt per side and 94.67pt top and bottom
-    func testStaleScreenSizedInitialFrameIsCorrected() {
-        let screen = CGSize(width: 820, height: 1180)
-        let window = CGSize(width: 640, height: 904)
-
-        // shipped: width from the screen, height derived, re-centred in the real window
-        let staleWidth = screen.width
-        let staleHeight = staleWidth / 3 * 4
-        let staleRecentred = CGRect(
-            x: window.width / 2 - staleWidth / 2,
-            y: window.height / 2 - staleHeight / 2,
-            width: staleWidth,
-            height: staleHeight
-        )
-        XCTAssertEqual(staleRecentred.minX, -90, accuracy: 0.001, "overhang per side")
-        XCTAssertEqual(staleRecentred.minY, -94.66667, accuracy: 0.001, "overhang top and bottom")
-
-        // fixed: refitted to the real window on the first layout pass
-        let fixed = LivenessPreviewGeometry.previewRect(fittingIn: window)
-        assertRect(fixed, CGRect(x: 0, y: 25.33333, width: 640, height: 853.33333), accuracy: 0.001)
-        XCTAssertGreaterThanOrEqual(fixed.minX, 0)
-        XCTAssertGreaterThanOrEqual(fixed.minY, 0)
-        XCTAssertLessThanOrEqual(fixed.maxX, window.width)
-        XCTAssertLessThanOrEqual(fixed.maxY, window.height)
-    }
-
-    /// Given: A stale initial width and the service oval expressed in the 480pt-wide video
-    /// When: The oval is mapped through the stale rect
-    /// Then: The oval only overhangs the window's SIDES once the stale width exceeds
-    ///       `windowWidth * videoWidth / ovalWidth`. For a 640pt window and a 264pt oval that is
-    ///       1163.6pt, so a stale width of 820 clips nothing horizontally while 1180 does. Side
-    ///       clipping therefore identifies which stale width is in play.
-    func testSideClippingRequiresALargeStaleWidth() {
-        let window = CGSize(width: 640, height: 904)
-        let videoOval = CGRect(x: 108, y: 107, width: 264, height: 427)
-        let videoSize = CGSize(width: 480, height: 640)
-
-        func sideOverhang(staleWidth: CGFloat) -> CGFloat {
-            let staleHeight = staleWidth / 3 * 4
-            let cam = CGRect(x: window.width / 2 - staleWidth / 2,
-                             y: window.height / 2 - staleHeight / 2,
-                             width: staleWidth, height: staleHeight)
-            let oval = LivenessPreviewGeometry.ovalRect(
-                forVideoOval: videoOval, videoSize: videoSize, previewRect: cam
-            )
-            let onScreen = CGRect(x: cam.minX + oval.minX, y: cam.minY + oval.minY,
-                                  width: oval.width, height: oval.height)
-            return max(0, -onScreen.minX) + max(0, onScreen.maxX - window.width)
+        func normalizedFaceBox(in previewRect: CGRect) -> CGRect {
+            faceFillingTheOval.normalize(width: previewRect.width, height: previewRect.height).boundingBox
+        }
+        func oval(in previewRect: CGRect) -> CGRect {
+            LivenessPreviewGeometry.ovalRect(forVideoOval: videoOval, videoSize: videoSize, previewRect: previewRect)
         }
 
-        XCTAssertEqual(window.width * videoSize.width / videoOval.width, 1163.63636, accuracy: 0.001)
-        XCTAssertEqual(sideOverhang(staleWidth: 820), 0, accuracy: 0.001, "portrait screen width does not clip sides")
-        XCTAssertGreaterThan(sideOverhang(staleWidth: 1180), 0, "landscape screen width does clip sides")
+        let before = LivenessPreviewGeometry.previewRect(fittingIn: sizeAtSetup)
+        let after = LivenessPreviewGeometry.previewRect(fittingIn: sizeAfterResize)
+        XCTAssertNotEqual(before, after, "the resize must actually change the fitted rect")
+
+        assertRect(normalizedFaceBox(in: before), oval(in: before), "before the resize")
+        assertRect(normalizedFaceBox(in: after), oval(in: after), "after the resize")
+
+        // the previous failure mode: landmarks in the new space, oval still in the old one
+        let desynced = normalizedFaceBox(in: after)
+        let staleOval = oval(in: before)
+        XCTAssertNotEqual(desynced.minX, staleOval.minX, accuracy: 0.0001)
+        XCTAssertNotEqual(desynced.minY, staleOval.minY, accuracy: 0.0001)
+        XCTAssertNotEqual(desynced.width, staleOval.width, accuracy: 0.0001)
+        XCTAssertNotEqual(desynced.height, staleOval.height, accuracy: 0.0001)
+    }
+
+    /// Given: A sweep of viewport sizes, including the near-square and landscape ones that were
+    ///        broken, and a face that fills the service's oval
+    /// When: The face is normalized against the fitted preview size and the oval mapped onto the
+    ///       fitted rect
+    /// Then: They coincide at every size. The agreement does not depend on the viewport being tall
+    func testLandmarksAndOvalAgreeAtEveryViewportSize() {
+        let videoOval = LivenessGeometryFixture.videoOval
+        let videoSize = LivenessGeometryFixture.videoSize
+        let faceFillingTheOval = DetectedFace(
+            boundingBox: CGRect(
+                x: videoOval.minX / videoSize.width,
+                y: videoOval.minY / videoSize.height,
+                width: videoOval.width / videoSize.width,
+                height: videoOval.height / videoSize.height
+            ),
+            leftEye: .zero, rightEye: .zero, nose: .zero, mouth: .zero, rightEar: .zero, leftEar: .zero,
+            confidence: 1
+        )
+        let viewports: [CGSize] = [
+            .init(width: 393, height: 852),
+            .init(width: 640, height: 904),
+            .init(width: 820, height: 1180),
+            .init(width: 700, height: 700),
+            .init(width: 904, height: 640),
+            .init(width: 1180, height: 820),
+            .init(width: 1024, height: 768)
+        ]
+
+        for viewport in viewports {
+            let fitted = LivenessPreviewGeometry.previewRect(fittingIn: viewport)
+            let face = faceFillingTheOval.normalize(width: fitted.width, height: fitted.height).boundingBox
+            let oval = LivenessPreviewGeometry.ovalRect(forVideoOval: videoOval, videoSize: videoSize, previewRect: fitted)
+
+            assertRect(face, oval, "\(Int(viewport.width))x\(Int(viewport.height))")
+        }
     }
 }

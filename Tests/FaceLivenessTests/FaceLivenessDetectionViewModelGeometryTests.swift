@@ -10,76 +10,22 @@ import UIKit
 @testable import FaceLiveness
 @_spi(PredictionsFaceLiveness) import AWSPredictionsPlugin
 
-/// Records the oval rects the view model asks to have drawn.
-private final class MockLivenessViewControllerPresenter: FaceLivenessViewControllerPresenter {
-    var drawnOvalRects: [CGRect] = []
-
-    func drawOvalInCanvas(_ ovalRect: CGRect) {
-        drawnOvalRects.append(ovalRect)
-    }
-
-    func displayFreshness(colorSequences: [FaceLivenessSession.DisplayColor]) {}
-    func stopFreshness() {}
-    func displaySingleFrame(uiImage: UIImage) {}
-    func completeNoLightCheck() {}
-}
-
 @MainActor
 final class FaceLivenessDetectionViewModelGeometryTests: XCTestCase {
     private var viewModel: FaceLivenessDetectionViewModel!
     private var presenter: MockLivenessViewControllerPresenter!
 
-    /// The oval the service specifies, in the 480x640 video's coordinate space.
-    private let videoOval = CGRect(x: 108, y: 107, width: 264, height: 427)
-    private let videoWidth: CGFloat = 480
+    private let videoOval = LivenessGeometryFixture.videoOval
+    private let videoSize = LivenessGeometryFixture.videoSize
 
     override func setUp() {
-        let presenter = MockLivenessViewControllerPresenter()
-        let viewModel = FaceLivenessDetectionViewModel(
-            faceDetector: MockFaceDetector(),
-            faceInOvalMatching: .init(instructor: .init()),
-            videoChunker: VideoChunker(
-                assetWriter: LivenessAVAssetWriter(),
-                assetWriterDelegate: VideoChunker.AssetWriterDelegate(),
-                assetWriterInput: LivenessAVAssetWriterInput()
-            ),
-            closeButtonAction: {},
-            sessionID: UUID().uuidString,
-            isPreviewScreenEnabled: false,
-            challengeOptions: .init(
-                faceMovementChallengeOption: .init(camera: .front),
-                faceMovementAndLightChallengeOption: .init()
-            )
-        )
-        viewModel.livenessViewControllerDelegate = presenter
-        viewModel.sessionConfiguration = .faceMovement(
-            .init(
-                faceDetectionThreshold: 0.7,
-                face: .init(
-                    distanceThreshold: 0.1,
-                    distanceThresholdMax: 0.1,
-                    distanceThresholdMin: 0.1,
-                    iouWidthThreshold: 0.1,
-                    iouHeightThreshold: 0.1
-                ),
-                oval: .init(
-                    boundingBox: .init(
-                        x: videoOval.minX,
-                        y: videoOval.minY,
-                        width: videoOval.width,
-                        height: videoOval.height
-                    ),
-                    heightWidthRatio: 1.618,
-                    iouThreshold: 0.1,
-                    iouWidthThreshold: 0.1,
-                    iouHeightThreshold: 0.1,
-                    ovalFitTimeout: 1
-                )
-            )
-        )
+        resetFixture()
+    }
 
-        self.presenter = presenter
-        self.viewModel = viewModel
+    /// Fresh view model and presenter, for tests that walk several scenarios in one body.
+    private func resetFixture() {
+        presenter = MockLivenessViewControllerPresenter()
+        viewModel = LivenessGeometryFixture.makeViewModel(presenter: presenter)
     }
 
     override func tearDown() {
@@ -87,26 +33,11 @@ final class FaceLivenessDetectionViewModelGeometryTests: XCTestCase {
         presenter = nil
     }
 
-    private func assertRect(
-        _ rect: CGRect,
-        _ expected: CGRect,
-        file: StaticString = #filePath,
-        line: UInt = #line
-    ) {
-        XCTAssertEqual(rect.minX, expected.minX, accuracy: 0.0001, "x", file: file, line: line)
-        XCTAssertEqual(rect.minY, expected.minY, accuracy: 0.0001, "y", file: file, line: line)
-        XCTAssertEqual(rect.width, expected.width, accuracy: 0.0001, "width", file: file, line: line)
-        XCTAssertEqual(rect.height, expected.height, accuracy: 0.0001, "height", file: file, line: line)
+    private func expectedOval(forPreviewWidth width: CGFloat) -> CGRect {
+        LivenessGeometryFixture.expectedOval(forPreviewWidth: width)
     }
 
-    private func scaled(_ rect: CGRect, by scale: CGFloat) -> CGRect {
-        CGRect(
-            x: rect.minX * scale,
-            y: rect.minY * scale,
-            width: rect.width * scale,
-            height: rect.height * scale
-        )
-    }
+    // MARK: - First draw
 
     /// Given: A view model whose camera rect was fitted to a phone-portrait viewport
     /// When: The oval is drawn
@@ -117,9 +48,9 @@ final class FaceLivenessDetectionViewModelGeometryTests: XCTestCase {
         viewModel.cameraViewRect = previewRect
         viewModel.livenessState.beginRecording()
 
-        viewModel.drawOval(onComplete: {})
+        drawOvalAndWaitUntilDisplayed(viewModel)
 
-        let expected = scaled(videoOval, by: previewRect.width / videoWidth)
+        let expected = expectedOval(forPreviewWidth: previewRect.width)
         assertRect(viewModel.ovalRect, expected)
         XCTAssertEqual(presenter.drawnOvalRects.count, 1)
         assertRect(presenter.drawnOvalRects[0], expected)
@@ -134,11 +65,38 @@ final class FaceLivenessDetectionViewModelGeometryTests: XCTestCase {
         viewModel.cameraViewRect = LivenessPreviewGeometry.previewRect(fittingIn: viewport)
         viewModel.livenessState.beginRecording()
 
-        viewModel.drawOval(onComplete: {})
+        drawOvalAndWaitUntilDisplayed(viewModel)
 
         assertRect(viewModel.ovalRect, videoOval)
         XCTAssertLessThanOrEqual(viewModel.ovalRect.maxY, viewport.height)
     }
+
+    /// Given: A view model whose camera rect is empty, as it is if the hosting view was laid out
+    ///        with no area
+    /// When: The oval is drawn
+    /// Then: Nothing is drawn and the state stays at `.recording(ovalDisplayed: false)`, so the
+    ///       next detection draws the oval once a real rect exists rather than latching an empty
+    ///       one that would mask the whole preview
+    func testDrawOvalIsDeferredUntilGeometryExists() {
+        viewModel.cameraViewRect = .zero
+        viewModel.livenessState.beginRecording()
+
+        viewModel.drawOval(onComplete: { XCTFail("must not complete without geometry") })
+
+        XCTAssertEqual(viewModel.ovalRect, .zero)
+        XCTAssertTrue(presenter.drawnOvalRects.isEmpty)
+        XCTAssertEqual(viewModel.livenessState.state, .recording(ovalDisplayed: false))
+
+        // a layout pass supplies a rect, and the next detection draws
+        let previewRect = LivenessPreviewGeometry.previewRect(fittingIn: .init(width: 640, height: 904))
+        viewModel.cameraViewRect = previewRect
+        drawOvalAndWaitUntilDisplayed(viewModel)
+
+        assertRect(viewModel.ovalRect, expectedOval(forPreviewWidth: previewRect.width))
+        XCTAssertEqual(presenter.drawnOvalRects.count, 1)
+    }
+
+    // MARK: - Redraw on resize
 
     /// Given: An oval already drawn for a phone-portrait viewport
     /// When: The camera rect changes, as it does when the view is rotated or resized
@@ -148,14 +106,14 @@ final class FaceLivenessDetectionViewModelGeometryTests: XCTestCase {
         let before = LivenessPreviewGeometry.previewRect(fittingIn: .init(width: 393, height: 852))
         viewModel.cameraViewRect = before
         viewModel.livenessState.beginRecording()
-        viewModel.drawOval(onComplete: {})
-        assertRect(viewModel.ovalRect, scaled(videoOval, by: before.width / videoWidth))
+        drawOvalAndWaitUntilDisplayed(viewModel)
+        assertRect(viewModel.ovalRect, expectedOval(forPreviewWidth: before.width))
 
         let after = LivenessPreviewGeometry.previewRect(fittingIn: .init(width: 904, height: 640))
         viewModel.cameraViewRect = after
         viewModel.redrawOvalForCurrentCameraViewRect()
 
-        let expected = scaled(videoOval, by: after.width / videoWidth)
+        let expected = expectedOval(forPreviewWidth: after.width)
         assertRect(viewModel.ovalRect, expected)
         XCTAssertEqual(presenter.drawnOvalRects.count, 2)
         assertRect(presenter.drawnOvalRects[1], expected)
@@ -167,51 +125,15 @@ final class FaceLivenessDetectionViewModelGeometryTests: XCTestCase {
     func testRedrawIsSkippedWhenTheRectIsUnchanged() {
         viewModel.cameraViewRect = LivenessPreviewGeometry.previewRect(fittingIn: .init(width: 393, height: 852))
         viewModel.livenessState.beginRecording()
-        viewModel.drawOval(onComplete: {})
+        drawOvalAndWaitUntilDisplayed(viewModel)
 
         viewModel.redrawOvalForCurrentCameraViewRect()
 
         XCTAssertEqual(presenter.drawnOvalRects.count, 1)
     }
 
-    /// Given: A view model that has not drawn an oval yet
-    /// When: The camera rect changes
-    /// Then: Nothing is drawn, because the oval only appears once the check reaches recording
-    func testRedrawIsSkippedBeforeTheOvalExists() {
-        viewModel.cameraViewRect = LivenessPreviewGeometry.previewRect(fittingIn: .init(width: 904, height: 640))
-
-        viewModel.redrawOvalForCurrentCameraViewRect()
-
-        XCTAssertEqual(viewModel.ovalRect, .zero)
-        XCTAssertTrue(presenter.drawnOvalRects.isEmpty)
-    }
-
-    /// Given: A view model whose camera rect is still empty, as it is between `viewDidLoad` and
-    ///        the first layout pass
-    /// When: The oval is drawn
-    /// Then: Nothing is drawn and the state stays at `.recording(ovalDisplayed: false)`, so the
-    ///       next detection draws the oval once a real rect exists rather than latching a zero one
-    func testDrawOvalIsDeferredUntilGeometryExists() {
-        viewModel.cameraViewRect = .zero
-        viewModel.livenessState.beginRecording()
-
-        viewModel.drawOval(onComplete: {})
-
-        XCTAssertEqual(viewModel.ovalRect, .zero)
-        XCTAssertTrue(presenter.drawnOvalRects.isEmpty)
-        XCTAssertEqual(viewModel.livenessState.state, .recording(ovalDisplayed: false))
-
-        // the first layout pass supplies a rect, and the next detection draws
-        let previewRect = LivenessPreviewGeometry.previewRect(fittingIn: .init(width: 640, height: 904))
-        viewModel.cameraViewRect = previewRect
-        viewModel.drawOval(onComplete: {})
-
-        assertRect(viewModel.ovalRect, scaled(videoOval, by: previewRect.width / videoWidth))
-        XCTAssertEqual(presenter.drawnOvalRects.count, 1)
-    }
-
-    /// Given: A view whose geometry was captured from the screen-sized default frame in
-    ///        `viewDidLoad` (820x1180) while the hosting window is 640x904
+    /// Given: A view that was sized from the screen (820x1180) when the camera was configured,
+    ///        while the hosting window is 640x904
     /// When: The first layout pass supplies the real size and the geometry is refitted
     /// Then: The oval is rebuilt for the real size. Previously the preview kept its 820pt width
     ///       and was only re-centred, overhanging the window by 90pt per side.
@@ -220,17 +142,159 @@ final class FaceLivenessDetectionViewModelGeometryTests: XCTestCase {
         let atViewDidLoad = LivenessPreviewGeometry.previewRect(fittingIn: .init(width: 820, height: 1180))
         viewModel.cameraViewRect = atViewDidLoad
         viewModel.livenessState.beginRecording()
-        viewModel.drawOval(onComplete: {})
-        assertRect(viewModel.ovalRect, scaled(videoOval, by: 820 / videoWidth))
+        drawOvalAndWaitUntilDisplayed(viewModel)
+        assertRect(viewModel.ovalRect, expectedOval(forPreviewWidth: 820))
 
         // first real layout pass
         let atFirstLayout = LivenessPreviewGeometry.previewRect(fittingIn: .init(width: 640, height: 904))
         viewModel.cameraViewRect = atFirstLayout
         viewModel.redrawOvalForCurrentCameraViewRect()
 
-        assertRect(viewModel.ovalRect, scaled(videoOval, by: 640 / videoWidth))
+        assertRect(viewModel.ovalRect, expectedOval(forPreviewWidth: 640))
         XCTAssertEqual(presenter.drawnOvalRects.count, 2)
         XCTAssertLessThanOrEqual(atFirstLayout.maxX, 640)
         XCTAssertLessThanOrEqual(atFirstLayout.maxY, 904)
+    }
+
+    /// Given: A 640x904 window whose camera rect was seeded from a stale screen width, once with
+    ///        the portrait screen width (820) and once with the landscape screen width (1180),
+    ///        the way the shipped code sized it before the first layout pass
+    /// When: The oval is drawn through the stale rect, and then the rect is refitted to the
+    ///       window and the oval redrawn
+    /// Then: Through the 1180pt rect the oval overhung both sides of the window, and through the
+    ///       820pt rect it did not, which is what distinguished the two stale widths on screen.
+    ///       After the refit the oval is fully inside the window in both cases.
+    func testSideClippingFromAStaleWidthIsRemovedByTheRefit() {
+        let window = CGSize(width: 640, height: 904)
+
+        func onScreenOval() -> CGRect {
+            viewModel.ovalRect.offsetBy(dx: viewModel.cameraViewRect.minX, dy: viewModel.cameraViewRect.minY)
+        }
+        func sideOverhang(_ rect: CGRect) -> CGFloat {
+            max(0, -rect.minX) + max(0, rect.maxX - window.width)
+        }
+
+        for staleWidth: CGFloat in [820, 1180] {
+            resetFixture()
+            let label = "stale width \(Int(staleWidth))"
+
+            // seeded from the screen, re-centred in the window: the shipped behaviour
+            let staleHeight = staleWidth / 3 * 4
+            viewModel.cameraViewRect = CGRect(
+                x: (window.width - staleWidth) / 2,
+                y: (window.height - staleHeight) / 2,
+                width: staleWidth,
+                height: staleHeight
+            )
+            viewModel.livenessState.beginRecording()
+            drawOvalAndWaitUntilDisplayed(viewModel)
+
+            if staleWidth > 820 {
+                XCTAssertGreaterThan(sideOverhang(onScreenOval()), 0, "\(label) must overhang the sides before the refit")
+            } else {
+                XCTAssertEqual(sideOverhang(onScreenOval()), 0, accuracy: 0.0001, "\(label) must not overhang the sides")
+            }
+
+            // first real layout pass
+            viewModel.cameraViewRect = LivenessPreviewGeometry.previewRect(fittingIn: window)
+            viewModel.redrawOvalForCurrentCameraViewRect()
+
+            let oval = onScreenOval()
+            XCTAssertEqual(presenter.drawnOvalRects.count, 2, "\(label) must redraw once")
+            XCTAssertEqual(sideOverhang(oval), 0, accuracy: 0.0001, "\(label) must not overhang after the refit")
+            XCTAssertGreaterThanOrEqual(oval.minY, 0, "\(label) must not overhang the top")
+            XCTAssertLessThanOrEqual(oval.maxY, window.height, "\(label) must not overhang the bottom")
+            assertRect(viewModel.ovalRect, expectedOval(forPreviewWidth: 640), label)
+        }
+    }
+
+    // MARK: - When a redraw must be refused
+
+    /// Given: A view model that has not displayed an oval yet, before recording and again in
+    ///        `.recording(ovalDisplayed: false)` with real geometry available
+    /// When: The camera rect changes
+    /// Then: Nothing is drawn. The first draw belongs to `drawOval`, so the redraw path must not
+    ///       pre-empt it
+    func testRedrawIsRefusedBeforeTheOvalIsDisplayed() {
+        viewModel.cameraViewRect = LivenessPreviewGeometry.previewRect(fittingIn: .init(width: 904, height: 640))
+
+        viewModel.redrawOvalForCurrentCameraViewRect()
+
+        XCTAssertEqual(viewModel.ovalRect, .zero)
+        XCTAssertTrue(presenter.drawnOvalRects.isEmpty)
+
+        viewModel.livenessState.beginRecording()
+        viewModel.cameraViewRect = LivenessPreviewGeometry.previewRect(fittingIn: .init(width: 640, height: 904))
+
+        viewModel.redrawOvalForCurrentCameraViewRect()
+
+        XCTAssertEqual(viewModel.livenessState.state, .recording(ovalDisplayed: false))
+        XCTAssertEqual(viewModel.ovalRect, .zero)
+        XCTAssertTrue(presenter.drawnOvalRects.isEmpty)
+    }
+
+    /// Given: An oval on screen, and then a check that has moved past the challenge into each of
+    ///        the terminal or post-challenge states
+    /// When: The camera rect changes
+    /// Then: Nothing is redrawn and the oval rect is left alone. There is nothing left to
+    ///       reposition, and the freshness view the oval is inserted beneath is gone
+    func testRedrawIsRefusedInTerminalStates() {
+        let terminalStates: [LivenessStateMachine.State] = [
+            .completedDisplayingFreshness,
+            .completedNoLightCheck,
+            .awaitingDisconnectEvent,
+            .disconnectEventReceived,
+            .completed,
+            .encounteredUnrecoverableError(.userCancelled),
+            .encounteredUnrecoverableError(.viewResignation)
+        ]
+
+        for state in terminalStates {
+            resetFixture()
+            let before = LivenessPreviewGeometry.previewRect(fittingIn: .init(width: 393, height: 852))
+            viewModel.cameraViewRect = before
+            viewModel.livenessState.beginRecording()
+            drawOvalAndWaitUntilDisplayed(viewModel)
+            let drawnOval = viewModel.ovalRect
+
+            viewModel.livenessState = LivenessStateMachine(state: state)
+            viewModel.cameraViewRect = LivenessPreviewGeometry.previewRect(fittingIn: .init(width: 904, height: 640))
+            viewModel.redrawOvalForCurrentCameraViewRect()
+
+            XCTAssertEqual(presenter.drawnOvalRects.count, 1, "\(state) must not redraw")
+            XCTAssertEqual(viewModel.ovalRect, drawnOval, "\(state) must leave the oval rect alone")
+        }
+    }
+
+    /// Given: An oval on screen and a layout pass that reports no area, so the camera rect is
+    ///        empty
+    /// When: A redraw is requested for the empty rect, and then again once a real rect is back
+    /// Then: The empty rect draws nothing and leaves the oval on screen. The real rect is then
+    ///       picked up and the oval redrawn for it. Previously the empty pass drew an empty oval,
+    ///       which masked the whole preview, and the following pass mistook that empty oval for
+    ///       "never drawn" and refused to redraw, so the preview stayed masked for the rest of
+    ///       the check
+    func testRedrawWithAnEmptyCameraRectKeepsTheOvalAndRecovers() {
+        let before = LivenessPreviewGeometry.previewRect(fittingIn: .init(width: 640, height: 904))
+        viewModel.cameraViewRect = before
+        viewModel.livenessState.beginRecording()
+        drawOvalAndWaitUntilDisplayed(viewModel)
+        let drawnOval = viewModel.ovalRect
+
+        viewModel.cameraViewRect = .zero
+        viewModel.redrawOvalForCurrentCameraViewRect()
+
+        XCTAssertEqual(presenter.drawnOvalRects.count, 1, "an empty rect must not draw")
+        XCTAssertEqual(viewModel.ovalRect, drawnOval, "the oval on screen must be kept")
+        XCTAssertNotEqual(viewModel.ovalRect, .zero)
+
+        let after = LivenessPreviewGeometry.previewRect(fittingIn: .init(width: 904, height: 640))
+        viewModel.cameraViewRect = after
+        viewModel.redrawOvalForCurrentCameraViewRect()
+
+        let expected = expectedOval(forPreviewWidth: after.width)
+        XCTAssertEqual(presenter.drawnOvalRects.count, 2, "the next real rect must be drawn")
+        assertRect(viewModel.ovalRect, expected)
+        assertRect(presenter.drawnOvalRects[1], expected)
     }
 }

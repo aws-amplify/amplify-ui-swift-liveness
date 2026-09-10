@@ -123,7 +123,11 @@ public struct FaceLivenessDetectorView: View {
 
     public var body: some View {
         ZStack {
+            // `RotateDeviceView` covers the content visually and swallows touches, but not the
+            // accessibility tree. Hide the content from it too, so VoiceOver and Full Keyboard
+            // Access cannot reach the controls underneath the prompt.
             content
+                .accessibilityHidden(orientationObserver.decision == .blockUntilPortrait)
 
             if orientationObserver.decision == .blockUntilPortrait {
                 RotateDeviceView(onClose: cancelFromRotatePrompt)
@@ -215,7 +219,11 @@ public struct FaceLivenessDetectorView: View {
         case .displayingGetReadyView(let challenge, let cameraPosition):
             GetReadyPageView(
                 onBegin: {
-                    guard displayState != .displayingLiveness else { return }
+                    // The rotate prompt sits over this screen while the interface is not
+                    // portrait, but the check must not start underneath it either.
+                    guard displayState != .displayingLiveness,
+                          orientationObserver.decision == .proceed
+                    else { return }
                     displayState = .displayingLiveness
                 },
                 beginCheckButtonDisabled: false,
@@ -290,12 +298,24 @@ public struct FaceLivenessDetectorView: View {
     /// already takes when the scene deactivates: stop recording and report
     /// `.viewResignation`, which reaches the host as `.sessionInterrupted` and dismisses the
     /// detector. The host can present a new session once the device is back in portrait.
+    ///
+    /// `displayState` stays `.displayingLiveness` until the host has actually dismissed the
+    /// detector, so this can run again for a further rotation during that window. Once the
+    /// check has reached a terminal state there is nothing left to interrupt, and touching
+    /// `livenessState` then would re-publish it and fire the host's completion a second time.
     private func interruptCheckIfOrientationUnsupported() {
         guard orientationObserver.decision == .blockUntilPortrait,
               displayState == .displayingLiveness
         else { return }
 
         DispatchQueue.main.async {
+            switch viewModel.livenessState.state {
+            case .completed, .encounteredUnrecoverableError:
+                return
+            default:
+                break
+            }
+
             viewModel.stopRecording()
             viewModel.livenessState.unrecoverableStateEncountered(.viewResignation)
         }
@@ -309,8 +329,10 @@ public struct FaceLivenessDetectorView: View {
     /// Without this exit a host that only supports landscape would leave the user stuck on the
     /// prompt.
     private func cancelFromRotatePrompt() {
+        let closeCode = LivenessStateMachine.LivenessError.userCancelled.webSocketCloseCode
+            ?? .normalClosure
         viewModel.stopRecording()
-        viewModel.livenessService?.closeSocket(with: .ovalFitUserClosedSession)
+        viewModel.livenessService?.closeSocket(with: closeCode)
         isPresented = false
         onCompletion(.failure(.userCancelled))
     }

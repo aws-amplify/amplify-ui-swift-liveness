@@ -29,7 +29,7 @@ enum LivenessPreviewGeometry {
     ///
     /// Leaves bars at the left and right when the viewport is proportionally wider than the
     /// camera image, and at the top and bottom when it is proportionally taller. Returns
-    /// `.zero` for an empty viewport, which happens before the first layout pass.
+    /// `.zero` for a viewport with no area, rather than a rect with NaN components.
     static func previewRect(fittingIn viewport: CGSize) -> CGRect {
         guard viewport.width > 0, viewport.height > 0 else { return .zero }
 

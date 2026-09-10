@@ -101,15 +101,19 @@ final class _LivenessViewController: UIViewController {
     /// Re-fits the camera preview, and the oval drawn on top of it, to the view's current size.
     ///
     /// `setupAVLayer` runs once, so without this every size change after the first layout pass
-    /// (rotation, an iPad window resize, folding or unfolding a device) would leave a preview
-    /// and an oval sized for the previous viewport. Recomputing is skipped while the fitted
-    /// rect is unchanged, which is the common case and also what keeps the layout pass this
-    /// triggers from recursing.
+    /// (a rotation, or a window resize on iPad) would leave a preview and an oval sized for the
+    /// previous viewport. Recomputing is skipped while the fitted rect is unchanged, which is
+    /// the common case and also what keeps the layout pass this triggers from recursing.
+    ///
+    /// A layout pass that reports no area (a collapsed host, a transition frame) is skipped as
+    /// well, keeping the last real geometry. Fitting to it would write an empty
+    /// `cameraViewRect`, and an oval mapped through an empty rect masks the whole preview and
+    /// can never be matched.
     private func updateGeometryForCurrentViewSize() {
         guard let previewLayer = self.previewLayer else { return }
 
         let cameraFrame = LivenessPreviewGeometry.previewRect(fittingIn: view.bounds.size)
-        guard cameraFrame != previewLayer.frame else { return }
+        guard !cameraFrame.isEmpty, cameraFrame != viewModel.cameraViewRect else { return }
 
         previewLayer.frame = cameraFrame
         viewModel.cameraViewRect = cameraFrame
