@@ -17,8 +17,7 @@ final class InterfaceOrientationObserver: ObservableObject {
     init(orientation: UIInterfaceOrientation? = nil) {
         self.orientation = orientation ?? LivenessOrientation.currentInterfaceOrientation
 
-        // Covers a rotation that happens while the app is in the background, which produces
-        // no transition callback on the detector's own view controllers.
+        // A rotation while the app is backgrounded produces no transition callback.
         sceneActivationObserver = NotificationCenter.default.addObserver(
             forName: UIScene.didActivateNotification,
             object: nil,
@@ -27,12 +26,8 @@ final class InterfaceOrientationObserver: ObservableObject {
             self?.refresh()
         }
 
-        // Redundant trigger alongside `InterfaceOrientationReader`, so the gate does not
-        // depend on a single signal. This one reports the device rather than the interface and
-        // carries no ordering guarantee against the interface rotation, hence the second read
-        // on the next main queue turn. A host locked to portrait still reads portrait here, so
-        // it is never gated. `begin`/`endGeneratingDeviceOrientationNotifications` are
-        // reference counted by UIKit, so this does not disturb the host app's own use of them.
+        // Secondary signal alongside `InterfaceOrientationReader`. Device orientation is not
+        // ordered against the interface rotation, hence the second read on the next turn.
         UIDevice.current.beginGeneratingDeviceOrientationNotifications()
         deviceOrientationObserver = NotificationCenter.default.addObserver(
             forName: UIDevice.orientationDidChangeNotification,
@@ -58,8 +53,7 @@ final class InterfaceOrientationObserver: ObservableObject {
         LivenessOrientation.decision(for: orientation)
     }
 
-    /// Re-reads the interface orientation from the host scene. Publishes only on a change so
-    /// a repeated read does not re-render the detector.
+    /// Re-reads the host scene's interface orientation, publishing only on a change.
     func refresh() {
         let current = LivenessOrientation.currentInterfaceOrientation
         guard current != orientation else { return }
@@ -67,19 +61,9 @@ final class InterfaceOrientationObserver: ObservableObject {
     }
 }
 
-/// Zero-sized bridge that tells an `InterfaceOrientationObserver` when to re-read the
-/// interface orientation.
-///
-/// UIKit calls `viewWillTransition(to:with:)` on the view controllers in the hierarchy for
-/// every interface rotation, which is the signal available on iOS 15 that is actually tied
-/// to the interface. `UIDevice.orientationDidChangeNotification` is not equivalent: it
-/// reports the *device*, fires for hosts that are locked to portrait, and requires the app
-/// to be generating device orientation notifications.
-///
-/// The observer is refreshed at the start of the transition, where the scene's
-/// `interfaceOrientation` already reports the new value, so the rotate prompt covers the
-/// camera feed before the rotation animation plays rather than after it. The refresh on
-/// completion is a backstop in case that read is ever early.
+/// Zero-sized view that calls `onChange` on every interface rotation, via
+/// `viewWillTransition(to:with:)`, which is tied to the interface rather than the device.
+/// Fires at the start of the transition so the prompt covers the feed before the animation.
 struct InterfaceOrientationReader: UIViewControllerRepresentable {
     let onChange: () -> Void
 

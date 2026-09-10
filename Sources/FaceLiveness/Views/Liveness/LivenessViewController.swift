@@ -31,8 +31,7 @@ final class _LivenessViewController: UIViewController {
         viewModel.normalizeFace = { [weak self] face in
             guard let self = self else { return face }
             return DispatchQueue.main.sync {
-                // Normalize against the same fitted rect the preview and the oval use, so the
-                // landmarks and the oval they are matched against share one coordinate space.
+                // normalize against the same fitted rect the preview and the oval use
                 let previewRect = LivenessPreviewGeometry.previewRect(fittingIn: self.view.bounds.size)
                 return face.normalize(width: previewRect.width, height: previewRect.height)
             }
@@ -83,8 +82,7 @@ final class _LivenessViewController: UIViewController {
             return
         }
 
-        // `cameraFrame` is already centered within the view, so the layer needs no further
-        // positioning. `viewDidLayoutSubviews` takes over from here if the view is resized.
+        // `cameraFrame` is already centered; `viewDidLayoutSubviews` takes over on resize
         avLayer.frame = cameraFrame
         self.previewLayer = avLayer
         viewModel.cameraViewRect = cameraFrame
@@ -98,17 +96,8 @@ final class _LivenessViewController: UIViewController {
         }
     }
 
-    /// Re-fits the camera preview, and the oval drawn on top of it, to the view's current size.
-    ///
-    /// `setupAVLayer` runs once, so without this every size change after the first layout pass
-    /// (a rotation, or a window resize on iPad) would leave a preview and an oval sized for the
-    /// previous viewport. Recomputing is skipped while the fitted rect is unchanged, which is
-    /// the common case and also what keeps the layout pass this triggers from recursing.
-    ///
-    /// A layout pass that reports no area (a collapsed host, a transition frame) is skipped as
-    /// well, keeping the last real geometry. Fitting to it would write an empty
-    /// `cameraViewRect`, and an oval mapped through an empty rect masks the whole preview and
-    /// can never be matched.
+    /// Re-fits the preview layer and the oval to the view's current size. Skipped while the
+    /// fitted rect is unchanged (which also stops the layout pass recursing) or has no area.
     private func updateGeometryForCurrentViewSize() {
         guard let previewLayer = self.previewLayer else { return }
 
@@ -188,8 +177,7 @@ extension _LivenessViewController: FaceLivenessViewControllerPresenter {
             guard let self else { return }
             guard let previewLayer = self.previewLayer else { return }
 
-            // Drop any previous oval, so redrawing after a size change replaces it rather
-            // than layering a second oval over it.
+            // drop any previous oval so a redraw replaces it rather than layering over it
             self.ovalView?.removeFromSuperview()
 
             let ovalView = OvalView(

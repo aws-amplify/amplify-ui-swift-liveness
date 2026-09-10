@@ -179,13 +179,8 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         guard livenessState.state == .recording(ovalDisplayed: false),
               let ovalMatchChallenge = ovalMatchChallenge else { return }
 
-        // `cameraViewRect` is normally set by `setupAVLayer` before recording can begin, and
-        // on the first layout pass it is corrected for size, not for emptiness (the view has
-        // screen bounds before layout, so a stale rect is the hazard there, and
-        // `redrawOvalForCurrentCameraViewRect` handles it). An empty rect is only possible if
-        // the view has no area. Mapping the oval through it would produce an empty oval that
-        // masks the whole preview and can never be matched, so bail and stay at
-        // `.recording(ovalDisplayed: false)`; the next detection retries with the current rect.
+        // an oval mapped through an empty rect would mask the whole preview; the next
+        // detection retries once layout supplies a real rect
         guard !cameraViewRect.isEmpty else { return }
 
         let normalizedOvalRect = computeOvalRect(for: ovalMatchChallenge)
@@ -198,21 +193,9 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         ovalRect = normalizedOvalRect
     }
 
-    /// Recomputes the oval for the current `cameraViewRect` and redraws it, leaving the state
-    /// machine untouched.
-    ///
-    /// `drawOval` only runs in `.recording(ovalDisplayed: false)`, so it cannot be reused once
-    /// the oval is on screen. This is the path taken when the view is resized mid-check, which
-    /// would otherwise leave an oval sized for the previous viewport.
-    ///
-    /// Whether an oval is on screen is read from the state machine, not from `ovalRect`. An
-    /// `ovalRect` of `.zero` cannot distinguish "never drawn" from "drawn through an empty
-    /// rect", and keying on it would leave the second case stuck with no oval.
+    /// Recomputes and redraws the oval for the current `cameraViewRect` after a resize, without
+    /// touching the state machine. Only runs while an oval is on screen.
     func redrawOvalForCurrentCameraViewRect() {
-        // Only while the oval is actually on screen. Before `.recording(ovalDisplayed: true)`
-        // there is no oval yet and `drawOval` owns the first draw. Past the challenge there is
-        // nothing left to reposition, and the freshness view the oval is inserted beneath is
-        // gone.
         switch livenessState.state {
         case .recording(ovalDisplayed: true), .awaitingFaceInOvalMatch, .faceMatched, .displayingFreshness:
             break
@@ -220,8 +203,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
             return
         }
 
-        // Same reasoning as in `drawOval`: never map the oval through an empty rect. Keep the
-        // oval that is on screen until a layout pass supplies real geometry.
+        // keep the oval that is on screen until a layout pass supplies real geometry
         guard !cameraViewRect.isEmpty,
               let ovalMatchChallenge = ovalMatchChallenge else { return }
 

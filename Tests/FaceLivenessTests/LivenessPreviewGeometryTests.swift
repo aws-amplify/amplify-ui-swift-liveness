@@ -9,16 +9,16 @@ import XCTest
 @testable import FaceLiveness
 
 final class LivenessPreviewGeometryTests: XCTestCase {
-    /// The preview sizing this fix replaced. See `LivenessGeometryFixture.legacyPreviewRect`.
+    /// The previous preview sizing. See `LivenessGeometryFixture.legacyPreviewRect`.
     private func legacyPreviewRect(fittingIn viewport: CGSize) -> CGRect {
         LivenessGeometryFixture.legacyPreviewRect(fittingIn: viewport)
     }
 
-    // MARK: - Tall viewports: the fix must be a no-op
+    // MARK: - Tall viewports
 
-    /// Given: A phone-shaped viewport, taller than 4/3 of its width (iPhone 15, portrait)
+    /// Given: A phone portrait viewport (iPhone 15), taller than 4/3 of its width
     /// When: The preview rect is fitted
-    /// Then: It is unchanged from the previous sizing, and fills the viewport's full width
+    /// Then: It matches the previous sizing and fills the viewport's width
     func testPhonePortraitIsUnchanged() {
         let viewport = CGSize(width: 393, height: 852)
         let rect = LivenessPreviewGeometry.previewRect(fittingIn: viewport)
@@ -29,7 +29,7 @@ final class LivenessPreviewGeometryTests: XCTestCase {
 
     /// Given: Every shipping iPhone size and both portrait iPad sizes
     /// When: The preview rect is fitted
-    /// Then: Each one is identical to the previous sizing, so no supported portrait device moves
+    /// Then: Each one matches the previous sizing
     func testTallViewportsAreAllUnchanged() {
         let tallViewports: [CGSize] = [
             .init(width: 320, height: 568),   // iPhone SE 1st gen
@@ -55,11 +55,9 @@ final class LivenessPreviewGeometryTests: XCTestCase {
         }
     }
 
-    /// Given: A viewport whose height is exactly 4/3 of its width, the threshold between the two
-    ///        behaviours
+    /// Given: A viewport whose height is exactly 4/3 of its width
     /// When: The preview rect is fitted
-    /// Then: It fills the viewport exactly, with no bars on any edge, and both the old and the
-    ///       new expressions agree
+    /// Then: It fills the viewport exactly and matches the previous sizing
     func testExactFourThirdsThresholdFillsTheViewport() {
         let viewport = CGSize(width: 600, height: 800)
         let rect = LivenessPreviewGeometry.previewRect(fittingIn: viewport)
@@ -68,10 +66,9 @@ final class LivenessPreviewGeometryTests: XCTestCase {
         assertRect(rect, legacyPreviewRect(fittingIn: viewport), "the threshold must be continuous")
     }
 
-    /// Given: A viewport one point taller than the 4/3 threshold, and one point shorter
+    /// Given: Viewports one point taller and one point shorter than the 4/3 threshold
     /// When: The preview rect is fitted
-    /// Then: The taller one still fills the width and the shorter one is already clamped, so the
-    ///       two behaviours meet without a jump
+    /// Then: The taller one fills the width and the shorter one is clamped, with no jump
     func testThresholdIsContinuous() {
         let taller = LivenessPreviewGeometry.previewRect(fittingIn: .init(width: 600, height: 801))
         let shorter = LivenessPreviewGeometry.previewRect(fittingIn: .init(width: 600, height: 799))
@@ -81,12 +78,11 @@ final class LivenessPreviewGeometryTests: XCTestCase {
         XCTAssertEqual(taller.width - shorter.width, 0.75, accuracy: 0.0001)
     }
 
-    // MARK: - Short viewports: the case that was broken
+    // MARK: - Short viewports
 
     /// Given: A near-square 904x640 viewport
     /// When: The preview rect is fitted
-    /// Then: It is letterboxed to 480x640, fits entirely inside the viewport, and no longer
-    ///       overflows by the 565pt the previous sizing produced
+    /// Then: It is letterboxed to 480x640 inside the viewport; the previous sizing overflowed
     func testNearSquareLandscapeIsClamped() {
         let viewport = CGSize(width: 904, height: 640)
         let rect = LivenessPreviewGeometry.previewRect(fittingIn: viewport)
@@ -100,9 +96,9 @@ final class LivenessPreviewGeometryTests: XCTestCase {
         )
     }
 
-    /// Given: The same 904x640 window rotated to 640x904, which is above the 4/3 threshold
+    /// Given: The same window rotated to 640x904, above the 4/3 threshold
     /// When: The preview rect is fitted
-    /// Then: Nothing changes, confirming only one of the two orientations was ever affected
+    /// Then: It matches the previous sizing
     func testNearSquarePortraitIsUnchanged() {
         let viewport = CGSize(width: 640, height: 904)
         let rect = LivenessPreviewGeometry.previewRect(fittingIn: viewport)
@@ -113,8 +109,7 @@ final class LivenessPreviewGeometryTests: XCTestCase {
 
     /// Given: An iPad 10th gen in landscape
     /// When: The preview rect is fitted
-    /// Then: It is letterboxed to 615x820 instead of the 1573pt-tall rect the previous sizing
-    ///       produced in an 820pt-tall window
+    /// Then: It is letterboxed to 615x820; the previous sizing was 1573pt tall
     func testIPadLandscapeIsClamped() {
         let viewport = CGSize(width: 1180, height: 820)
         let rect = LivenessPreviewGeometry.previewRect(fittingIn: viewport)
@@ -123,7 +118,7 @@ final class LivenessPreviewGeometryTests: XCTestCase {
         XCTAssertEqual(legacyPreviewRect(fittingIn: viewport).height, 1573.33333, accuracy: 0.001)
     }
 
-    /// Given: An iPad 5th gen in landscape, the device reported in GitHub issue #229
+    /// Given: An iPad 5th gen in landscape (issue #229)
     /// When: The preview rect is fitted
     /// Then: It is letterboxed to 576x768 and fits the window
     func testIPad5thGenLandscapeIsClamped() {
@@ -134,10 +129,9 @@ final class LivenessPreviewGeometryTests: XCTestCase {
 
     // MARK: - Invariants
 
-    /// Given: A sweep of viewports either side of the threshold, including square and extreme ones
+    /// Given: A sweep of viewports either side of the threshold, including square and extreme
     /// When: The preview rect is fitted
-    /// Then: It always keeps the camera's 3:4 aspect ratio, always fits inside the viewport, and
-    ///       is always centred
+    /// Then: It is always 3:4, inside the viewport, and centered
     func testFittedRectIsAlwaysContainedCentredAndThreeByFour() {
         let viewports: [CGSize] = [
             .init(width: 393, height: 852),
@@ -169,9 +163,9 @@ final class LivenessPreviewGeometryTests: XCTestCase {
         }
     }
 
-    /// Given: A viewport with no area, as a view reports when its host has collapsed it
+    /// Given: A viewport with no area
     /// When: The preview rect is fitted
-    /// Then: It is `.zero` rather than a NaN-bearing rect
+    /// Then: It is `.zero`
     func testEmptyViewportIsZero() {
         XCTAssertEqual(LivenessPreviewGeometry.previewRect(fittingIn: .zero), .zero)
         XCTAssertEqual(LivenessPreviewGeometry.previewRect(fittingIn: .init(width: 393, height: 0)), .zero)
@@ -181,7 +175,7 @@ final class LivenessPreviewGeometryTests: XCTestCase {
 
     // MARK: - Oval mapping
 
-    /// Given: A preview rect exactly as wide as the 480pt-wide video the service is configured with
+    /// Given: A preview rect as wide as the 480pt video
     /// When: The service's oval is mapped onto it
     /// Then: The oval is passed through unscaled
     func testOvalAtVideoScaleIsUnscaled() {
@@ -196,7 +190,7 @@ final class LivenessPreviewGeometryTests: XCTestCase {
         assertRect(rect, videoOval)
     }
 
-    /// Given: A preview rect narrower than the video, as on a phone
+    /// Given: A preview rect narrower than the video
     /// When: The service's oval is mapped onto it
     /// Then: Every edge is scaled by the preview-to-video width ratio
     func testOvalScalesWithPreviewWidth() {
@@ -222,8 +216,7 @@ final class LivenessPreviewGeometryTests: XCTestCase {
 
     /// Given: The 904x640 viewport, before and after the clamp
     /// When: The service's oval is mapped onto each preview rect
-    /// Then: The clamped oval fits inside the viewport's height, where the unclamped one was
-    ///       taller than the whole window
+    /// Then: The clamped oval fits the viewport's height; the unclamped one did not
     func testOvalFitsTheViewportAfterClamping() {
         let viewport = CGSize(width: 904, height: 640)
         let videoOval = CGRect(x: 108, y: 107, width: 264, height: 427)
@@ -244,7 +237,7 @@ final class LivenessPreviewGeometryTests: XCTestCase {
         XCTAssertGreaterThan(legacy.height, viewport.height, "the previous oval was taller than the window")
     }
 
-    /// Given: A video size with no width, which would divide by zero
+    /// Given: A video size with no width
     /// When: The service's oval is mapped
     /// Then: The result is `.zero`
     func testOvalWithEmptyVideoSizeIsZero() {
@@ -257,14 +250,11 @@ final class LivenessPreviewGeometryTests: XCTestCase {
         XCTAssertEqual(rect, .zero)
     }
 
-    // MARK: - A 640x904 windowed viewport, and the marginal band around the threshold
+    // MARK: - The marginal band around the threshold
 
-    /// Given: A windowed viewport of 640 wide by 904 tall, which is ABOVE the 4/3
-    ///        threshold (h/w 1.4125)
+    /// Given: A 640x904 windowed viewport, above the 4/3 threshold with 50.67pt of headroom
     /// When: The preview rect is fitted
-    /// Then: Nothing changes. A 640pt-wide preview needs 853.33pt and the viewport supplies 904,
-    ///       so 50.67pt of headroom remain and the clamp is a no-op. If the oval is misplaced at
-    ///       this size the cause is NOT the static clamp.
+    /// Then: It matches the previous sizing; the clamp is a no-op here
     func testWindowedViewport640x904IsAboveThresholdAndUnchanged() {
         let viewport = CGSize(width: 640, height: 904)
         let rect = LivenessPreviewGeometry.previewRect(fittingIn: viewport)
@@ -275,12 +265,9 @@ final class LivenessPreviewGeometryTests: XCTestCase {
         assertRect(rect, legacyPreviewRect(fittingIn: viewport), accuracy: 0.001, "must be a no-op")
     }
 
-    /// Given: A 640pt-wide detector view whose height has been reduced below 853.33pt by host
-    ///        chrome that consumes layout height, measured at 845.5pt for a title above the
-    ///        detector
+    /// Given: A 640x845.5 view, just below the 4/3 threshold
     /// When: The preview rect is fitted
-    /// Then: The clamp fires with a small letterbox, the rect stays inside the view, and the
-    ///       previous sizing would have overflowed by 7.83pt
+    /// Then: The clamp fires with a small letterbox; the previous sizing overflowed by 7.83pt
     func testMarginalBandJustBelowThreshold() {
         let viewport = CGSize(width: 640, height: 845.5)
         let rect = LivenessPreviewGeometry.previewRect(fittingIn: viewport)
@@ -294,8 +281,7 @@ final class LivenessPreviewGeometryTests: XCTestCase {
 
     /// Given: Viewports one point either side of the threshold at 640pt wide
     /// When: The preview rect is fitted
-    /// Then: The reduction is proportional and tiny rather than a jump to a degenerate rect: one
-    ///       point of missing height costs 0.75pt of width and 0.375pt of letterbox per side
+    /// Then: One point of missing height costs 0.75pt of width and 0.375pt of letterbox a side
     func testMarginalBandDegradesProportionally() {
         let atThreshold = LivenessPreviewGeometry.previewRect(fittingIn: .init(width: 640, height: 853.33333))
         let onePointShort = LivenessPreviewGeometry.previewRect(fittingIn: .init(width: 640, height: 852.33333))
@@ -308,7 +294,7 @@ final class LivenessPreviewGeometryTests: XCTestCase {
 
     /// Given: A sweep across the marginal band, from 30pt above the threshold to 30pt below
     /// When: The preview rect is fitted and the service's oval mapped onto it
-    /// Then: The oval is fully inside the view at every step, and the rect never degenerates
+    /// Then: The oval is fully inside the view at every step and the rect never degenerates
     func testOvalStaysFullyVisibleAcrossTheMarginalBand() {
         let videoOval = CGRect(x: 108, y: 107, width: 264, height: 427)
         let width: CGFloat = 640
@@ -328,7 +314,7 @@ final class LivenessPreviewGeometryTests: XCTestCase {
             XCTAssertGreaterThan(preview.height, 0, "\(label) preview must not degenerate")
             XCTAssertLessThanOrEqual(preview.maxY, viewport.height + 0.0001, "\(label) preview must fit")
             XCTAssertLessThanOrEqual(preview.maxX, viewport.width + 0.0001, "\(label) preview must fit")
-            // the oval is in preview-local coordinates, so on-screen it is offset by the origin
+            // the oval is in preview-local coordinates
             XCTAssertLessThanOrEqual(preview.minY + oval.maxY, viewport.height + 0.0001,
                                      "\(label) oval must be fully visible")
             XCTAssertLessThanOrEqual(preview.minX + oval.maxX, viewport.width + 0.0001,
@@ -338,11 +324,9 @@ final class LivenessPreviewGeometryTests: XCTestCase {
 
     // MARK: - The resize path
 
-    /// Given: A view sized 820x1180 (iPad 10th gen full-screen portrait) that is then resized to
-    ///        640x904, both of which are above the 4/3 threshold
-    /// When: The preview rect is refitted for the new size
-    /// Then: It changes, so a relayout is genuinely required even though NEITHER size trips the
-    ///       clamp. This is the defect a width clamp alone would not fix.
+    /// Given: A view resized from 820x1180 to 640x904, both above the 4/3 threshold
+    /// When: The preview rect is refitted
+    /// Then: It changes, so a relayout is required even though neither size is clamped
     func testResizeBetweenTwoUnclampedSizesStillChangesTheRect() {
         let before = LivenessPreviewGeometry.previewRect(fittingIn: .init(width: 820, height: 1180))
         let after = LivenessPreviewGeometry.previewRect(fittingIn: .init(width: 640, height: 904))
@@ -352,14 +336,9 @@ final class LivenessPreviewGeometryTests: XCTestCase {
         XCTAssertNotEqual(before, after)
     }
 
-    /// Given: A face whose landmarks, in the detector's 0...1 coordinates, fill exactly the oval the
-    ///        service specifies, and a view that is resized from 820x1180 to 640x904
-    /// When: The face is normalized the way `normalizeFace` now does it, against the fitted preview
-    ///       size, and the oval is mapped onto the same fitted rect, before and after the resize
-    /// Then: The normalized face and the oval coincide on both sides of the resize, because both
-    ///       derive from one fitted rect. Normalizing against the new size while the oval still
-    ///       sits in the old rect, which is what a stale `cameraViewRect` produced before, does
-    ///       not: the two disagree on every edge
+    /// Given: A face that fills the service's oval, and a view resized from 820x1180 to 640x904
+    /// When: The face is normalized against the fitted preview and the oval mapped onto it
+    /// Then: Face and oval coincide before and after the resize; a stale oval does not match
     func testResizeNoLongerDesyncsLandmarksFromTheOval() {
         let videoOval = LivenessGeometryFixture.videoOval
         let videoSize = LivenessGeometryFixture.videoSize
@@ -392,7 +371,7 @@ final class LivenessPreviewGeometryTests: XCTestCase {
         assertRect(normalizedFaceBox(in: before), oval(in: before), "before the resize")
         assertRect(normalizedFaceBox(in: after), oval(in: after), "after the resize")
 
-        // the previous failure mode: landmarks in the new space, oval still in the old one
+        // landmarks in the new space, oval still in the old one
         let desynced = normalizedFaceBox(in: after)
         let staleOval = oval(in: before)
         XCTAssertNotEqual(desynced.minX, staleOval.minX, accuracy: 0.0001)
@@ -401,11 +380,9 @@ final class LivenessPreviewGeometryTests: XCTestCase {
         XCTAssertNotEqual(desynced.height, staleOval.height, accuracy: 0.0001)
     }
 
-    /// Given: A sweep of viewport sizes, including the near-square and landscape ones that were
-    ///        broken, and a face that fills the service's oval
-    /// When: The face is normalized against the fitted preview size and the oval mapped onto the
-    ///       fitted rect
-    /// Then: They coincide at every size. The agreement does not depend on the viewport being tall
+    /// Given: A sweep of viewport sizes and a face that fills the service's oval
+    /// When: The face is normalized against the fitted preview and the oval mapped onto it
+    /// Then: They coincide at every size
     func testLandmarksAndOvalAgreeAtEveryViewportSize() {
         let videoOval = LivenessGeometryFixture.videoOval
         let videoSize = LivenessGeometryFixture.videoSize

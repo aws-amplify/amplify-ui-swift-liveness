@@ -28,16 +28,14 @@ final class LivenessOrientationTestCase: XCTestCase {
 
     /// Given: An upside down interface orientation
     /// When: The orientation decision is made
-    /// Then: The flow is blocked, because the capture connections are pinned to `.portrait`
-    ///       and would produce a feed rotated by 180 degrees
+    /// Then: The flow is blocked
     func testPortraitUpsideDownIsBlocked() {
         XCTAssertEqual(LivenessOrientation.decision(for: .portraitUpsideDown), .blockUntilPortrait)
     }
 
     /// Given: An interface orientation that cannot be read
     /// When: The orientation decision is made
-    /// Then: The flow proceeds, so an unreadable orientation never blocks a check that
-    ///       works today
+    /// Then: The flow proceeds
     func testUnknownOrientationProceeds() {
         XCTAssertEqual(LivenessOrientation.decision(for: .unknown), .proceed)
     }
@@ -53,8 +51,7 @@ final class LivenessOrientationTestCase: XCTestCase {
 
     /// Given: An observer created without a seeded orientation
     /// When: Its orientation is read
-    /// Then: It matches the orientation of the host scene, falling back to portrait when no
-    ///       scene can be resolved
+    /// Then: It matches the host scene's orientation
     func testObserverDefaultsToHostSceneOrientation() {
         let observer = InterfaceOrientationObserver()
         XCTAssertEqual(observer.orientation, LivenessOrientation.currentInterfaceOrientation)

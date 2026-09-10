@@ -7,11 +7,8 @@
 
 import SwiftUI
 
-/// Shown in place of the liveness flow while the interface is not portrait.
-///
-/// The check only supports portrait (see `LivenessOrientation`), so this asks the user to
-/// rotate rather than showing a sideways camera feed. The close button is not optional: a
-/// host that only supports landscape would otherwise leave the user with no way out.
+/// Shown in place of the liveness flow while the interface is not portrait. The close button
+/// is the only exit for a host that supports landscape only.
 struct RotateDeviceView: View {
     let onClose: () -> Void
 

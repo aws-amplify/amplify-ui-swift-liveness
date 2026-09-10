@@ -9,12 +9,8 @@ import XCTest
 import UIKit
 @testable import FaceLiveness
 
-/// Drives `_LivenessViewController`'s layout path with an injected preview layer, so the refit
-/// on resize is exercised through UIKit's real `viewDidLayoutSubviews` rather than by calling
-/// the view model directly.
-///
-/// The layer is installed before the view loads, which makes `setupAVLayer` a no-op (it only
-/// runs when no layer exists), so no capture session is needed.
+/// Drives `_LivenessViewController`'s layout path through `viewDidLayoutSubviews` with an
+/// injected preview layer, which makes `setupAVLayer` a no-op so no capture session is needed.
 @MainActor
 final class LivenessViewControllerGeometryTests: XCTestCase {
     private var viewModel: FaceLivenessDetectionViewModel!
@@ -30,10 +26,10 @@ final class LivenessViewControllerGeometryTests: XCTestCase {
         viewModel = LivenessGeometryFixture.makeViewModel(presenter: presenter)
 
         viewController = _LivenessViewController(viewModel: viewModel)
-        // the controller registers itself as the presenter in `init`; observe draws instead
+        // the controller registers itself as the presenter in `init`
         viewModel.livenessViewControllerDelegate = presenter
 
-        // what `setupAVLayer` does off the pre-layout, screen-sized view
+        // what `setupAVLayer` does off the pre-layout frame
         let initialFrame = LivenessPreviewGeometry.previewRect(fittingIn: screen)
         previewLayer = CALayer()
         previewLayer.frame = initialFrame
@@ -63,7 +59,7 @@ final class LivenessViewControllerGeometryTests: XCTestCase {
 
     /// Given: A controller whose layer and camera rect were sized from the screen before layout
     /// When: The view is laid out at that same size
-    /// Then: Nothing changes and nothing is drawn; the common layout pass is a no-op
+    /// Then: Nothing changes and nothing is drawn
     func testLayoutAtTheSameSizeIsANoOp() {
         beginRecordingAndDisplayOval()
         let drawnOval = viewModel.ovalRect
@@ -76,12 +72,9 @@ final class LivenessViewControllerGeometryTests: XCTestCase {
         XCTAssertEqual(presenter.drawnOvalRects.count, 1)
     }
 
-    /// Given: A controller whose layer and camera rect were sized from the 820x1180 screen in
-    ///        `viewDidLoad`, hosted in a 640x904 window, with the oval already drawn
+    /// Given: A layer and camera rect sized from the 820x1180 screen, in a 640x904 window
     /// When: The first layout pass at the window's real size runs
-    /// Then: The layer, the camera rect and the oval are all refitted to the window. Previously
-    ///       the layer kept its 820pt width and was only re-centred, overhanging the window by
-    ///       90pt per side and 94.67pt top and bottom
+    /// Then: The layer, the camera rect and the oval are all refitted to the window
     func testStaleScreenSizedInitialFrameIsCorrectedOnFirstLayoutPass() {
         beginRecordingAndDisplayOval()
         assertRect(viewModel.ovalRect, LivenessGeometryFixture.expectedOval(forPreviewWidth: 820))
@@ -104,9 +97,7 @@ final class LivenessViewControllerGeometryTests: XCTestCase {
 
     /// Given: A controller laid out in a 640x904 window with the oval on screen
     /// When: A layout pass reports a view with no area, and then a real size again
-    /// Then: The empty pass leaves the layer, the camera rect and the oval exactly as they were,
-    ///       and the following real pass is picked up normally. Previously the empty pass wrote
-    ///       an empty camera rect and drew an empty oval, and no later pass could recover
+    /// Then: The empty pass leaves the geometry as it was; the following real pass is applied
     func testLayoutPassWithNoAreaKeepsTheLastGeometry() {
         layout(to: window)
         beginRecordingAndDisplayOval()
@@ -133,8 +124,7 @@ final class LivenessViewControllerGeometryTests: XCTestCase {
 
     /// Given: A controller in a 640x904 window whose check has not yet reached recording
     /// When: The view is resized
-    /// Then: The layer and the camera rect follow the new size, but no oval is drawn; the first
-    ///       draw is left to `drawOval` once recording starts
+    /// Then: The layer and the camera rect follow the new size, but no oval is drawn
     func testResizeBeforeRecordingRefitsWithoutDrawing() {
         layout(to: window)
 

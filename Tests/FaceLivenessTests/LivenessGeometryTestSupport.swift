@@ -30,7 +30,7 @@ enum LivenessGeometryFixture {
     static let videoOval = CGRect(x: 108, y: 107, width: 264, height: 427)
     static let videoSize = CGSize(width: 480, height: 640)
 
-    /// A view model whose session configuration carries `videoOval`, reporting draws to `presenter`.
+    /// A view model configured with `videoOval`, reporting draws to `presenter`.
     @MainActor
     static func makeViewModel(presenter: MockLivenessViewControllerPresenter) -> FaceLivenessDetectionViewModel {
         let viewModel = FaceLivenessDetectionViewModel(
@@ -78,9 +78,8 @@ enum LivenessGeometryFixture {
         return viewModel
     }
 
-    /// `videoOval` mapped onto a preview rect of the given width, which is how the view model
-    /// is expected to place it. Expressed independently of `LivenessPreviewGeometry` so the
-    /// tests do not restate the implementation.
+    /// `videoOval` mapped onto a preview rect of the given width, computed independently of
+    /// `LivenessPreviewGeometry`.
     static func expectedOval(forPreviewWidth previewWidth: CGFloat) -> CGRect {
         let scale = previewWidth / videoSize.width
         return CGRect(
@@ -91,9 +90,7 @@ enum LivenessGeometryFixture {
         )
     }
 
-    /// The preview rect the shipped code produced: full viewport width, height derived from it,
-    /// centred in the viewport. Kept so the "no change on tall viewports" guarantee and the
-    /// stale-frame scenarios are stated against the old expression rather than hand-copied numbers.
+    /// The previous preview sizing: full viewport width, height derived from it, centered.
     static func legacyPreviewRect(fittingIn viewport: CGSize) -> CGRect {
         let width = viewport.width
         let height = width / 3 * 4
@@ -107,8 +104,7 @@ enum LivenessGeometryFixture {
 }
 
 extension XCTestCase {
-    /// Draws the oval and waits for the view model to move to `.recording(ovalDisplayed: true)`,
-    /// which `drawOval` does on the next main queue turn.
+    /// Draws the oval and waits for `.recording(ovalDisplayed: true)`.
     @MainActor
     func drawOvalAndWaitUntilDisplayed(
         _ viewModel: FaceLivenessDetectionViewModel,

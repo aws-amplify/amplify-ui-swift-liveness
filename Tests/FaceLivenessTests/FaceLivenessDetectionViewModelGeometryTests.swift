@@ -22,7 +22,7 @@ final class FaceLivenessDetectionViewModelGeometryTests: XCTestCase {
         resetFixture()
     }
 
-    /// Fresh view model and presenter, for tests that walk several scenarios in one body.
+    /// Fresh view model and presenter for tests that walk several scenarios.
     private func resetFixture() {
         presenter = MockLivenessViewControllerPresenter()
         viewModel = LivenessGeometryFixture.makeViewModel(presenter: presenter)
@@ -41,8 +41,7 @@ final class FaceLivenessDetectionViewModelGeometryTests: XCTestCase {
 
     /// Given: A view model whose camera rect was fitted to a phone-portrait viewport
     /// When: The oval is drawn
-    /// Then: The oval is scaled by the preview-to-video width ratio, which is the behaviour
-    ///       phones already had
+    /// Then: The oval is scaled by the preview-to-video width ratio
     func testDrawOvalOnPhonePortrait() {
         let previewRect = LivenessPreviewGeometry.previewRect(fittingIn: .init(width: 393, height: 852))
         viewModel.cameraViewRect = previewRect
@@ -58,8 +57,7 @@ final class FaceLivenessDetectionViewModelGeometryTests: XCTestCase {
 
     /// Given: A view model whose camera rect was fitted to the near-square 904x640 viewport
     /// When: The oval is drawn
-    /// Then: The oval is the service's own coordinates, and it fits inside the viewport rather
-    ///       than being taller than the whole window
+    /// Then: The oval is unscaled and fits inside the viewport
     func testDrawOvalOnNearSquareViewportFitsTheViewport() {
         let viewport = CGSize(width: 904, height: 640)
         viewModel.cameraViewRect = LivenessPreviewGeometry.previewRect(fittingIn: viewport)
@@ -71,12 +69,10 @@ final class FaceLivenessDetectionViewModelGeometryTests: XCTestCase {
         XCTAssertLessThanOrEqual(viewModel.ovalRect.maxY, viewport.height)
     }
 
-    /// Given: A view model whose camera rect is empty, as it is if the hosting view was laid out
-    ///        with no area
-    /// When: The oval is drawn
-    /// Then: Nothing is drawn and the state stays at `.recording(ovalDisplayed: false)`, so the
-    ///       next detection draws the oval once a real rect exists rather than latching an empty
-    ///       one that would mask the whole preview
+    /// Given: A view model whose camera rect is empty
+    /// When: The oval is drawn, and again once a real rect exists
+    /// Then: Nothing is drawn and the state stays `.recording(ovalDisplayed: false)` until the
+    ///       real rect arrives
     func testDrawOvalIsDeferredUntilGeometryExists() {
         viewModel.cameraViewRect = .zero
         viewModel.livenessState.beginRecording()
@@ -99,9 +95,8 @@ final class FaceLivenessDetectionViewModelGeometryTests: XCTestCase {
     // MARK: - Redraw on resize
 
     /// Given: An oval already drawn for a phone-portrait viewport
-    /// When: The camera rect changes, as it does when the view is rotated or resized
-    /// Then: The oval is recomputed for the new rect and redrawn, instead of staying sized for
-    ///       the previous viewport
+    /// When: The camera rect changes
+    /// Then: The oval is recomputed for the new rect and redrawn
     func testRedrawAfterResize() {
         let before = LivenessPreviewGeometry.previewRect(fittingIn: .init(width: 393, height: 852))
         viewModel.cameraViewRect = before
@@ -132,11 +127,9 @@ final class FaceLivenessDetectionViewModelGeometryTests: XCTestCase {
         XCTAssertEqual(presenter.drawnOvalRects.count, 1)
     }
 
-    /// Given: A view that was sized from the screen (820x1180) when the camera was configured,
-    ///        while the hosting window is 640x904
-    /// When: The first layout pass supplies the real size and the geometry is refitted
-    /// Then: The oval is rebuilt for the real size. Previously the preview kept its 820pt width
-    ///       and was only re-centred, overhanging the window by 90pt per side.
+    /// Given: A camera rect sized from the 820x1180 screen, hosted in a 640x904 window
+    /// When: The first layout pass supplies the real size
+    /// Then: The oval is rebuilt for the real size
     func testStaleInitialFrameIsCorrectedOnFirstLayoutPass() {
         // setupAVLayer, off the pre-layout frame
         let atViewDidLoad = LivenessPreviewGeometry.previewRect(fittingIn: .init(width: 820, height: 1180))
@@ -156,14 +149,9 @@ final class FaceLivenessDetectionViewModelGeometryTests: XCTestCase {
         XCTAssertLessThanOrEqual(atFirstLayout.maxY, 904)
     }
 
-    /// Given: A 640x904 window whose camera rect was seeded from a stale screen width, once with
-    ///        the portrait screen width (820) and once with the landscape screen width (1180),
-    ///        the way the shipped code sized it before the first layout pass
-    /// When: The oval is drawn through the stale rect, and then the rect is refitted to the
-    ///       window and the oval redrawn
-    /// Then: Through the 1180pt rect the oval overhung both sides of the window, and through the
-    ///       820pt rect it did not, which is what distinguished the two stale widths on screen.
-    ///       After the refit the oval is fully inside the window in both cases.
+    /// Given: A 640x904 window with a camera rect seeded from a stale screen width, 820 or 1180
+    /// When: The oval is drawn through the stale rect, then the rect is refitted and redrawn
+    /// Then: The 1180pt rect overhangs the sides before the refit; both fit the window after it
     func testSideClippingFromAStaleWidthIsRemovedByTheRefit() {
         let window = CGSize(width: 640, height: 904)
 
@@ -178,7 +166,7 @@ final class FaceLivenessDetectionViewModelGeometryTests: XCTestCase {
             resetFixture()
             let label = "stale width \(Int(staleWidth))"
 
-            // seeded from the screen, re-centred in the window: the shipped behaviour
+            // seeded from the screen, re-centered in the window
             let staleHeight = staleWidth / 3 * 4
             viewModel.cameraViewRect = CGRect(
                 x: (window.width - staleWidth) / 2,
@@ -210,11 +198,9 @@ final class FaceLivenessDetectionViewModelGeometryTests: XCTestCase {
 
     // MARK: - When a redraw must be refused
 
-    /// Given: A view model that has not displayed an oval yet, before recording and again in
-    ///        `.recording(ovalDisplayed: false)` with real geometry available
+    /// Given: A view model that has not displayed an oval yet
     /// When: The camera rect changes
-    /// Then: Nothing is drawn. The first draw belongs to `drawOval`, so the redraw path must not
-    ///       pre-empt it
+    /// Then: Nothing is drawn; the first draw belongs to `drawOval`
     func testRedrawIsRefusedBeforeTheOvalIsDisplayed() {
         viewModel.cameraViewRect = LivenessPreviewGeometry.previewRect(fittingIn: .init(width: 904, height: 640))
 
@@ -233,11 +219,9 @@ final class FaceLivenessDetectionViewModelGeometryTests: XCTestCase {
         XCTAssertTrue(presenter.drawnOvalRects.isEmpty)
     }
 
-    /// Given: An oval on screen, and then a check that has moved past the challenge into each of
-    ///        the terminal or post-challenge states
+    /// Given: An oval on screen and a check in each terminal or post-challenge state
     /// When: The camera rect changes
-    /// Then: Nothing is redrawn and the oval rect is left alone. There is nothing left to
-    ///       reposition, and the freshness view the oval is inserted beneath is gone
+    /// Then: Nothing is redrawn and the oval rect is left alone
     func testRedrawIsRefusedInTerminalStates() {
         let terminalStates: [LivenessStateMachine.State] = [
             .completedDisplayingFreshness,
@@ -266,14 +250,9 @@ final class FaceLivenessDetectionViewModelGeometryTests: XCTestCase {
         }
     }
 
-    /// Given: An oval on screen and a layout pass that reports no area, so the camera rect is
-    ///        empty
-    /// When: A redraw is requested for the empty rect, and then again once a real rect is back
-    /// Then: The empty rect draws nothing and leaves the oval on screen. The real rect is then
-    ///       picked up and the oval redrawn for it. Previously the empty pass drew an empty oval,
-    ///       which masked the whole preview, and the following pass mistook that empty oval for
-    ///       "never drawn" and refused to redraw, so the preview stayed masked for the rest of
-    ///       the check
+    /// Given: An oval on screen and an empty camera rect
+    /// When: A redraw is requested for the empty rect, then again for a real rect
+    /// Then: The empty rect draws nothing and keeps the oval; the real rect is redrawn
     func testRedrawWithAnEmptyCameraRectKeepsTheOvalAndRecovers() {
         let before = LivenessPreviewGeometry.previewRect(fittingIn: .init(width: 640, height: 904))
         viewModel.cameraViewRect = before
