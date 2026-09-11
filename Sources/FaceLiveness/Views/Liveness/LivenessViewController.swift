@@ -28,13 +28,10 @@ final class _LivenessViewController: UIViewController {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
         viewModel.livenessViewControllerDelegate = self
-        viewModel.normalizeFace = { [weak self] face in
-            guard let self = self else { return face }
-            return DispatchQueue.main.sync {
-                // normalize against the same fitted rect the preview and the oval use
-                let previewRect = LivenessPreviewGeometry.previewRect(fittingIn: self.view.bounds.size)
-                return face.normalize(width: previewRect.width, height: previewRect.height)
-            }
+        viewModel.normalizeFace = { [weak viewModel] face in
+            // the same fitted rect the preview and the oval use; lock-guarded, so no main hop
+            guard let previewRect = viewModel?.cameraViewRect else { return face }
+            return face.normalize(width: previewRect.width, height: previewRect.height)
         }
     }
     

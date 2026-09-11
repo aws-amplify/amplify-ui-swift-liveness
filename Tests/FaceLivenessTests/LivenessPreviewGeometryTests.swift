@@ -184,7 +184,7 @@ final class LivenessPreviewGeometryTests: XCTestCase {
         let rect = LivenessPreviewGeometry.ovalRect(
             forVideoOval: videoOval,
             videoSize: .init(width: 480, height: 640),
-            previewRect: .init(x: 212, y: 0, width: 480, height: 640)
+            previewWidth: 480
         )
 
         assertRect(rect, videoOval)
@@ -200,7 +200,7 @@ final class LivenessPreviewGeometryTests: XCTestCase {
         let rect = LivenessPreviewGeometry.ovalRect(
             forVideoOval: videoOval,
             videoSize: .init(width: 480, height: 640),
-            previewRect: .init(x: 0, y: 164, width: 393, height: 524)
+            previewWidth: 393
         )
 
         assertRect(
@@ -225,12 +225,12 @@ final class LivenessPreviewGeometryTests: XCTestCase {
         let fixed = LivenessPreviewGeometry.ovalRect(
             forVideoOval: videoOval,
             videoSize: videoSize,
-            previewRect: LivenessPreviewGeometry.previewRect(fittingIn: viewport)
+            previewWidth: LivenessPreviewGeometry.previewRect(fittingIn: viewport).width
         )
         let legacy = LivenessPreviewGeometry.ovalRect(
             forVideoOval: videoOval,
             videoSize: videoSize,
-            previewRect: legacyPreviewRect(fittingIn: viewport)
+            previewWidth: legacyPreviewRect(fittingIn: viewport).width
         )
 
         XCTAssertLessThanOrEqual(fixed.maxY, viewport.height)
@@ -244,7 +244,7 @@ final class LivenessPreviewGeometryTests: XCTestCase {
         let rect = LivenessPreviewGeometry.ovalRect(
             forVideoOval: .init(x: 108, y: 107, width: 264, height: 427),
             videoSize: .init(width: 0, height: 640),
-            previewRect: .init(x: 0, y: 0, width: 480, height: 640)
+            previewWidth: 480
         )
 
         XCTAssertEqual(rect, .zero)
@@ -306,7 +306,7 @@ final class LivenessPreviewGeometryTests: XCTestCase {
             let oval = LivenessPreviewGeometry.ovalRect(
                 forVideoOval: videoOval,
                 videoSize: .init(width: 480, height: 640),
-                previewRect: preview
+                previewWidth: preview.width
             )
             let label = "640x\(String(format: "%.2f", viewport.height))"
 
@@ -361,7 +361,7 @@ final class LivenessPreviewGeometryTests: XCTestCase {
             faceFillingTheOval.normalize(width: previewRect.width, height: previewRect.height).boundingBox
         }
         func oval(in previewRect: CGRect) -> CGRect {
-            LivenessPreviewGeometry.ovalRect(forVideoOval: videoOval, videoSize: videoSize, previewRect: previewRect)
+            LivenessPreviewGeometry.ovalRect(forVideoOval: videoOval, videoSize: videoSize, previewWidth: previewRect.width)
         }
 
         let before = LivenessPreviewGeometry.previewRect(fittingIn: sizeAtSetup)
@@ -409,7 +409,7 @@ final class LivenessPreviewGeometryTests: XCTestCase {
         for viewport in viewports {
             let fitted = LivenessPreviewGeometry.previewRect(fittingIn: viewport)
             let face = faceFillingTheOval.normalize(width: fitted.width, height: fitted.height).boundingBox
-            let oval = LivenessPreviewGeometry.ovalRect(forVideoOval: videoOval, videoSize: videoSize, previewRect: fitted)
+            let oval = LivenessPreviewGeometry.ovalRect(forVideoOval: videoOval, videoSize: videoSize, previewWidth: fitted.width)
 
             assertRect(face, oval, "\(Int(viewport.width))x\(Int(viewport.height))")
         }

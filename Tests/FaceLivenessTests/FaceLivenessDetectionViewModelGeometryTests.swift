@@ -196,6 +196,48 @@ final class FaceLivenessDetectionViewModelGeometryTests: XCTestCase {
         }
     }
 
+    // MARK: - Both challenge configurations
+
+    /// Given: An oval on screen under each challenge configuration the service can send
+    /// When: The camera rect changes while the check is in the freshness state
+    /// Then: The oval is redrawn for the new rect under both configurations
+    func testRedrawDuringFreshnessUnderEachChallengeConfiguration() {
+        for kind in LivenessGeometryFixture.ChallengeKind.allCases {
+            presenter = MockLivenessViewControllerPresenter()
+            viewModel = LivenessGeometryFixture.makeViewModel(presenter: presenter, kind: kind)
+            let label = "\(kind)"
+
+            let before = LivenessPreviewGeometry.previewRect(fittingIn: .init(width: 820, height: 1180))
+            viewModel.cameraViewRect = before
+            viewModel.livenessState.beginRecording()
+            drawOvalAndWaitUntilDisplayed(viewModel)
+            viewModel.livenessState.displayingFreshness()
+
+            let after = LivenessPreviewGeometry.previewRect(fittingIn: .init(width: 640, height: 904))
+            viewModel.cameraViewRect = after
+            viewModel.redrawOvalForCurrentCameraViewRect()
+
+            XCTAssertEqual(presenter.drawnOvalRects.count, 2, "\(label) must redraw during freshness")
+            assertRect(viewModel.ovalRect, expectedOval(forPreviewWidth: after.width), label)
+            XCTAssertEqual(viewModel.livenessState.state, .displayingFreshness, "\(label) must not touch the state")
+        }
+    }
+
+    /// Given: A session configuration of each kind, with a 1 ms oval fit timeout
+    /// When: The no-fit timeout is read
+    /// Then: It comes from the oval challenge (0 s after integer millisecond division) under
+    ///       both configurations, and the 7 s default applies without a configuration
+    func testNoFitTimeoutIsReadFromEitherChallengeConfiguration() {
+        for kind in LivenessGeometryFixture.ChallengeKind.allCases {
+            viewModel = LivenessGeometryFixture.makeViewModel(presenter: presenter, kind: kind)
+
+            XCTAssertEqual(viewModel.noFitTimeoutInterval, 0, "\(kind)")
+        }
+
+        viewModel.sessionConfiguration = nil
+        XCTAssertEqual(viewModel.noFitTimeoutInterval, 7, "the default applies without a configuration")
+    }
+
     // MARK: - When a redraw must be refused
 
     /// Given: A view model that has not displayed an oval yet

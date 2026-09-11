@@ -132,13 +132,32 @@ public struct FaceLivenessDetectorView: View {
             }
         }
         .background(
-            InterfaceOrientationReader { orientationObserver.refresh() }
-                .frame(width: 0, height: 0)
-                .accessibilityHidden(true)
+            InterfaceOrientationReader(
+                onTransition: orientationObserver.beginTransition(with:),
+                onSettled: orientationObserver.refresh
+            )
+            .frame(width: 0, height: 0)
+            .accessibilityHidden(true)
         )
         .onChange(of: orientationObserver.orientation) { _ in
             interruptCheckIfOrientationUnsupported()
             advanceIfWaitingOnPortrait()
+        }
+        .onReceive(viewModel.$livenessState) { output in
+            // one observer for every display state, so any exit that reaches a terminal
+            // state dismisses and fires the host's completion exactly once
+            switch output.state {
+            case .completed:
+                isPresented = false
+                onCompletion(.success(()))
+            case .encounteredUnrecoverableError(let error):
+                let closeCode = error.webSocketCloseCode ?? .normalClosure
+                viewModel.livenessService?.closeSocket(with: closeCode)
+                isPresented = false
+                onCompletion(.failure(mapError(error)))
+            default:
+                break
+            }
         }
         .onDisappear {
             restoreOriginalBrightness()
@@ -191,17 +210,6 @@ public struct FaceLivenessDetectorView: View {
                     }
                 }
             }
-            .onReceive(viewModel.$livenessState) { output in
-                switch output.state {
-                case .encounteredUnrecoverableError(let error):
-                    let closeCode = error.webSocketCloseCode ?? .normalClosure
-                    viewModel.livenessService?.closeSocket(with: closeCode)
-                    isPresented = false
-                    onCompletion(.failure(mapError(error)))
-                default:
-                    break
-                }
-            }
         case .awaitingCameraPermission(let challenge):
             CameraPermissionView(displayingCameraPermissionsNeededAlert: $displayingCameraPermissionsNeededAlert)
                 .onAppear {
@@ -245,20 +253,6 @@ public struct FaceLivenessDetectorView: View {
             .onDisappear() {
                 viewModel.stopRecording()
             }
-            .onReceive(viewModel.$livenessState) { output in
-                switch output.state {
-                case .completed:
-                    isPresented = false
-                    onCompletion(.success(()))
-                case .encounteredUnrecoverableError(let error):
-                    let closeCode = error.webSocketCloseCode ?? .normalClosure
-                    viewModel.livenessService?.closeSocket(with: closeCode)
-                    isPresented = false
-                    onCompletion(.failure(mapError(error)))
-                default:
-                    break
-                }
-            }
         }
     }
 
@@ -268,50 +262,29 @@ public struct FaceLivenessDetectorView: View {
         guard case .awaitingLivenessSession(let challenge) = displayState else { return }
         guard orientationObserver.decision == .proceed else { return }
 
-        let cameraPosition: LivenessCamera
-        switch challenge {
-        case .faceMovementAndLightChallenge:
-            cameraPosition = challengeOptions.faceMovementAndLightChallengeOption.camera
-        case .faceMovementChallenge:
-            cameraPosition = challengeOptions.faceMovementChallengeOption.camera
-        }
-
         let newState = disableStartView
         ? DisplayState.displayingLiveness
-        : DisplayState.displayingGetReadyView(challenge, cameraPosition)
+        : DisplayState.displayingGetReadyView(challenge, challengeOptions.camera(for: challenge))
         guard self.displayState != newState else { return }
         self.displayState = newState
     }
 
     /// Ends a running check when the interface leaves portrait, the same way scene deactivation
-    /// does. A finished check is left alone so the host's completion does not fire twice.
+    /// does. Deferred so the state change lands outside the view update.
     private func interruptCheckIfOrientationUnsupported() {
         guard orientationObserver.decision == .blockUntilPortrait,
               displayState == .displayingLiveness
         else { return }
 
         DispatchQueue.main.async {
-            switch viewModel.livenessState.state {
-            case .completed, .encounteredUnrecoverableError:
-                return
-            default:
-                break
-            }
-
-            viewModel.stopRecording()
-            viewModel.livenessState.unrecoverableStateEncountered(.viewResignation)
+            viewModel.endCheck(with: .viewResignation)
         }
     }
 
-    /// Cancels from the rotate prompt. Dismisses directly because the prompt is reachable in
-    /// states that do not observe `livenessState`.
+    /// Cancels from the rotate prompt through the state machine, like the close button, so a
+    /// pending rotation interrupt finds the check already finished.
     private func cancelFromRotatePrompt() {
-        let closeCode = LivenessStateMachine.LivenessError.userCancelled.webSocketCloseCode
-            ?? .normalClosure
-        viewModel.stopRecording()
-        viewModel.livenessService?.closeSocket(with: closeCode)
-        isPresented = false
-        onCompletion(.failure(.userCancelled))
+        viewModel.endCheck(with: .userCancelled)
     }
 
     /// Overrides the device screen brightness to maximum for the liveness check,
@@ -453,6 +426,16 @@ public struct ChallengeOptions {
                 faceMovementAndLightChallengeOption: FaceMovementAndLightChallengeOption = .init()) {
         self.faceMovementChallengeOption = faceMovementChallengeOption
         self.faceMovementAndLightChallengeOption = faceMovementAndLightChallengeOption
+    }
+
+    /// The camera configured for `challenge`.
+    func camera(for challenge: Challenge) -> LivenessCamera {
+        switch challenge {
+        case .faceMovementChallenge:
+            return faceMovementChallengeOption.camera
+        case .faceMovementAndLightChallenge:
+            return faceMovementAndLightChallengeOption.camera
+        }
     }
 }
 

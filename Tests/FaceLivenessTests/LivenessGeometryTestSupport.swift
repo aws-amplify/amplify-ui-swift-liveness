@@ -30,9 +30,25 @@ enum LivenessGeometryFixture {
     static let videoOval = CGRect(x: 108, y: 107, width: 264, height: 427)
     static let videoSize = CGSize(width: 480, height: 640)
 
-    /// A view model configured with `videoOval`, reporting draws to `presenter`.
+    /// Which session configuration the service is simulated as having sent.
+    enum ChallengeKind: CaseIterable {
+        case faceMovement
+        case faceMovementAndLight
+
+        var challenge: Challenge {
+            switch self {
+            case .faceMovement: return .faceMovementChallenge("1.0.0")
+            case .faceMovementAndLight: return .faceMovementAndLightChallenge("2.0.0")
+            }
+        }
+    }
+
+    /// A view model configured with `videoOval` under `kind`, reporting draws to `presenter`.
     @MainActor
-    static func makeViewModel(presenter: MockLivenessViewControllerPresenter) -> FaceLivenessDetectionViewModel {
+    static func makeViewModel(
+        presenter: MockLivenessViewControllerPresenter,
+        kind: ChallengeKind = .faceMovement
+    ) -> FaceLivenessDetectionViewModel {
         let viewModel = FaceLivenessDetectionViewModel(
             faceDetector: MockFaceDetector(),
             faceInOvalMatching: .init(instructor: .init()),
@@ -50,31 +66,49 @@ enum LivenessGeometryFixture {
             )
         )
         viewModel.livenessViewControllerDelegate = presenter
-        viewModel.sessionConfiguration = .faceMovement(
-            .init(
-                faceDetectionThreshold: 0.7,
-                face: .init(
-                    distanceThreshold: 0.1,
-                    distanceThresholdMax: 0.1,
-                    distanceThresholdMin: 0.1,
-                    iouWidthThreshold: 0.1,
-                    iouHeightThreshold: 0.1
+        viewModel.challengeReceived = kind.challenge
+
+        let ovalMatchChallenge = FaceLivenessSession.OvalMatchChallenge(
+            faceDetectionThreshold: 0.7,
+            face: .init(
+                distanceThreshold: 0.1,
+                distanceThresholdMax: 0.1,
+                distanceThresholdMin: 0.1,
+                iouWidthThreshold: 0.1,
+                iouHeightThreshold: 0.1
+            ),
+            oval: .init(
+                boundingBox: .init(
+                    x: videoOval.minX,
+                    y: videoOval.minY,
+                    width: videoOval.width,
+                    height: videoOval.height
                 ),
-                oval: .init(
-                    boundingBox: .init(
-                        x: videoOval.minX,
-                        y: videoOval.minY,
-                        width: videoOval.width,
-                        height: videoOval.height
-                    ),
-                    heightWidthRatio: 1.618,
-                    iouThreshold: 0.1,
-                    iouWidthThreshold: 0.1,
-                    iouHeightThreshold: 0.1,
-                    ovalFitTimeout: 1
-                )
+                heightWidthRatio: 1.618,
+                iouThreshold: 0.1,
+                iouWidthThreshold: 0.1,
+                iouHeightThreshold: 0.1,
+                ovalFitTimeout: 1
             )
         )
+        switch kind {
+        case .faceMovement:
+            viewModel.sessionConfiguration = .faceMovement(ovalMatchChallenge)
+        case .faceMovementAndLight:
+            let colors = [
+                FaceLivenessSession.DisplayColor(
+                    rgb: .init(red: 0, green: 0, blue: 0, _values: [0, 0, 0]),
+                    duration: 75,
+                    shouldScroll: false
+                ),
+                FaceLivenessSession.DisplayColor(
+                    rgb: .init(red: 1, green: 1, blue: 1, _values: [255, 255, 255]),
+                    duration: 475,
+                    shouldScroll: true
+                )
+            ]
+            viewModel.sessionConfiguration = .faceMovementAndLight(.init(colors: colors), ovalMatchChallenge)
+        }
         return viewModel
     }
 

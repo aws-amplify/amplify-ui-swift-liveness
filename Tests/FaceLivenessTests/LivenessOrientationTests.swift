@@ -69,4 +69,69 @@ final class LivenessOrientationTestCase: XCTestCase {
         XCTAssertEqual(observer.orientation, current)
         XCTAssertEqual(observer.decision, LivenessOrientation.decision(for: current))
     }
+
+    // MARK: - Deriving the target orientation from a transition
+
+    private func rotation(degrees: CGFloat) -> CGAffineTransform {
+        CGAffineTransform(rotationAngle: degrees * .pi / 180)
+    }
+
+    /// Given: A portrait interface and the transforms a rotation coordinator reports
+    /// When: The target orientation is derived
+    /// Then: A quarter turn each way lands on the matching landscape; a half turn is upside down
+    func testQuarterAndHalfTurnsFromPortrait() {
+        XCTAssertEqual(LivenessOrientation.orientation(.portrait, rotatedBy: rotation(degrees: -90)), .landscapeLeft)
+        XCTAssertEqual(LivenessOrientation.orientation(.portrait, rotatedBy: rotation(degrees: 90)), .landscapeRight)
+        XCTAssertEqual(LivenessOrientation.orientation(.portrait, rotatedBy: rotation(degrees: 180)), .portraitUpsideDown)
+        XCTAssertEqual(LivenessOrientation.orientation(.portrait, rotatedBy: rotation(degrees: -180)), .portraitUpsideDown)
+        XCTAssertEqual(LivenessOrientation.orientation(.portrait, rotatedBy: .identity), .portrait)
+    }
+
+    /// Given: A landscape or upside-down interface
+    /// When: The target orientation is derived for the transforms that return it to portrait
+    /// Then: Each lands on portrait
+    func testTurnsBackToPortrait() {
+        XCTAssertEqual(LivenessOrientation.orientation(.landscapeLeft, rotatedBy: rotation(degrees: 90)), .portrait)
+        XCTAssertEqual(LivenessOrientation.orientation(.landscapeRight, rotatedBy: rotation(degrees: -90)), .portrait)
+        XCTAssertEqual(LivenessOrientation.orientation(.portraitUpsideDown, rotatedBy: rotation(degrees: 180)), .portrait)
+    }
+
+    /// Given: A landscape interface
+    /// When: The device is turned a half turn to the other landscape
+    /// Then: The target is the opposite landscape, and the decision stays blocked
+    func testHalfTurnBetweenLandscapes() {
+        XCTAssertEqual(LivenessOrientation.orientation(.landscapeLeft, rotatedBy: rotation(degrees: 180)), .landscapeRight)
+        XCTAssertEqual(LivenessOrientation.orientation(.landscapeRight, rotatedBy: rotation(degrees: 180)), .landscapeLeft)
+    }
+
+    /// Given: An unknown interface orientation
+    /// When: The target orientation is derived
+    /// Then: It stays unknown rather than guessing
+    func testUnknownOrientationIsNotRotated() {
+        XCTAssertEqual(LivenessOrientation.orientation(.unknown, rotatedBy: rotation(degrees: 90)), .unknown)
+    }
+
+    /// Given: An observer in portrait
+    /// When: A transition to landscape begins
+    /// Then: The blocked decision is published before the scene reports the new orientation
+    func testBeginTransitionPublishesTargetOrientation() {
+        let observer = InterfaceOrientationObserver(orientation: .portrait)
+
+        observer.beginTransition(with: rotation(degrees: -90))
+
+        XCTAssertEqual(observer.orientation, .landscapeLeft)
+        XCTAssertEqual(observer.decision, .blockUntilPortrait)
+    }
+
+    /// Given: An observer in landscape
+    /// When: A transition back to portrait begins
+    /// Then: The proceed decision is published
+    func testBeginTransitionBackToPortraitProceeds() {
+        let observer = InterfaceOrientationObserver(orientation: .landscapeRight)
+
+        observer.beginTransition(with: rotation(degrees: -90))
+
+        XCTAssertEqual(observer.orientation, .portrait)
+        XCTAssertEqual(observer.decision, .proceed)
+    }
 }

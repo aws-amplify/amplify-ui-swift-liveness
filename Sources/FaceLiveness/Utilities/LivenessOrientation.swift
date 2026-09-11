@@ -42,4 +42,22 @@ enum LivenessOrientation {
 
         return scene?.interfaceOrientation ?? .portrait
     }
+
+    /// `orientation` turned by a transition coordinator's `targetTransform`. Each quarter turn
+    /// of the transform's rotation advances portrait -> landscapeRight -> upsideDown -> landscapeLeft.
+    static func orientation(
+        _ orientation: UIInterfaceOrientation,
+        rotatedBy transform: CGAffineTransform
+    ) -> UIInterfaceOrientation {
+        let clockwiseOrder: [UIInterfaceOrientation] = [
+            .portrait, .landscapeRight, .portraitUpsideDown, .landscapeLeft
+        ]
+        guard let index = clockwiseOrder.firstIndex(of: orientation) else { return orientation }
+
+        let radians = atan2(transform.b, transform.a)
+        let quarterTurns = Int((radians / (.pi / 2)).rounded())
+        let rotated = ((index + quarterTurns) % 4 + 4) % 4
+
+        return clockwiseOrder[rotated]
+    }
 }

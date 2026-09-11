@@ -29,15 +29,16 @@ enum LivenessPreviewGeometry {
         )
     }
 
-    /// Maps the service's oval from video coordinates into the preview rect's coordinate space.
+    /// Scales the service's oval from video coordinates to a preview `previewWidth` wide. The
+    /// result is relative to the preview's origin.
     static func ovalRect(
         forVideoOval videoOval: CGRect,
         videoSize: CGSize,
-        previewRect: CGRect
+        previewWidth: CGFloat
     ) -> CGRect {
         guard videoSize.width > 0 else { return .zero }
 
-        let scaleRatio = previewRect.width / videoSize.width
+        let scaleRatio = previewWidth / videoSize.width
 
         return CGRect(
             x: videoOval.minX * scaleRatio,

@@ -7,17 +7,17 @@
 
 import SwiftUI
 
-/// Tracks the interface orientation of the scene hosting the detector view.
+/// Tracks the interface orientation of the scene hosting the detector view. Fed by
+/// `InterfaceOrientationReader`; `UIScene.didActivateNotification` covers a rotation that
+/// happened while the app was in the background.
 final class InterfaceOrientationObserver: ObservableObject {
     @Published private(set) var orientation: UIInterfaceOrientation
 
     private var sceneActivationObserver: NSObjectProtocol?
-    private var deviceOrientationObserver: NSObjectProtocol?
 
     init(orientation: UIInterfaceOrientation? = nil) {
         self.orientation = orientation ?? LivenessOrientation.currentInterfaceOrientation
 
-        // A rotation while the app is backgrounded produces no transition callback.
         sceneActivationObserver = NotificationCenter.default.addObserver(
             forName: UIScene.didActivateNotification,
             object: nil,
@@ -25,32 +25,24 @@ final class InterfaceOrientationObserver: ObservableObject {
         ) { [weak self] _ in
             self?.refresh()
         }
-
-        // Secondary signal alongside `InterfaceOrientationReader`. Device orientation is not
-        // ordered against the interface rotation, hence the second read on the next turn.
-        UIDevice.current.beginGeneratingDeviceOrientationNotifications()
-        deviceOrientationObserver = NotificationCenter.default.addObserver(
-            forName: UIDevice.orientationDidChangeNotification,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            self?.refresh()
-            DispatchQueue.main.async { self?.refresh() }
-        }
     }
 
     deinit {
         if let sceneActivationObserver {
             NotificationCenter.default.removeObserver(sceneActivationObserver)
         }
-        if let deviceOrientationObserver {
-            NotificationCenter.default.removeObserver(deviceOrientationObserver)
-            UIDevice.current.endGeneratingDeviceOrientationNotifications()
-        }
     }
 
     var decision: LivenessOrientation.Decision {
         LivenessOrientation.decision(for: orientation)
+    }
+
+    /// Publishes where a rotation is heading before the scene reports it: the current
+    /// orientation turned by the transition coordinator's `targetTransform`.
+    func beginTransition(with targetTransform: CGAffineTransform) {
+        let next = LivenessOrientation.orientation(orientation, rotatedBy: targetTransform)
+        guard next != orientation else { return }
+        orientation = next
     }
 
     /// Re-reads the host scene's interface orientation, publishing only on a change.
@@ -61,25 +53,32 @@ final class InterfaceOrientationObserver: ObservableObject {
     }
 }
 
-/// Zero-sized view that calls `onChange` on every interface rotation, via
-/// `viewWillTransition(to:with:)`, which is tied to the interface rather than the device.
-/// Fires at the start of the transition so the prompt covers the feed before the animation.
+/// Zero-sized view reporting interface rotations through `viewWillTransition(to:with:)`.
+/// `onTransition` fires at the start with the coordinator's `targetTransform`; `onSettled`
+/// fires when the rotation completes and on first appearance.
 struct InterfaceOrientationReader: UIViewControllerRepresentable {
-    let onChange: () -> Void
+    let onTransition: (CGAffineTransform) -> Void
+    let onSettled: () -> Void
 
     func makeUIViewController(context: Context) -> ReaderViewController {
-        ReaderViewController(onChange: onChange)
+        ReaderViewController(onTransition: onTransition, onSettled: onSettled)
     }
 
     func updateUIViewController(_ uiViewController: ReaderViewController, context: Context) {
-        uiViewController.onChange = onChange
+        uiViewController.onTransition = onTransition
+        uiViewController.onSettled = onSettled
     }
 
     final class ReaderViewController: UIViewController {
-        var onChange: () -> Void
+        var onTransition: (CGAffineTransform) -> Void
+        var onSettled: () -> Void
 
-        init(onChange: @escaping () -> Void) {
-            self.onChange = onChange
+        init(
+            onTransition: @escaping (CGAffineTransform) -> Void,
+            onSettled: @escaping () -> Void
+        ) {
+            self.onTransition = onTransition
+            self.onSettled = onSettled
             super.init(nibName: nil, bundle: nil)
         }
 
@@ -93,7 +92,7 @@ struct InterfaceOrientationReader: UIViewControllerRepresentable {
 
         override func viewDidAppear(_ animated: Bool) {
             super.viewDidAppear(animated)
-            onChange()
+            onSettled()
         }
 
         override func viewWillTransition(
@@ -101,9 +100,9 @@ struct InterfaceOrientationReader: UIViewControllerRepresentable {
             with coordinator: UIViewControllerTransitionCoordinator
         ) {
             super.viewWillTransition(to: size, with: coordinator)
-            onChange()
+            onTransition(coordinator.targetTransform)
             coordinator.animate(alongsideTransition: nil) { [weak self] _ in
-                self?.onChange()
+                self?.onSettled()
             }
         }
     }

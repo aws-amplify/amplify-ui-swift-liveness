@@ -137,4 +137,43 @@ final class LivenessViewControllerGeometryTests: XCTestCase {
         XCTAssertTrue(presenter.drawnOvalRects.isEmpty)
         XCTAssertEqual(viewModel.ovalRect, .zero)
     }
+
+    /// Given: A controller laid out in a 640x904 window, then resized
+    /// When: A face is normalized from a background queue, as the capture queue does
+    /// Then: It is scaled by the fitted rect current at that moment, without blocking on main
+    func testNormalizeFaceReadsTheFittedRectOffTheMainQueue() {
+        let face = DetectedFace(
+            boundingBox: CGRect(x: 0.25, y: 0.25, width: 0.5, height: 0.5),
+            leftEye: .zero, rightEye: .zero, nose: .zero, mouth: .zero, rightEar: .zero, leftEar: .zero,
+            confidence: 1
+        )
+
+        func normalizedOffMain() -> CGRect {
+            var normalized = CGRect.zero
+            let done = expectation(description: "normalized on the capture queue")
+            let normalize = viewModel.normalizeFace
+            DispatchQueue.global(qos: .userInitiated).async {
+                normalized = normalize(face).boundingBox
+                done.fulfill()
+            }
+            // the main queue keeps running; a main.sync inside `normalize` would deadlock here
+            wait(for: [done], timeout: 1)
+            return normalized
+        }
+
+        layout(to: window)
+        let fitted = LivenessPreviewGeometry.previewRect(fittingIn: window)
+        assertRect(
+            normalizedOffMain(),
+            CGRect(x: fitted.width / 4, y: fitted.height / 4, width: fitted.width / 2, height: fitted.height / 2)
+        )
+
+        let rotated = CGSize(width: window.height, height: window.width)
+        layout(to: rotated)
+        let refitted = LivenessPreviewGeometry.previewRect(fittingIn: rotated)
+        assertRect(
+            normalizedOffMain(),
+            CGRect(x: refitted.width / 4, y: refitted.height / 4, width: refitted.width / 2, height: refitted.height / 2)
+        )
+    }
 }
