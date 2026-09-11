@@ -31,7 +31,11 @@ final class _LivenessViewController: UIViewController {
         viewModel.normalizeFace = { [weak self] face in
             guard let self = self else { return face }
             return DispatchQueue.main.sync {
-                face.normalize(width: self.view.frame.width, height: self.view.frame.width / 3 * 4)
+                // Normalise against the same (capped) rect the preview and oval use, so the detected
+                // face box and the oval never drift apart on wide windows. `cameraViewRect` is set in
+                // `setupAVLayer()` before the session (and thus face detection) starts.
+                let rect = self.viewModel.cameraViewRect
+                return face.normalize(width: rect.width, height: rect.height)
             }
         }
     }
@@ -51,7 +55,12 @@ final class _LivenessViewController: UIViewController {
     }
 
     override func viewDidLayoutSubviews() {
-        previewLayer?.position = view.center
+        super.viewDidLayoutSubviews()
+        // Re-size/centre the preview against the current bounds — but only before the oval is drawn, so an
+        // in-progress check's oval never desyncs from the preview.
+        if ovalView == nil {
+            updatePreviewFrame()
+        }
     }
 
     private func layoutSubviews() {
@@ -67,13 +76,25 @@ final class _LivenessViewController: UIViewController {
         freshnessView.clearColors()
     }
 
+    /// The portrait rect for the camera preview, in the view's own (bounds) coordinate space.
+    ///
+    /// This matches the upstream full-bleed layout — a 3:4 column centred in the view, with the REC/close
+    /// controls overlaid on top of it. `_FaceLivenessDetectionView` centres and 3:4-fits the SwiftUI chrome
+    /// the same way, so the controls sit over the top of the preview and the preview stays vertically centred.
+    /// The only iOS 27 change is capping the width for wide/short windows: the smallest of the view width,
+    /// the width that keeps the 3:4 column within the view height, and `.livenessMaxViewportWidth` (540,
+    /// a readable-width cap). On a phone the width binds, so the preview is full width and centred
+    /// exactly as upstream; only wide/short windows get a narrower centred column.
+    private func captureFrame() -> CGRect {
+        let width = min(view.bounds.width, view.bounds.height * 3 / 4, .livenessMaxViewportWidth)
+        let height = width / 3 * 4
+        let origin = CGPoint(x: view.bounds.midX - width / 2, y: view.bounds.midY - height / 2)
+        return CGRect(origin: origin, size: CGSize(width: width, height: height))
+    }
+
     private func setupAVLayer() {
         guard previewLayer == nil else { return }
-        let x = view.frame.minX
-        let y = view.frame.minY
-        let width = view.frame.width
-        let height = width / 3 * 4
-        let cameraFrame = CGRect(x: x, y: y, width: width, height: height)
+        let cameraFrame = captureFrame()
 
         guard let avLayer = viewModel.configureCamera(withinFrame: cameraFrame) else {
             DispatchQueue.main.async { [weak self] in
@@ -83,11 +104,9 @@ final class _LivenessViewController: UIViewController {
             return
         }
 
-        avLayer.position = view.center
+        avLayer.frame = cameraFrame
         self.previewLayer = avLayer
-        if let previewLayer = self.previewLayer {
-            viewModel.cameraViewRect = previewLayer.frame
-        }
+        viewModel.cameraViewRect = cameraFrame
 
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
@@ -96,6 +115,20 @@ final class _LivenessViewController: UIViewController {
 
             self.viewModel.startSession()
         }
+    }
+
+    /// Re-applies `captureFrame()` to the live preview layer (and `cameraViewRect`) when the bounds change
+    /// (e.g. bounds settling after `viewDidLoad`, or a window resize). Guarded to before the oval is drawn
+    /// (see `viewDidLayoutSubviews`) so an in-progress check's oval never desyncs.
+    private func updatePreviewFrame() {
+        guard let previewLayer else { return }
+        let cameraFrame = captureFrame()
+        guard cameraFrame != previewLayer.frame else { return }
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        previewLayer.frame = cameraFrame
+        CATransaction.commit()
+        viewModel.cameraViewRect = cameraFrame
     }
 
     var runningFreshness = false
@@ -135,8 +168,11 @@ extension _LivenessViewController: FaceLivenessViewControllerPresenter {
         }
         self.freshness.showColorSequences(
             colorSequences,
-            width: UIScreen.main.bounds.width,
-            height: UIScreen.main.bounds.height,
+            // Size the colour flash to the app window, not the whole physical screen — on a resized
+            // iOS 27 window `UIScreen.main.bounds` overshoots the window. `freshnessView` is pinned to
+            // the view edges, so `view.bounds` is the correct extent.
+            width: view.bounds.width,
+            height: view.bounds.height,
             view: self.freshnessView,
             onNewColor: { [weak self] colorEvent in
                 self?.viewModel.sendColorDisplayedEvent(colorEvent)
