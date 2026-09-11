@@ -44,6 +44,11 @@ struct GetReadyPageView: View {
                     Spacer()
                 }.padding()
             }
+            // Constrain the preview + overlay to a centered portrait column on wide windows so
+            // the ellipse (sized as a fraction of its container) stays proportionate; on phone
+            // widths the available width binds, so behavior is unchanged.
+            .aspectRatio(3 / 4, contentMode: .fit)
+            .frame(maxWidth: .livenessMaxViewportWidth)
             beginCheckButton
         }
     }

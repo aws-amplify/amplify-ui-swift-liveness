@@ -143,8 +143,10 @@ extension _LivenessViewController: FaceLivenessViewControllerPresenter {
         }
         self.freshness.showColorSequences(
             colorSequences,
-            width: UIScreen.main.bounds.width,
-            height: UIScreen.main.bounds.height,
+            // `freshnessView` is pinned to the view's edges, so size the flash to the view;
+            // `UIScreen.main.bounds` overshoots a resized window
+            width: view.bounds.width,
+            height: view.bounds.height,
             view: self.freshnessView,
             onNewColor: { [weak self] colorEvent in
                 self?.viewModel.sendColorDisplayedEvent(colorEvent)
