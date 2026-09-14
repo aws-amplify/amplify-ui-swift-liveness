@@ -53,7 +53,9 @@ struct _FaceLivenessDetectionView<VideoView: View>: View {
                 }
                 .padding([.leading, .trailing])
                 .aspectRatio(3/4, contentMode: .fit)
-                .frame(maxWidth: .infinity)
+                // Cap the chrome column to the same readable width as the camera viewport so the
+                // recording/close controls and instructions stay aligned with the preview on wide windows.
+                .frame(maxWidth: .livenessMaxViewportWidth)
             }
         }
         .edgesIgnoringSafeArea(.all)

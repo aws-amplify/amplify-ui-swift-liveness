@@ -44,6 +44,12 @@ struct GetReadyPageView: View {
                     Spacer()
                 }.padding()
             }
+            // Cap the preview + overlay to a centred portrait column on wide iOS 27 windows so the
+            // CameraPreviewView ellipse (sized as a fraction of its container width) stays proportionate,
+            // mirroring the capture screen. Capped to `.livenessMaxViewportWidth` (540); on phone widths
+            // the available width is the binding dimension, so behaviour is unchanged.
+            .aspectRatio(3 / 4, contentMode: .fit)
+            .frame(maxWidth: .livenessMaxViewportWidth)
             beginCheckButton
         }
     }
