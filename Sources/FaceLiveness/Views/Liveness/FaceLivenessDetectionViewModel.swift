@@ -38,8 +38,18 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     var challengeReceived: Challenge?
     var normalizeFace: (DetectedFace) -> DetectedFace = { $0 }
     var provideSingleFrame: ((UIImage) -> Void)?
-    var cameraViewRect = CGRect.zero
-    var ovalRect = CGRect.zero
+    /// The fitted preview rect and the oval mapped onto it. Written on main by layout, read on
+    /// the capture queue per frame, hence the lock rather than main-actor isolation.
+    nonisolated var cameraViewRect: CGRect {
+        get { cameraViewRectStorage.value }
+        set { cameraViewRectStorage.value = newValue }
+    }
+    nonisolated var ovalRect: CGRect {
+        get { ovalRectStorage.value }
+        set { ovalRectStorage.value = newValue }
+    }
+    private let cameraViewRectStorage = Synchronized(CGRect.zero)
+    private let ovalRectStorage = Synchronized(CGRect.zero)
     var initialClientEvent: InitialClientEvent?
     var faceMatchedTimestamp: UInt64?
     var noFitStartTime: Date?
@@ -49,18 +59,8 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     static var attemptIdTimeStamp: Date = Date()
     
     var noFitTimeoutInterval: TimeInterval {
-        guard let sessionConfiguration = sessionConfiguration else {
-            return defaultNoFitTimeoutInterval
-        }
-        
-        let ovalMatchChallenge: FaceLivenessSession.OvalMatchChallenge
-        switch sessionConfiguration{
-        case .faceMovement(let challenge):
-            ovalMatchChallenge = challenge
-        case .faceMovementAndLight(_, let challenge):
-            ovalMatchChallenge = challenge
-        }
-        
+        guard let ovalMatchChallenge else { return defaultNoFitTimeoutInterval }
+
         let sessionTimeoutMilliSec = ovalMatchChallenge.oval.ovalFitTimeout
         return TimeInterval(sessionTimeoutMilliSec/1_000)
     }
@@ -85,10 +85,8 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         self.challengeOptions = challengeOptions
 
         self.closeButtonAction = { [weak self] in
-            guard let self else { return }
             DispatchQueue.main.async {
-                self.stopRecording()
-                self.livenessState.unrecoverableStateEncountered(.userCancelled)
+                self?.endCheck(with: .userCancelled)
             }
         }
 
@@ -157,6 +155,20 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         captureSession?.stopRunning()
     }
 
+    /// Ends the check with `error` unless it has already finished, so the terminal state is
+    /// published once however many exits (close, cancel, rotation, deactivation) race for it.
+    func endCheck(with error: LivenessStateMachine.LivenessError) {
+        switch livenessState.state {
+        case .completed, .encounteredUnrecoverableError:
+            return
+        default:
+            break
+        }
+
+        stopRecording()
+        livenessState.unrecoverableStateEncountered(error)
+    }
+
     func configureCamera(withinFrame frame: CGRect) -> CALayer? {
         do {
             let avLayer = try captureSession?.configureCamera(frame: frame)
@@ -177,31 +189,13 @@ class FaceLivenessDetectionViewModel: ObservableObject {
 
     func drawOval(onComplete: @escaping () -> Void) {
         guard livenessState.state == .recording(ovalDisplayed: false),
-              let sessionConfiguration = sessionConfiguration else { return }
-        
-        let ovalMatchChallenge: FaceLivenessSession.OvalMatchChallenge
-        switch sessionConfiguration {
-        case .faceMovement(let challenge):
-            ovalMatchChallenge = challenge
-        case .faceMovementAndLight(_, let challenge):
-            ovalMatchChallenge = challenge
-        }
-        
-        let ovalParameters = ovalMatchChallenge.oval
-        let scaleRatio = cameraViewRect.width / videoSize.width
-        let rect = CGRect(
-            x: ovalParameters.boundingBox.x,
-            y: ovalParameters.boundingBox.y,
-            width: ovalParameters.boundingBox.width,
-            height: ovalParameters.boundingBox.height
-        )
+              let ovalMatchChallenge = ovalMatchChallenge else { return }
 
-        let normalizedOvalRect = CGRect(
-            x: rect.minX * scaleRatio,
-            y: rect.minY * scaleRatio,
-            width: rect.width * scaleRatio,
-            height: rect.height * scaleRatio
-        )
+        // an oval mapped through an empty rect would mask the whole preview; the next
+        // detection retries once layout supplies a real rect
+        guard !cameraViewRect.isEmpty else { return }
+
+        let normalizedOvalRect = computeOvalRect(for: ovalMatchChallenge)
 
         livenessViewControllerDelegate?.drawOvalInCanvas(normalizedOvalRect)
         DispatchQueue.main.async { [weak self] in
@@ -211,6 +205,53 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         ovalRect = normalizedOvalRect
     }
 
+    /// Recomputes and redraws the oval for the current `cameraViewRect` after a resize, without
+    /// touching the state machine. Only runs while an oval is on screen.
+    func redrawOvalForCurrentCameraViewRect() {
+        switch livenessState.state {
+        case .recording(ovalDisplayed: true), .awaitingFaceInOvalMatch, .faceMatched, .displayingFreshness:
+            break
+        default:
+            return
+        }
+
+        // keep the oval that is on screen until a layout pass supplies real geometry
+        guard !cameraViewRect.isEmpty,
+              let ovalMatchChallenge = ovalMatchChallenge else { return }
+
+        let normalizedOvalRect = computeOvalRect(for: ovalMatchChallenge)
+        guard normalizedOvalRect != ovalRect else { return }
+
+        ovalRect = normalizedOvalRect
+        livenessViewControllerDelegate?.drawOvalInCanvas(normalizedOvalRect)
+    }
+
+    private func computeOvalRect(
+        for ovalMatchChallenge: FaceLivenessSession.OvalMatchChallenge
+    ) -> CGRect {
+        let boundingBox = ovalMatchChallenge.oval.boundingBox
+        return LivenessPreviewGeometry.ovalRect(
+            forVideoOval: CGRect(
+                x: boundingBox.x,
+                y: boundingBox.y,
+                width: boundingBox.width,
+                height: boundingBox.height
+            ),
+            videoSize: videoSize,
+            previewWidth: cameraViewRect.width
+        )
+    }
+
+    private var ovalMatchChallenge: FaceLivenessSession.OvalMatchChallenge? {
+        guard let sessionConfiguration = sessionConfiguration else { return nil }
+
+        switch sessionConfiguration {
+        case .faceMovement(let challenge):
+            return challenge
+        case .faceMovementAndLight(_, let challenge):
+            return challenge
+        }
+    }
 
     func initializeLivenessStream() {
         do {
@@ -419,13 +460,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     }
     
     func configureCaptureSession(challenge: Challenge) {
-        let cameraPosition: LivenessCamera
-        switch challenge {
-        case .faceMovementChallenge:
-            cameraPosition = challengeOptions.faceMovementChallengeOption.camera
-        case .faceMovementAndLightChallenge:
-            cameraPosition = challengeOptions.faceMovementAndLightChallengeOption.camera
-        }
+        let cameraPosition = challengeOptions.camera(for: challenge)
         
         let avCaptureDevice = AVCaptureDevice.default(
                                 .builtInWideAngleCamera,
