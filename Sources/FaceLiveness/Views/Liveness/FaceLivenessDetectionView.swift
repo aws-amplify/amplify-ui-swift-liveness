@@ -134,7 +134,7 @@ public struct FaceLivenessDetectorView: View {
         .background(
             InterfaceOrientationReader(
                 onTransition: orientationObserver.beginTransition(with:),
-                onSettled: orientationObserver.refresh
+                onSettled: orientationObserver.settle(in:)
             )
             .frame(width: 0, height: 0)
             .accessibilityHidden(true)
@@ -218,9 +218,7 @@ public struct FaceLivenessDetectorView: View {
         case .awaitingLivenessSession:
             Color.clear
                 .onAppear {
-                    Task {
-                        advanceIfWaitingOnPortrait()
-                    }
+                    advanceIfWaitingOnPortrait()
                 }
         case .displayingGetReadyView(let challenge, let cameraPosition):
             GetReadyPageView(

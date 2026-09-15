@@ -32,7 +32,8 @@ enum LivenessOrientation {
         }
     }
 
-    /// The interface orientation of the host's current scene, or `.portrait` if none resolves.
+    /// The interface orientation of the app's foreground scene, or `.portrait` if none resolves.
+    /// Only a seed: once the reader is in a window, its scene is read instead.
     static var currentInterfaceOrientation: UIInterfaceOrientation {
         let windowScenes = UIApplication.shared.connectedScenes
             .compactMap { $0 as? UIWindowScene }
@@ -44,7 +45,8 @@ enum LivenessOrientation {
     }
 
     /// `orientation` turned by a transition coordinator's `targetTransform`. Each quarter turn
-    /// of the transform's rotation advances portrait -> landscapeRight -> upsideDown -> landscapeLeft.
+    /// of the transform's rotation advances portrait -> landscapeRight -> upsideDown -> landscapeLeft,
+    /// the convention UIKit reported on iOS 17.5 (see `LivenessOrientationTestCase`).
     static func orientation(
         _ orientation: UIInterfaceOrientation,
         rotatedBy transform: CGAffineTransform
@@ -61,3 +63,11 @@ enum LivenessOrientation {
         return clockwiseOrder[rotated]
     }
 }
+
+/// What the observer needs from the scene hosting the detector; lets tests stand in for a
+/// `UIWindowScene`.
+protocol InterfaceOrientationProviding: AnyObject {
+    var interfaceOrientation: UIInterfaceOrientation { get }
+}
+
+extension UIWindowScene: InterfaceOrientationProviding {}
