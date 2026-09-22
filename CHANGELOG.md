@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.8 (2026-09-22)
+
+### Bug Fixes
+
+- correct preview geometry on resized windows and gate non-portrait use (#246)
+
 ## 1.4.7 (2026-09-09)
 
 ## 1.4.6 (2026-09-02)
