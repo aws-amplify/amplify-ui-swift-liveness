@@ -1,0 +1,172 @@
+//
+// Copyright Amazon.com Inc. or its affiliates.
+// All Rights Reserved.
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+
+import UIKit
+import XCTest
+@testable import FaceLiveness
+@_spi(PredictionsFaceLiveness) import AWSPredictionsPlugin
+
+/// Records the oval rects the view model asks to have drawn.
+final class MockLivenessViewControllerPresenter: FaceLivenessViewControllerPresenter {
+    var drawnOvalRects: [CGRect] = []
+
+    func drawOvalInCanvas(_ ovalRect: CGRect) {
+        drawnOvalRects.append(ovalRect)
+    }
+
+    func displayFreshness(colorSequences: [FaceLivenessSession.DisplayColor]) {}
+    func stopFreshness() {}
+    func displaySingleFrame(uiImage: UIImage) {}
+    func completeNoLightCheck() {}
+}
+
+/// Fixtures shared by the geometry tests.
+enum LivenessGeometryFixture {
+    /// The oval the service specifies, in the 480x640 video's coordinate space.
+    static let videoOval = CGRect(x: 108, y: 107, width: 264, height: 427)
+    static let videoSize = CGSize(width: 480, height: 640)
+
+    /// Which session configuration the service is simulated as having sent.
+    enum ChallengeKind: CaseIterable {
+        case faceMovement
+        case faceMovementAndLight
+
+        var challenge: Challenge {
+            switch self {
+            case .faceMovement: return .faceMovementChallenge("1.0.0")
+            case .faceMovementAndLight: return .faceMovementAndLightChallenge("2.0.0")
+            }
+        }
+    }
+
+    /// A view model configured with `videoOval` under `kind`, reporting draws to `presenter`.
+    @MainActor
+    static func makeViewModel(
+        presenter: MockLivenessViewControllerPresenter,
+        kind: ChallengeKind = .faceMovement
+    ) -> FaceLivenessDetectionViewModel {
+        let viewModel = FaceLivenessDetectionViewModel(
+            faceDetector: MockFaceDetector(),
+            faceInOvalMatching: .init(instructor: .init()),
+            videoChunker: VideoChunker(
+                assetWriter: LivenessAVAssetWriter(),
+                assetWriterDelegate: VideoChunker.AssetWriterDelegate(),
+                assetWriterInput: LivenessAVAssetWriterInput()
+            ),
+            closeButtonAction: {},
+            sessionID: UUID().uuidString,
+            isPreviewScreenEnabled: false,
+            challengeOptions: .init(
+                faceMovementChallengeOption: .init(camera: .front),
+                faceMovementAndLightChallengeOption: .init()
+            )
+        )
+        viewModel.livenessViewControllerDelegate = presenter
+        viewModel.challengeReceived = kind.challenge
+
+        let ovalMatchChallenge = FaceLivenessSession.OvalMatchChallenge(
+            faceDetectionThreshold: 0.7,
+            face: .init(
+                distanceThreshold: 0.1,
+                distanceThresholdMax: 0.1,
+                distanceThresholdMin: 0.1,
+                iouWidthThreshold: 0.1,
+                iouHeightThreshold: 0.1
+            ),
+            oval: .init(
+                boundingBox: .init(
+                    x: videoOval.minX,
+                    y: videoOval.minY,
+                    width: videoOval.width,
+                    height: videoOval.height
+                ),
+                heightWidthRatio: 1.618,
+                iouThreshold: 0.1,
+                iouWidthThreshold: 0.1,
+                iouHeightThreshold: 0.1,
+                ovalFitTimeout: 1
+            )
+        )
+        switch kind {
+        case .faceMovement:
+            viewModel.sessionConfiguration = .faceMovement(ovalMatchChallenge)
+        case .faceMovementAndLight:
+            let colors = [
+                FaceLivenessSession.DisplayColor(
+                    rgb: .init(red: 0, green: 0, blue: 0, _values: [0, 0, 0]),
+                    duration: 75,
+                    shouldScroll: false
+                ),
+                FaceLivenessSession.DisplayColor(
+                    rgb: .init(red: 1, green: 1, blue: 1, _values: [255, 255, 255]),
+                    duration: 475,
+                    shouldScroll: true
+                )
+            ]
+            viewModel.sessionConfiguration = .faceMovementAndLight(.init(colors: colors), ovalMatchChallenge)
+        }
+        return viewModel
+    }
+
+    /// `videoOval` mapped onto a preview rect of the given width, computed independently of
+    /// `LivenessPreviewGeometry`.
+    static func expectedOval(forPreviewWidth previewWidth: CGFloat) -> CGRect {
+        let scale = previewWidth / videoSize.width
+        return CGRect(
+            x: videoOval.minX * scale,
+            y: videoOval.minY * scale,
+            width: videoOval.width * scale,
+            height: videoOval.height * scale
+        )
+    }
+
+    /// The previous preview sizing: full viewport width, height derived from it, centered.
+    static func legacyPreviewRect(fittingIn viewport: CGSize) -> CGRect {
+        let width = viewport.width
+        let height = width / 3 * 4
+        return CGRect(
+            x: (viewport.width - width) / 2,
+            y: (viewport.height - height) / 2,
+            width: width,
+            height: height
+        )
+    }
+}
+
+extension XCTestCase {
+    /// Draws the oval and waits for `.recording(ovalDisplayed: true)`.
+    @MainActor
+    func drawOvalAndWaitUntilDisplayed(
+        _ viewModel: FaceLivenessDetectionViewModel,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        let displayed = expectation(description: "oval displayed")
+        viewModel.drawOval(onComplete: { displayed.fulfill() })
+        wait(for: [displayed], timeout: 1)
+        XCTAssertEqual(
+            viewModel.livenessState.state,
+            .recording(ovalDisplayed: true),
+            file: file,
+            line: line
+        )
+    }
+
+    func assertRect(
+        _ rect: CGRect,
+        _ expected: CGRect,
+        accuracy: CGFloat = 0.0001,
+        _ message: String = "",
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        XCTAssertEqual(rect.minX, expected.minX, accuracy: accuracy, "x. \(message)", file: file, line: line)
+        XCTAssertEqual(rect.minY, expected.minY, accuracy: accuracy, "y. \(message)", file: file, line: line)
+        XCTAssertEqual(rect.width, expected.width, accuracy: accuracy, "width. \(message)", file: file, line: line)
+        XCTAssertEqual(rect.height, expected.height, accuracy: accuracy, "height. \(message)", file: file, line: line)
+    }
+}
