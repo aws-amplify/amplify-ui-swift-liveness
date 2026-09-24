@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.9 (2026-09-24)
+
+### Bug Fixes
+
+- Re-export credential protocols for import FaceLiveness (#253)
+
 ## 1.4.8 (2026-09-22)
 
 ### Bug Fixes
