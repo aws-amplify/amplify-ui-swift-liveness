@@ -7,7 +7,11 @@
 
 import SwiftUI
 import AWSClientRuntime
-import protocol AWSPluginsCore.AWSCredentialsProvider
+// Re-exported so consumers can use the credentials-provider initializer with
+// only `import FaceLiveness`.
+@_exported import protocol AWSPluginsCore.AWSCredentialsProvider
+@_exported import protocol AWSPluginsCore.AWSCredentials
+@_exported import protocol AWSPluginsCore.AWSTemporaryCredentials
 import AWSPredictionsPlugin
 import AVFoundation
 import Amplify
