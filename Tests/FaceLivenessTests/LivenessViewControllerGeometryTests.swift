@@ -8,6 +8,23 @@
 import XCTest
 import UIKit
 @testable import FaceLiveness
+@_spi(PredictionsFaceLiveness) import AWSPredictionsPlugin
+
+/// Captures the extent handed to `showColorSequences` without running any color timers.
+private final class SpyFreshness: Freshness {
+    var capturedSize: CGSize?
+
+    override func showColorSequences(
+        _ colorSequences: [FaceLivenessSession.DisplayColor],
+        width: CGFloat,
+        height: CGFloat,
+        view: FreshnessView,
+        onNewColor: @escaping (Freshness.ColorEvent) -> Void,
+        onComplete: @escaping () -> Void
+    ) {
+        capturedSize = CGSize(width: width, height: height)
+    }
+}
 
 /// Drives `_LivenessViewController`'s layout path through `viewDidLayoutSubviews` with an
 /// injected preview layer, which makes `setupAVLayer` a no-op so no capture session is needed.
@@ -175,5 +192,39 @@ final class LivenessViewControllerGeometryTests: XCTestCase {
             normalizedOffMain(),
             CGRect(x: refitted.width / 4, y: refitted.height / 4, width: refitted.width / 2, height: refitted.height / 2)
         )
+    }
+
+    // MARK: - Freshness flash extent
+
+    /// Given: A controller laid out at a window smaller than the screen it launched on
+    /// When: The freshness flash is displayed
+    /// Then: The flash is sized to the view's bounds, not `UIScreen.main.bounds`
+    func testFreshnessFlashIsSizedToTheViewNotTheScreen() {
+        let spy = SpyFreshness()
+        viewController.freshness = spy
+        layout(to: window)
+
+        viewController.displayFreshness(colorSequences: [])
+
+        XCTAssertEqual(spy.capturedSize?.width ?? -1, window.width, accuracy: 0.0001)
+        XCTAssertEqual(spy.capturedSize?.height ?? -1, window.height, accuracy: 0.0001)
+        XCTAssertNotEqual(spy.capturedSize?.height ?? -1, UIScreen.main.bounds.height, accuracy: 0.0001)
+    }
+
+    /// Given: A window resized after the flash extent was first read
+    /// When: The freshness flash is displayed again
+    /// Then: The flash tracks the view's current bounds
+    func testFreshnessFlashTracksTheCurrentBoundsAfterResize() {
+        let spy = SpyFreshness()
+        viewController.freshness = spy
+        layout(to: window)
+        viewController.displayFreshness(colorSequences: [])
+
+        let rotated = CGSize(width: window.height, height: window.width)
+        layout(to: rotated)
+        viewController.displayFreshness(colorSequences: [])
+
+        XCTAssertEqual(spy.capturedSize?.width ?? -1, rotated.width, accuracy: 0.0001)
+        XCTAssertEqual(spy.capturedSize?.height ?? -1, rotated.height, accuracy: 0.0001)
     }
 }

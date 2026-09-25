@@ -101,7 +101,12 @@ final class _LivenessViewController: UIViewController {
         let cameraFrame = LivenessPreviewGeometry.previewRect(fittingIn: view.bounds.size)
         guard !cameraFrame.isEmpty, cameraFrame != viewModel.cameraViewRect else { return }
 
+        // a bare CALayer frame change implicitly animates (~0.25s); disable actions so the
+        // preview snaps to the new rect in the same pass as the oval redraw
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
         previewLayer.frame = cameraFrame
+        CATransaction.commit()
         viewModel.cameraViewRect = cameraFrame
         viewModel.redrawOvalForCurrentCameraViewRect()
     }
@@ -143,8 +148,10 @@ extension _LivenessViewController: FaceLivenessViewControllerPresenter {
         }
         self.freshness.showColorSequences(
             colorSequences,
-            width: UIScreen.main.bounds.width,
-            height: UIScreen.main.bounds.height,
+            // `freshnessView` is pinned to the view's edges, so size the flash to the view;
+            // `UIScreen.main.bounds` overshoots a resized window
+            width: view.bounds.width,
+            height: view.bounds.height,
             view: self.freshnessView,
             onNewColor: { [weak self] colorEvent in
                 self?.viewModel.sendColorDisplayedEvent(colorEvent)

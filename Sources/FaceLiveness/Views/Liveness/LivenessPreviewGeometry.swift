@@ -29,6 +29,12 @@ enum LivenessPreviewGeometry {
         )
     }
 
+    /// The width of the widest 3:4 column that fits in `viewport`; height is left to the
+    /// container. On phone-shaped viewports the width binds, so it is returned unchanged.
+    static func columnWidth(fittingIn viewport: CGSize) -> CGFloat {
+        min(viewport.width, viewport.height * previewAspectRatio)
+    }
+
     /// Scales the service's oval from video coordinates to a preview `previewWidth` wide. The
     /// result is relative to the preview's origin.
     static func ovalRect(
