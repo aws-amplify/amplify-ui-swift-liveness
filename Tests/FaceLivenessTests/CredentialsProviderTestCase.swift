@@ -30,7 +30,7 @@ final class CredentialsProviderTestCase: XCTestCase {
 
         let viewModel = FaceLivenessDetectionViewModel(
             faceDetector: faceDetector,
-            faceInOvalMatching: .init(instructor: .init()),
+            faceInOvalMatching: .init(),
             videoChunker: videoChunker,
             closeButtonAction: {},
             sessionID: UUID().uuidString,

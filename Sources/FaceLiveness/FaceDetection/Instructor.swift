@@ -7,15 +7,7 @@
 
 import Foundation
 
-class Instructor {
-    init(
-        previousInstruction: Instructor.Instruction? = nil,
-        runningCount: Int = 0
-    ) {
-        self.previousInstruction = previousInstruction
-        self.runningCount = runningCount
-    }
-
+enum Instructor {
     enum Instruction: Equatable {
         case `match`
         case tooFarLeft(
@@ -46,22 +38,5 @@ class Instructor {
             default: return false
             }
         }
-    }
-
-    var previousInstruction: Instruction?
-    var runningCount = 0
-
-    func instruction(for update: Instruction) -> Instruction {
-        if previousInstruction == update {
-            runningCount += 1
-            if runningCount >= 15 {
-                return update
-            }
-            return .none
-        } else {
-            previousInstruction = update
-            runningCount = 0
-        }
-        return .none
     }
 }
