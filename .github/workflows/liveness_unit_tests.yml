@@ -18,7 +18,7 @@ permissions:
 jobs:
   test-iOS:
     name: Liveness iOS Unit Tests
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
@@ -30,6 +30,8 @@ jobs:
         with:
           scheme: FaceLiveness
           token: ${{ secrets.CODECOV_TOKEN }}
-          destination: 'platform=iOS Simulator,name=iPhone 16 Pro Max,OS=18.5'
+          # Amplify Swift requires Xcode 26.0 or later.
+          xcode_path: '/Applications/Xcode_26.5.app'
+          destination: 'platform=iOS Simulator,name=iPhone 17 Pro Max,OS=26.5'
           generate_coverage: true
           other_flags: '-skipPackagePluginValidation'

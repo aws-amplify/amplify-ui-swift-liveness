@@ -20,7 +20,7 @@ concurrency:
 
 jobs:
   build-amplify-ui-swift-liveness:
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 #v3.5.3
@@ -30,7 +30,9 @@ jobs:
         uses: ./.github/composite_actions/run_xcodebuild
         with:
           scheme: FaceLiveness
-          destination: 'platform=iOS Simulator,name=iPhone 16 Pro Max,OS=18.5'
+          # Amplify Swift requires Xcode 26.0 or later.
+          xcode_path: '/Applications/Xcode_26.5.app'
+          destination: 'platform=iOS Simulator,name=iPhone 17 Pro Max,OS=26.5'
           other_flags: '-skipPackagePluginValidation'
 
   confirm-pass:
