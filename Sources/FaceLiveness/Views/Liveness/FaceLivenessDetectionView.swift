@@ -60,9 +60,7 @@ public struct FaceLivenessDetectorView: View {
         }
 
         let faceDetector = try! FaceDetectorShortRange.Model()
-        let faceInOvalStateMatching = FaceInOvalMatching(
-            instructor: Instructor()
-        )
+        let faceInOvalStateMatching = FaceInOvalMatching()
 
         let videoChunker = VideoChunker(
             assetWriter: LivenessAVAssetWriter(),
@@ -108,9 +106,7 @@ public struct FaceLivenessDetectorView: View {
             return session
         }
 
-        let faceInOvalStateMatching = FaceInOvalMatching(
-            instructor: Instructor()
-        )
+        let faceInOvalStateMatching = FaceInOvalMatching()
 
         self._viewModel = StateObject(
             wrappedValue: .init(

@@ -51,7 +51,7 @@ enum LivenessGeometryFixture {
     ) -> FaceLivenessDetectionViewModel {
         let viewModel = FaceLivenessDetectionViewModel(
             faceDetector: MockFaceDetector(),
-            faceInOvalMatching: .init(instructor: .init()),
+            faceInOvalMatching: .init(),
             videoChunker: VideoChunker(
                 assetWriter: LivenessAVAssetWriter(),
                 assetWriterDelegate: VideoChunker.AssetWriterDelegate(),
