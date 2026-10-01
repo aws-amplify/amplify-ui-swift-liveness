@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.10 (2026-10-01)
+
+### Bug Fixes
+
+- show face distance hints on every frame, matching Android (#257)
+
 ## 1.4.9 (2026-09-24)
 
 ### Bug Fixes
