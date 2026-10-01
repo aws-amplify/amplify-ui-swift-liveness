@@ -177,8 +177,8 @@ extension _LivenessViewController: FaceLivenessViewControllerPresenter {
             // drop any previous oval so a redraw replaces it rather than layering over it
             self.ovalView?.removeFromSuperview()
 
-            // Like Android, the overlay covers the whole screen, not just the camera preview,
-            // so no black shows above or below the preview. `ovalRect` is relative to the preview.
+            // The overlay covers the whole screen, not just the camera preview, so no black
+            // shows above or below the preview. `ovalRect` is relative to the preview.
             let ovalView = OvalView(
                 frame: self.view.bounds,
                 ovalFrame: ovalRect.offsetBy(

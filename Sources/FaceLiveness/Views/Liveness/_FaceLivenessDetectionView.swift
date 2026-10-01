@@ -25,8 +25,8 @@ struct _FaceLivenessDetectionView<VideoView: View>: View {
         )
     }
 
-    /// Android insets the instruction 24dp from the preview's edges while the oval is on
-    /// screen (exactly when the REC indicator shows) and 16dp otherwise.
+    /// The instruction is inset 24pt from the preview's edges while the oval is on screen
+    /// (exactly when the REC indicator shows) and 16pt otherwise.
     private var instructionPadding: CGFloat {
         viewModel.livenessState.shouldDisplayRecordingIcon ? 24 : 16
     }
@@ -37,7 +37,6 @@ struct _FaceLivenessDetectionView<VideoView: View>: View {
                 Color.black
                 videoView
 
-                // Like Android, the instruction sits at the top of the camera preview.
                 VStack(spacing: 5) {
                     InstructionContainerView(
                         viewModel: viewModel
@@ -51,8 +50,8 @@ struct _FaceLivenessDetectionView<VideoView: View>: View {
             }
             .edgesIgnoringSafeArea(.all)
 
-            // Like Android, the REC indicator and close button sit in the screen's top
-            // corners rather than above the instruction, so they don't push it onto the oval.
+            // The REC indicator and close button sit in the screen's top corners rather than
+            // above the instruction, so they don't push it onto the oval.
             VStack {
                 HStack(alignment: .top) {
                     if viewModel.livenessState.shouldDisplayRecordingIcon {

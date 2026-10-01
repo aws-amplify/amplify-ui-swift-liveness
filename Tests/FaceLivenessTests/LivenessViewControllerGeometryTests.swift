@@ -179,8 +179,8 @@ final class LivenessViewControllerGeometryTests: XCTestCase {
 
     /// Given: A controller laid out in a 640x904 window, taller than the 3:4 preview
     /// When: The oval is drawn
-    /// Then: Like Android, the overlay covers the whole view and the oval sits at the same spot
-    ///       on screen as before, offset by the preview's origin
+    /// Then: The overlay covers the whole view and the oval sits at the same spot on screen
+    ///       as before, offset by the preview's origin
     func testOvalOverlayCoversTheWholeView() throws {
         layout(to: window)
         let fitted = LivenessPreviewGeometry.previewRect(fittingIn: window)

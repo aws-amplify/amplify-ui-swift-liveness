@@ -17,7 +17,7 @@ class OvalView: UIView {
         backgroundColor = .clear
     }
 
-    /// Android's face guide outline color, `#AEB3B7`.
+    /// The face guide outline color, `#AEB3B7`.
     private static let strokeColor = UIColor(red: 0xAE / 255, green: 0xB3 / 255, blue: 0xB7 / 255, alpha: 1)
 
     override func draw(_ rect: CGRect) {
@@ -25,8 +25,8 @@ class OvalView: UIView {
         let oval = UIBezierPath(ovalIn: ovalFrame)
         mask.append(oval.reversing())
 
-        // Matches Android's face guide: an opaque white background with the oval cut out,
-        // and a 4pt outline whose inner half is cut away with the oval.
+        // An opaque white background with the oval cut out, and a 4pt outline whose inner
+        // half is cut away with the oval.
         UIColor.white.setFill()
         mask.fill()
 

@@ -39,7 +39,6 @@ struct FaceInOvalMatching {
             thresholds: thresholds
         )
 
-        // Evaluated on every frame, in the same order as Android's `calculateFaceOvalPosition`.
         if isMatch(face: face, oval: oval, intersection: intersection, thresholds: thresholds) {
             return .match
         } else if oval.minX > face.minX && oval.maxX > face.maxX {
