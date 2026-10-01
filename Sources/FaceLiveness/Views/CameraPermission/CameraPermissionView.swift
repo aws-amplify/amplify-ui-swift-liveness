@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct CameraPermissionView: View {
+    @Environment(\.faceLivenessDetectorTheme) private var theme
     @Binding var displayingCameraPermissionsNeededAlert: Bool
 
     init(
@@ -21,18 +22,21 @@ struct CameraPermissionView: View {
             Spacer()
             VStack {
                 Text(LocalizedStrings.camera_permission_change_setting_header)
-                    .font(.title2)
+                    .font(theme.fonts.title2)
                     .fontWeight(.medium)
                     .multilineTextAlignment(.center)
                     .padding(8)
                     
                 Text(LocalizedStrings.camera_permission_change_setting_description)
+                    .font(theme.fonts.body)
                     .multilineTextAlignment(.center)
                     .padding(8)
             }
             Spacer()
             editPermissionButton
         }
+        .foregroundColor(theme.colors.onBackground)
+        .background(theme.colors.background.edgesIgnoringSafeArea(.all))
         .alert(isPresented: $displayingCameraPermissionsNeededAlert) {
             Alert(
                 title: Text(LocalizedStrings.camera_setting_alert_title),
@@ -60,12 +64,13 @@ struct CameraPermissionView: View {
             action: goToSettingsAppPage,
             label: {
                 Text(LocalizedStrings.camera_permission_change_setting_button_title)
-                    .foregroundColor(.livenessPrimaryLabel)
+                    .font(theme.fonts.body)
+                    .foregroundColor(theme.colors.onPrimary)
                     .frame(maxWidth: .infinity)
             }
         )
         .frame(height: 52)
-        ._background { Color.livenessPrimaryBackground }
+        ._background { theme.colors.primary }
         .cornerRadius(14)
         .padding([.leading, .trailing])
         .padding(.bottom, 16)

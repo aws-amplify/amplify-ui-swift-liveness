@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct WarningBox<PopoverView: View>: View {
+    @Environment(\.faceLivenessDetectorTheme) private var theme
     @State var isPresentingPopover = false
     let titleText: String
     let bodyText: String
@@ -27,18 +28,19 @@ struct WarningBox<PopoverView: View>: View {
         HStack {
             VStack(alignment: .leading) {
                 Text(titleText)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.livenessWarningLabel)
+                    .font(theme.fonts.headline)
+                    .foregroundColor(theme.colors.onErrorContainer)
 
                 Text(bodyText)
-                    .foregroundColor(.livenessWarningLabel)
+                    .font(theme.fonts.body)
+                    .foregroundColor(theme.colors.onErrorContainer)
             }
             Spacer()
             Button(
                 action: { isPresentingPopover = true },
                 label: {
                     Image(systemName: "info.circle")
-                        .foregroundColor(.livenessWarningLabel)
+                        .foregroundColor(theme.colors.onErrorContainer)
                         .frame(width: 20, height: 20)
                 }
             )
@@ -53,7 +55,7 @@ struct WarningBox<PopoverView: View>: View {
         .padding()
         .background(
             Rectangle()
-                .foregroundColor(.livenessWarningBackground)
+                .foregroundColor(theme.colors.errorContainer)
                 .cornerRadius(6)
         )
     }

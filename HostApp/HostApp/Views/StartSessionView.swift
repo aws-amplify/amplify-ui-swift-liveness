@@ -14,10 +14,19 @@ struct StartSessionView: View {
     @Binding var sessionID: String
     @Binding var containerViewState: ContainerViewState
     @State private var showAlert = false
+    @AppStorage(LivenessThemeOption.storageKey) private var themeOption = LivenessThemeOption.standard
 
     var body: some View {
         VStack {
             Spacer()
+            Picker("Liveness theme", selection: $themeOption) {
+                ForEach(LivenessThemeOption.allCases) { option in
+                    Text(option.rawValue).tag(option)
+                }
+            }
+            .pickerStyle(.segmented)
+            .padding()
+
             button(
                 text: viewModel.presentationState.buttonText,
                 backgroundColor: viewModel.presentationState.buttonBackgroundColor,
