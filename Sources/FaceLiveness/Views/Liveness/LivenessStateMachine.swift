@@ -32,11 +32,10 @@ struct LivenessStateMachine {
         case .tooFar(_, let nearnessPercentage):
             reason = .moveFaceCloser
             percentage = nearnessPercentage
-        case .tooFarLeft(_, let nearnessPercentage):
-            reason = .moveFaceLeft
-            percentage = nearnessPercentage
-        case .tooFarRight(_, let nearnessPercentage):
-            reason = .moveFaceRight
+        // Matches Android, which shows "Move closer" for a face off to either side of the oval.
+        case .tooFarLeft(_, let nearnessPercentage),
+                .tooFarRight(_, let nearnessPercentage):
+            reason = .moveFaceCloser
             percentage = nearnessPercentage
         case .tooClose(_, let nearnessPercentage):
             reason = .faceTooClose

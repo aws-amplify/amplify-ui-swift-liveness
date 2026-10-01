@@ -10,7 +10,6 @@ import UIKit
 import Amplify
 
 struct FaceInOvalMatching {
-    let instructor: Instructor
     private let storage = Storage()
     class Storage {
         var initialIOU: Double?
@@ -40,18 +39,18 @@ struct FaceInOvalMatching {
             thresholds: thresholds
         )
 
-        let update: Instructor.Instruction
-
+        // Evaluated on every frame, in the same order as Android's `calculateFaceOvalPosition`.
         if isMatch(face: face, oval: oval, intersection: intersection, thresholds: thresholds) {
-            update = .match
+            return .match
+        } else if oval.minX > face.minX && oval.maxX > face.maxX {
+            return .tooFarLeft(nearnessPercentage: faceMatchPercentage)
+        } else if face.minX > oval.minX && face.maxX > oval.maxX {
+            return .tooFarRight(nearnessPercentage: faceMatchPercentage)
         } else if isTooClose(face: face, oval: oval, intersection: intersection, thresholds: thresholds) {
-            update = .tooClose(nearnessPercentage: faceMatchPercentage)
+            return .tooClose(nearnessPercentage: faceMatchPercentage)
         } else {
-            update = .tooFar(nearnessPercentage: faceMatchPercentage)
+            return .tooFar(nearnessPercentage: faceMatchPercentage)
         }
-
-        let instruction = instructor.instruction(for: update)
-        return instruction
     }
 
     private func isTooClose(face: CGRect, oval: CGRect, intersection: Double, thresholds: Thresholds) -> Bool {
