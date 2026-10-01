@@ -176,4 +176,24 @@ final class LivenessViewControllerGeometryTests: XCTestCase {
             CGRect(x: refitted.width / 4, y: refitted.height / 4, width: refitted.width / 2, height: refitted.height / 2)
         )
     }
+
+    /// Given: A controller laid out in a 640x904 window, taller than the 3:4 preview
+    /// When: The oval is drawn
+    /// Then: Like Android, the overlay covers the whole view and the oval sits at the same spot
+    ///       on screen as before, offset by the preview's origin
+    func testOvalOverlayCoversTheWholeView() throws {
+        layout(to: window)
+        let fitted = LivenessPreviewGeometry.previewRect(fittingIn: window)
+        let oval = LivenessGeometryFixture.expectedOval(forPreviewWidth: fitted.width)
+
+        viewController.drawOvalInCanvas(oval)
+        let drawn = expectation(description: "oval view added on main")
+        DispatchQueue.main.async { drawn.fulfill() }
+        wait(for: [drawn], timeout: 1)
+
+        let ovalView = try XCTUnwrap(viewController.ovalView)
+        assertRect(ovalView.frame, CGRect(origin: .zero, size: window))
+        assertRect(ovalView.ovalFrame, oval.offsetBy(dx: fitted.minX, dy: fitted.minY))
+        XCTAssertGreaterThan(fitted.minY, 0, "the window must leave space above the preview")
+    }
 }
