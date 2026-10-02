@@ -8,15 +8,18 @@
 import SwiftUI
 
 struct InstructionView: View {
+    @Environment(\.faceLivenessDetectorTheme) private var theme
     let text: String
     let backgroundColor: Color
-    var textColor: Color = .livenessLabel
-    var font: Font = .body
-    
+    /// Defaults to the theme's `onBackground` color.
+    var textColor: Color?
+    /// Defaults to the theme's `body` font.
+    var font: Font?
+
     var body: some View {
         Text(text)
-            .foregroundColor(textColor)
-            .font(font)
+            .foregroundColor(textColor ?? theme.colors.onBackground)
+            .font(font ?? theme.fonts.body)
             .padding(12)
             .background(backgroundColor)
             .cornerRadius(8)

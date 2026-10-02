@@ -24,6 +24,7 @@ public struct FaceLivenessDetectorView: View {
     @State var displayingCameraPermissionsNeededAlert = false
     @State private var brightnessState = BrightnessState()
     @StateObject private var orientationObserver = InterfaceOrientationObserver()
+    @SwiftUI.Environment(\.faceLivenessDetectorTheme) private var theme
 
     private final class BrightnessState {
         var original: CGFloat?
@@ -131,6 +132,10 @@ public struct FaceLivenessDetectorView: View {
                 RotateDeviceView(onClose: cancelFromRotatePrompt)
             }
         }
+        // one full-screen fill for every state, so the app's own background never shows, even
+        // around a state whose content is smaller than the screen
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(theme.colors.background.edgesIgnoringSafeArea(.all))
         .background(
             InterfaceOrientationReader(
                 onTransition: orientationObserver.beginTransition(with:),
