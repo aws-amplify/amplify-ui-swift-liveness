@@ -36,7 +36,6 @@ struct CameraPermissionView: View {
             editPermissionButton
         }
         .foregroundColor(theme.colors.onBackground)
-        .background(theme.colors.background.edgesIgnoringSafeArea(.all))
         .alert(isPresented: $displayingCameraPermissionsNeededAlert) {
             Alert(
                 title: Text(LocalizedStrings.camera_setting_alert_title),

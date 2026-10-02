@@ -55,7 +55,6 @@ struct InstructionContainerView: View {
                 emptyColor: theme.colors.surface,
                 borderColor: .hex("#AEB3B7"),
                 fillColor: theme.colors.primary,
-                indicatorColor: theme.colors.primary,
                 percentage: percentage
             )
             .frame(width: 200, height: 30)
@@ -77,7 +76,6 @@ struct InstructionContainerView: View {
                 emptyColor: theme.colors.surface,
                 borderColor: .hex("#AEB3B7"),
                 fillColor: theme.colors.primary,
-                indicatorColor: theme.colors.primary,
                 percentage: 0.2
             )
             .frame(width: 200, height: 30)

@@ -9,8 +9,6 @@ import XCTest
 import SwiftUI
 @testable import FaceLiveness
 
-// `Color.resolve(in:)`, which these tests use to check colors as SwiftUI draws them, needs iOS 17.
-@available(iOS 17.0, *)
 @MainActor
 final class FaceLivenessDetectorThemeTests: XCTestCase {
     private typealias Colors = FaceLivenessDetectorTheme.Colors
@@ -31,7 +29,8 @@ final class FaceLivenessDetectorThemeTests: XCTestCase {
     /// Given: A theme created with `init()`
     /// When: Its colors are resolved in light and in dark appearance
     /// Then: Each matches that appearance's default
-    func testDefaultColorsFollowTheSystemAppearance() {
+    func testDefaultColorsFollowTheSystemAppearance() throws {
+        try skipBeforeIOS17()
         let colors = FaceLivenessDetectorTheme().colors
 
         for role in expected {
@@ -43,7 +42,8 @@ final class FaceLivenessDetectorThemeTests: XCTestCase {
     /// Given: Themes created with `init(colorScheme:)`
     /// When: Their colors are resolved in either appearance
     /// Then: Each has the chosen appearance's defaults, whatever the system's appearance
-    func testColorSchemeDefaultsIgnoreTheSystemAppearance() {
+    func testColorSchemeDefaultsIgnoreTheSystemAppearance() throws {
+        try skipBeforeIOS17()
         let light = FaceLivenessDetectorTheme(colorScheme: .light).colors
         let dark = FaceLivenessDetectorTheme(colorScheme: .dark).colors
 
@@ -55,6 +55,9 @@ final class FaceLivenessDetectorThemeTests: XCTestCase {
         }
     }
 
+    /// Given: A theme created with `init()`
+    /// When: Its fonts are read
+    /// Then: Each is the SwiftUI text style it's named after
     func testDefaultFontsAreTheMatchingTextStyles() {
         let fonts = FaceLivenessDetectorTheme().fonts
 
@@ -75,6 +78,7 @@ final class FaceLivenessDetectorThemeTests: XCTestCase {
     /// When: It renders
     /// Then: It reads a theme with the default colors
     func testViewsWithoutAThemeUseTheDefaults() throws {
+        try skipBeforeIOS17()
         let probe = ThemeProbe()
         render(ThemeReader(probe: probe))
 
@@ -106,8 +110,17 @@ final class FaceLivenessDetectorThemeTests: XCTestCase {
 
     // MARK: - Helpers
 
+    /// `hex(_:in:)` needs `Color.resolve(in:)`. Converting to `UIColor` and resolving that instead
+    /// loses the light and dark variants of a `Color` made from a dynamic `UIColor`.
+    private func skipBeforeIOS17() throws {
+        guard #available(iOS 17, *) else {
+            throw XCTSkip("Resolving a SwiftUI Color for an appearance needs iOS 17")
+        }
+    }
+
     /// Resolves `color` the way SwiftUI does when drawing it in the given appearance.
     private func hex(_ color: Color, in style: UIUserInterfaceStyle) -> String {
+        guard #available(iOS 17, *) else { return "" }
         var environment = EnvironmentValues()
         environment.colorScheme = style == .dark ? .dark : .light
         let components = color.resolve(in: environment).cgColor.components ?? []

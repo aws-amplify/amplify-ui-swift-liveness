@@ -48,7 +48,6 @@ struct GetReadyPageView: View {
             }
             beginCheckButton
         }
-        .background(theme.colors.background.edgesIgnoringSafeArea(.all))
     }
 
     private var beginCheckButton: some View {

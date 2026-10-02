@@ -13,15 +13,14 @@ struct LoadingPageView: View {
     var body: some View {
         VStack {
             HStack(spacing: 5) {
+                // `.tint(_:)` doesn't color the circular style on iOS 15
                 ProgressView()
-                    .tint(theme.colors.primary)
+                    .progressViewStyle(CircularProgressViewStyle(tint: theme.colors.primary))
                 Text(LocalizedStrings.challenge_connecting)
                     .font(theme.fonts.body)
                     .foregroundColor(theme.colors.onBackground)
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(theme.colors.background.edgesIgnoringSafeArea(.all))
     }
 }
 

@@ -8,8 +8,7 @@
 import SwiftUI
 
 extension Color {
-    static let livenessPreviewBorder = Color.dynamicColors(
-        light: .hex("#AEB3B7"),
-        dark: .white
-    )
+    /// Fixed rather than following the system appearance, so it stays visible on any themed
+    /// background.
+    static let livenessPreviewBorder = Color.hex("#AEB3B7")
 }

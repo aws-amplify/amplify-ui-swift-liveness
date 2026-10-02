@@ -21,8 +21,13 @@ import SwiftUI
 ///     .faceLivenessDetectorTheme(theme)
 /// ```
 ///
+/// For light and dark appearance, use adaptive colors, such as asset catalog colors with a Dark
+/// appearance or `UIColor(dynamicProvider:)`. They follow appearance changes, even during a check,
+/// with a single theme.
+///
 /// The views don't observe changes to a theme they're already using. To change the theme while
-/// they're on screen, pass a new theme to ``View/faceLivenessDetectorTheme(_:)``.
+/// they're on screen, pass a new theme to ``View/faceLivenessDetectorTheme(_:)``. Create your themes
+/// once and keep them: creating one on every redraw updates the views on every redraw.
 ///
 /// The background around the face oval, the oval's outline, and the colors flashed during the
 /// check light the user's face, so they aren't part of the theme.
@@ -44,8 +49,12 @@ public final class FaceLivenessDetectorTheme: ObservableObject {
     }
 
     /// Creates a theme with the default colors for the given appearance, whatever the system's
-    /// appearance. Use it to choose the appearance yourself, for example from
-    /// `@Environment(\.colorScheme)`.
+    /// appearance.
+    ///
+    /// To follow the system appearance, prefer ``init()`` with adaptive colors. If you choose the
+    /// appearance yourself, keep one theme per appearance, and read `@Environment(\.colorScheme)`
+    /// in a view modifier rather than in the view that creates the ``FaceLivenessDetectorView``.
+    /// Otherwise every appearance change runs the detector view's initializer again.
     ///
     /// Android equivalent: `LivenessColorScheme.Defaults.lightColorScheme` and
     /// `LivenessColorScheme.Defaults.darkColorScheme`.
@@ -81,8 +90,8 @@ extension FaceLivenessDetectorTheme {
         /// Android equivalent: `ColorScheme.onError`.
         public var onError: Color
 
-        /// The background of the get ready, camera permission, loading, and rotate device
-        /// screens, the close button, the REC indicator, and the "Verifying" message.
+        /// The background behind all the liveness views, the close button, the REC indicator, and
+        /// the "Verifying" message.
         ///
         /// Android equivalent: `ColorScheme.background`.
         public var background: Color
@@ -119,8 +128,8 @@ extension FaceLivenessDetectorTheme {
         /// Not used by the liveness views.
         public var largeTitle: Font = .largeTitle
 
-        /// The instructions shown during the check, and "Center your face" on the get ready
-        /// screen.
+        /// The instructions shown before and during the check, and "Center your face" on the get
+        /// ready screen.
         ///
         /// Android equivalent: `Typography.headlineLarge`.
         public var title: Font = .title
@@ -143,8 +152,8 @@ extension FaceLivenessDetectorTheme {
         public var subheadline: Font = .subheadline
 
         /// Body text and button labels: the photosensitivity warning and dialog text, the
-        /// descriptions on the camera permission and rotate device screens, "Connecting",
-        /// the instructions shown before the oval appears, and "Verifying".
+        /// descriptions on the camera permission and rotate device screens, "Connecting", and
+        /// "Verifying".
         ///
         /// Android equivalent: `Typography.bodyMedium`.
         public var body: Font = .body
@@ -194,20 +203,14 @@ extension FaceLivenessDetectorTheme.Colors {
 
     /// ``light`` or ``dark``, whichever matches the system's appearance.
     static let system = Self(
-        primary: .adaptive(light: light.primary, dark: dark.primary),
-        onPrimary: .adaptive(light: light.onPrimary, dark: dark.onPrimary),
-        error: .adaptive(light: light.error, dark: dark.error),
-        onError: .adaptive(light: light.onError, dark: dark.onError),
-        background: .adaptive(light: light.background, dark: dark.background),
-        onBackground: .adaptive(light: light.onBackground, dark: dark.onBackground),
-        surface: .adaptive(light: light.surface, dark: dark.surface),
-        errorContainer: .adaptive(light: light.errorContainer, dark: dark.errorContainer),
-        onErrorContainer: .adaptive(light: light.onErrorContainer, dark: dark.onErrorContainer)
+        primary: .dynamicColors(light: light.primary, dark: dark.primary),
+        onPrimary: .dynamicColors(light: light.onPrimary, dark: dark.onPrimary),
+        error: .dynamicColors(light: light.error, dark: dark.error),
+        onError: .dynamicColors(light: light.onError, dark: dark.onError),
+        background: .dynamicColors(light: light.background, dark: dark.background),
+        onBackground: .dynamicColors(light: light.onBackground, dark: dark.onBackground),
+        surface: .dynamicColors(light: light.surface, dark: dark.surface),
+        errorContainer: .dynamicColors(light: light.errorContainer, dark: dark.errorContainer),
+        onErrorContainer: .dynamicColors(light: light.onErrorContainer, dark: dark.onErrorContainer)
     )
-}
-
-private extension Color {
-    static func adaptive(light: Color, dark: Color) -> Color {
-        .dynamicColors(light: UIColor(light), dark: UIColor(dark))
-    }
 }

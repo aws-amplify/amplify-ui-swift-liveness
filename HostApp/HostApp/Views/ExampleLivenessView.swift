@@ -11,8 +11,6 @@ import FaceLiveness
 struct ExampleLivenessView: View {
     @Binding var containerViewState: ContainerViewState
     @ObservedObject var viewModel: ExampleLivenessViewModel
-    @Environment(\.colorScheme) private var colorScheme
-    @AppStorage(LivenessThemeOption.storageKey) private var themeOption = LivenessThemeOption.standard
 
     init(sessionID: String, containerViewState: Binding<ContainerViewState>) {
         self._containerViewState = containerViewState
@@ -73,7 +71,7 @@ struct ExampleLivenessView: View {
                     }
                 }
             )
-            .faceLivenessDetectorTheme(themeOption.theme(for: colorScheme))
+            .modifier(LivenessThemeModifier())
             .id(containerViewState)
         case .result:
             LivenessResultView(
@@ -113,6 +111,18 @@ struct ExampleLivenessView: View {
             )
             .animation(.default, value: viewModel.presentationState)
         }
+    }
+}
+
+/// Applies the theme picked on the start screen. Reading the appearance here, rather than in
+/// `ExampleLivenessView`, means an appearance change only updates the theme: it doesn't run
+/// `FaceLivenessDetectorView`'s initializer again.
+private struct LivenessThemeModifier: ViewModifier {
+    @Environment(\.colorScheme) private var colorScheme
+    @AppStorage(LivenessThemeOption.storageKey) private var themeOption = LivenessThemeOption.standard
+
+    func body(content: Content) -> some View {
+        content.faceLivenessDetectorTheme(themeOption.theme(for: colorScheme))
     }
 }
 
