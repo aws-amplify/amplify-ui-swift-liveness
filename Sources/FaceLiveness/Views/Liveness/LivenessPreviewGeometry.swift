@@ -29,6 +29,17 @@ enum LivenessPreviewGeometry {
         )
     }
 
+    /// The instruction's inset from the top of the preview: `inset`, or more when the preview
+    /// starts behind the REC indicator and close button (as on iPads close to 3:4), so the
+    /// instruction sits below them. Both positions are in the same coordinate space.
+    static func instructionTopInset(
+        _ inset: CGFloat,
+        previewMinY: CGFloat,
+        controlsMaxY: CGFloat
+    ) -> CGFloat {
+        max(inset, controlsMaxY - previewMinY)
+    }
+
     /// Scales the service's oval from video coordinates to a preview `previewWidth` wide. The
     /// result is relative to the preview's origin.
     static func ovalRect(

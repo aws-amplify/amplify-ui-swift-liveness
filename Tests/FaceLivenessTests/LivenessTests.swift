@@ -281,6 +281,33 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
         }
     }
 
+    /// Given: Every state the check passes through
+    /// When: `isFaceGuideDisplayed` is read
+    /// Then: The face guide is up exactly while the REC indicator shows, and is gone once the
+    ///       check completes
+    func testFaceGuideIsDisplayedExactlyWhileRecording() {
+        let states: [LivenessStateMachine.State] = [
+            .initial,
+            .pendingFacePreparedConfirmation(.pendingCheck),
+            .waitForRecording,
+            .recording(ovalDisplayed: false),
+            .recording(ovalDisplayed: true),
+            .awaitingFaceInOvalMatch(.moveFaceCloser, 0.5),
+            .faceMatched,
+            .displayingFreshness,
+            .completedDisplayingFreshness,
+            .completedNoLightCheck,
+            .completed,
+            .encounteredUnrecoverableError(.timedOut)
+        ]
+        for state in states {
+            let stateMachine = LivenessStateMachine(state: state)
+            XCTAssertEqual(stateMachine.isFaceGuideDisplayed, stateMachine.shouldDisplayRecordingIcon, "\(state)")
+        }
+        XCTAssertFalse(LivenessStateMachine(state: .completedDisplayingFreshness).isFaceGuideDisplayed)
+        XCTAssertFalse(LivenessStateMachine(state: .completedNoLightCheck).isFaceGuideDisplayed)
+    }
+
     /// Given:  The public `FaceLivenessDetectionError` values
     /// When: Comparing `.sessionInterrupted` against `.userCancelled`
     /// Then: They are distinct so integrators can tell an interruption apart from a cancel
