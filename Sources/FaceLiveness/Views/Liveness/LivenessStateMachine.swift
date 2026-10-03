@@ -102,11 +102,10 @@ struct LivenessStateMachine {
         state = .completed
     }
 
-    var shouldDisplayRecordingIcon: Bool {
-        // Only show the REC indicator while the session is actively capturing:
-        // from when the oval is displayed through the freshness (color) check.
-        // Everything else — including `.waitForRecording` (before the oval) and the
-        // post-challenge verifying states — is not capturing, so the icon stays hidden.
+    /// Whether the face guide (the white overlay with the oval cut out) is on screen: from when
+    /// the oval is displayed through the freshness (color) check. It's removed once the check
+    /// completes, before "Verifying".
+    var isFaceGuideDisplayed: Bool {
         switch state {
         case .recording(ovalDisplayed: true),
              .awaitingFaceInOvalMatch,
@@ -116,6 +115,13 @@ struct LivenessStateMachine {
         default:
             return false
         }
+    }
+
+    var shouldDisplayRecordingIcon: Bool {
+        // The session is capturing exactly while the face guide is up. Everything else,
+        // including `.waitForRecording` (before the oval) and the post-challenge verifying
+        // states, isn't, so the icon stays hidden.
+        isFaceGuideDisplayed
     }
 
     enum State: Equatable {

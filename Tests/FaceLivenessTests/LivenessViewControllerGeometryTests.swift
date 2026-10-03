@@ -177,6 +177,14 @@ final class LivenessViewControllerGeometryTests: XCTestCase {
         )
     }
 
+    private func drawOvalOnController(_ oval: CGRect) throws -> OvalView {
+        viewController.drawOvalInCanvas(oval)
+        let drawn = expectation(description: "oval view added on main")
+        DispatchQueue.main.async { drawn.fulfill() }
+        wait(for: [drawn], timeout: 1)
+        return try XCTUnwrap(viewController.ovalView)
+    }
+
     /// Given: A controller laid out in a 640x904 window, taller than the 3:4 preview
     /// When: The oval is drawn
     /// Then: The overlay covers the whole view and the oval sits at the same spot on screen
@@ -186,14 +194,67 @@ final class LivenessViewControllerGeometryTests: XCTestCase {
         let fitted = LivenessPreviewGeometry.previewRect(fittingIn: window)
         let oval = LivenessGeometryFixture.expectedOval(forPreviewWidth: fitted.width)
 
-        viewController.drawOvalInCanvas(oval)
-        let drawn = expectation(description: "oval view added on main")
-        DispatchQueue.main.async { drawn.fulfill() }
-        wait(for: [drawn], timeout: 1)
+        let ovalView = try drawOvalOnController(oval)
 
-        let ovalView = try XCTUnwrap(viewController.ovalView)
         assertRect(ovalView.frame, CGRect(origin: .zero, size: window))
-        assertRect(ovalView.ovalFrame, oval.offsetBy(dx: fitted.minX, dy: fitted.minY))
+        assertRect(ovalView.ovalFrameInView, oval.offsetBy(dx: fitted.minX, dy: fitted.minY))
         XCTAssertGreaterThan(fitted.minY, 0, "the window must leave space above the preview")
+    }
+
+    /// Given: A controller laid out at 640x904 with the oval drawn
+    /// When: The window grows to 640x1000, which moves the preview down without changing its
+    ///       width, so the oval isn't redrawn
+    /// Then: The overlay still covers the whole view and the cut-out moves with the preview
+    func testOvalOverlayFollowsAResizeThatOnlyMovesThePreview() throws {
+        layout(to: window)
+        let fitted = LivenessPreviewGeometry.previewRect(fittingIn: window)
+        let oval = LivenessGeometryFixture.expectedOval(forPreviewWidth: fitted.width)
+        let ovalView = try drawOvalOnController(oval)
+
+        let taller = CGSize(width: window.width, height: 1000)
+        layout(to: taller)
+
+        let moved = LivenessPreviewGeometry.previewRect(fittingIn: taller)
+        XCTAssertEqual(moved.width, fitted.width, "the preview's width must not change")
+        XCTAssertGreaterThan(moved.minY, fitted.minY, "the preview must move down")
+        XCTAssertTrue(viewController.ovalView === ovalView, "the oval isn't redrawn")
+        assertRect(ovalView.frame, CGRect(origin: .zero, size: taller))
+        assertRect(ovalView.ovalFrameInView, oval.offsetBy(dx: moved.minX, dy: moved.minY))
+    }
+
+    /// Given: A controller whose oval is drawn during a layout pass with no area
+    /// When: The view is laid out at its size again
+    /// Then: The overlay covers the whole view, with the cut-out where the preview is
+    func testOvalDrawnDuringALayoutPassWithNoAreaAppearsOnceTheViewHasArea() throws {
+        layout(to: window)
+        let fitted = LivenessPreviewGeometry.previewRect(fittingIn: window)
+        let oval = LivenessGeometryFixture.expectedOval(forPreviewWidth: fitted.width)
+
+        layout(to: .zero)
+        let ovalView = try drawOvalOnController(oval)
+        layout(to: window)
+
+        assertRect(ovalView.frame, CGRect(origin: .zero, size: window))
+        assertRect(ovalView.ovalFrameInView, oval.offsetBy(dx: fitted.minX, dy: fitted.minY))
+    }
+
+    /// Given: A controller showing the face guide during the freshness check
+    /// When: The check completes
+    /// Then: The guide is removed, so "Verifying" and the final frame show on black
+    func testFaceGuideIsRemovedWhenTheCheckCompletes() throws {
+        for completed in [LivenessStateMachine.State.completedDisplayingFreshness, .completedNoLightCheck] {
+            layout(to: window)
+            viewModel.livenessState = LivenessStateMachine(state: .displayingFreshness)
+            let ovalView = try drawOvalOnController(.init(x: 100, y: 100, width: 200, height: 300))
+            XCTAssertNotNil(ovalView.superview, "\(completed)")
+
+            viewModel.livenessState = LivenessStateMachine(state: completed)
+            let removed = expectation(description: "guide removed on main")
+            DispatchQueue.main.async { removed.fulfill() }
+            wait(for: [removed], timeout: 1)
+
+            XCTAssertNil(viewController.ovalView, "\(completed)")
+            XCTAssertNil(ovalView.superview, "\(completed)")
+        }
     }
 }

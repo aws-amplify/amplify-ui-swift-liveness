@@ -414,4 +414,33 @@ final class LivenessPreviewGeometryTests: XCTestCase {
             assertRect(face, oval, "\(Int(viewport.width))x\(Int(viewport.height))")
         }
     }
+
+    // MARK: - Instruction placement
+
+    /// Given: An iPhone 16 Pro, where the preview starts below the REC and close button row
+    /// When: The instruction's top inset is worked out (positions from the safe area's top)
+    /// Then: It's the plain inset
+    func testInstructionKeepsItsInsetWhenThePreviewStartsBelowTheButtons() {
+        // preview top at 169pt on screen, 62pt safe area; buttons end 16 + 63 + 16pt down
+        let inset = LivenessPreviewGeometry.instructionTopInset(24, previewMinY: 169 - 62, controlsMaxY: 95)
+        XCTAssertEqual(inset, 24)
+    }
+
+    /// Given: An iPad 9th generation in portrait (exactly 3:4), where the preview starts at the
+    ///        top of the screen, behind the REC and close button row
+    /// When: The instruction's top inset is worked out
+    /// Then: It's pushed down to where the button row ends
+    func testInstructionMovesBelowTheButtonsWhenThePreviewStartsBehindThem() {
+        // preview top at 0pt on screen, 20pt status bar; buttons end 16 + 63 + 16pt down
+        let inset = LivenessPreviewGeometry.instructionTopInset(24, previewMinY: 0 - 20, controlsMaxY: 95)
+        XCTAssertEqual(inset, 115)
+        XCTAssertEqual(0 + inset, 20 + 95, "the instruction starts where the button row ends")
+    }
+
+    /// Given: A preview that starts exactly where the plain inset would clear the buttons
+    /// When: The instruction's top inset is worked out
+    /// Then: It's the plain inset
+    func testInstructionKeepsItsInsetWhenItAlreadyClearsTheButtons() {
+        XCTAssertEqual(LivenessPreviewGeometry.instructionTopInset(16, previewMinY: 79, controlsMaxY: 95), 16)
+    }
 }

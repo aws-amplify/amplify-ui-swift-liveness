@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import Combine
 import AVFoundation
 import Vision
 import Amplify
@@ -15,7 +16,6 @@ final class _LivenessViewController: UIViewController {
     let viewModel: FaceLivenessDetectionViewModel
     var previewLayer: CALayer?
 
-    let faceShapeLayer = CAShapeLayer()
     var ovalExists = false
     var ovalRect: CGRect?
     var freshness = Freshness()
@@ -47,6 +47,21 @@ final class _LivenessViewController: UIViewController {
         view.backgroundColor = .black
         layoutSubviews()
         setupAVLayer()
+        removeFaceGuideWhenCheckEnds()
+    }
+
+    /// Removes the face guide once the check completes (or ends any other way), so "Verifying"
+    /// and the final frame show on black.
+    private func removeFaceGuideWhenCheckEnds() {
+        faceGuideSubscription = viewModel.$livenessState
+            .map(\.isFaceGuideDisplayed)
+            .removeDuplicates()
+            .filter { !$0 }
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.ovalView?.removeFromSuperview()
+                self?.ovalView = nil
+            }
     }
 
     override func viewDidLayoutSubviews() {
@@ -117,6 +132,7 @@ final class _LivenessViewController: UIViewController {
     var hasSentFinalEvent = false
     var hasSentEmptyFinalVideoEvent = false
     var ovalView: OvalView?
+    private var faceGuideSubscription: AnyCancellable?
 
 
     required init?(coder: NSCoder) { fatalError() }
@@ -137,7 +153,6 @@ extension _LivenessViewController: FaceLivenessViewControllerPresenter {
     }
 
     func displayFreshness(colorSequences: [FaceLivenessSession.DisplayColor]) {
-        self.ovalView?.setNeedsDisplay()
         DispatchQueue.main.async { [weak self] in
             self?.viewModel.livenessState.displayingFreshness()
         }
@@ -172,20 +187,15 @@ extension _LivenessViewController: FaceLivenessViewControllerPresenter {
     func drawOvalInCanvas(_ ovalRect: CGRect) {
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
-            guard let previewLayer = self.previewLayer else { return }
 
             // drop any previous oval so a redraw replaces it rather than layering over it
             self.ovalView?.removeFromSuperview()
 
-            // The overlay covers the whole screen, not just the camera preview, so no black
-            // shows above or below the preview. `ovalRect` is relative to the preview.
-            let ovalView = OvalView(
-                frame: self.view.bounds,
-                ovalFrame: ovalRect.offsetBy(
-                    dx: previewLayer.frame.minX,
-                    dy: previewLayer.frame.minY
-                )
-            )
+            // The guide covers the whole screen, not just the camera preview, so no black shows
+            // above or below the preview. It follows the view's size and places the oval, which
+            // is relative to the preview, wherever the preview sits.
+            let ovalView = OvalView(frame: self.view.bounds, ovalFrame: ovalRect)
+            ovalView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
             self.ovalView = ovalView
             self.view.insertSubview(
                 ovalView,
