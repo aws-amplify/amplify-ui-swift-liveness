@@ -28,21 +28,28 @@ struct GetReadyPageView: View {
 
     var body: some View {
         VStack {
-            ZStack {
-                CameraPreviewView(cameraPosition: cameraPosition)
-                VStack {
-                    WarningBox(
-                        titleText: LocalizedStrings.get_ready_photosensitivity_title,
-                        bodyText: LocalizedStrings.get_ready_photosensitivity_description,
-                        popoverContent: { photosensitivityWarningPopoverContent }
-                    )
-                    .accessibilityElement(children: .combine)
-                    .opacity(challenge == Challenge.faceMovementAndLightChallenge("2.0.0") ? 1.0 : 0.0)
-                    Text(LocalizedStrings.preview_center_your_face_text)
-                        .font(.title)
-                        .multilineTextAlignment(.center)
-                    Spacer()
-                }.padding()
+            GeometryReader { geometry in
+                ZStack {
+                    CameraPreviewView(cameraPosition: cameraPosition)
+                    VStack {
+                        WarningBox(
+                            titleText: LocalizedStrings.get_ready_photosensitivity_title,
+                            bodyText: LocalizedStrings.get_ready_photosensitivity_description,
+                            popoverContent: { photosensitivityWarningPopoverContent }
+                        )
+                        .accessibilityElement(children: .combine)
+                        .opacity(challenge == Challenge.faceMovementAndLightChallenge("2.0.0") ? 1.0 : 0.0)
+                        Text(LocalizedStrings.preview_center_your_face_text)
+                            .font(.title)
+                            .multilineTextAlignment(.center)
+                        Spacer()
+                    }.padding()
+                }
+                // never wider than a 3:4 column of the available height, so the ellipse (sized
+                // as a fraction of its container) stays proportionate on wide windows; on
+                // phones the width binds, so the layout is unchanged
+                .frame(width: LivenessPreviewGeometry.columnWidth(fittingIn: geometry.size))
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             beginCheckButton
         }

@@ -414,4 +414,91 @@ final class LivenessPreviewGeometryTests: XCTestCase {
             assertRect(face, oval, "\(Int(viewport.width))x\(Int(viewport.height))")
         }
     }
+
+    // MARK: - Get-ready column width
+
+    /// Given: The container the get-ready preview gets on an iPhone 15 (below the begin button)
+    /// When: The column width is fitted
+    /// Then: The width binds, so the layout is unchanged
+    func testGetReadyColumnWidthIsUnchangedOnPhones() {
+        let width = LivenessPreviewGeometry.columnWidth(fittingIn: CGSize(width: 393, height: 683))
+
+        XCTAssertEqual(width, 393, accuracy: 0.0001)
+    }
+
+    /// Given: Every tall viewport from the preview-rect sweep
+    /// When: The column width is fitted
+    /// Then: Each one keeps its own width
+    func testGetReadyColumnWidthIsUnchangedForAllTallViewports() {
+        let tallViewports: [CGSize] = [
+            .init(width: 320, height: 568),
+            .init(width: 375, height: 667),
+            .init(width: 390, height: 844),
+            .init(width: 393, height: 852),
+            .init(width: 402, height: 874),
+            .init(width: 430, height: 932),
+            .init(width: 440, height: 956),
+            .init(width: 768, height: 1024),
+            .init(width: 820, height: 1180),
+            .init(width: 1032, height: 1376)
+        ]
+
+        for viewport in tallViewports {
+            let width = LivenessPreviewGeometry.columnWidth(fittingIn: viewport)
+            XCTAssertEqual(
+                width, viewport.width, accuracy: 0.0001,
+                "\(Int(viewport.width))x\(Int(viewport.height)) must not move"
+            )
+        }
+    }
+
+    /// Given: A wide window (904x564 available to the preview)
+    /// When: The column width is fitted
+    /// Then: The height binds and the column narrows to a 3:4 portrait width
+    func testGetReadyColumnWidthNarrowsInWideWindows() {
+        let width = LivenessPreviewGeometry.columnWidth(fittingIn: CGSize(width: 904, height: 564))
+
+        XCTAssertEqual(width, 423, accuracy: 0.0001)
+    }
+
+    /// Given: A viewport whose width is exactly 3/4 of its height
+    /// When: The column width is fitted
+    /// Then: The width is returned unchanged (the two terms agree)
+    func testGetReadyColumnWidthAtTheExactThreshold() {
+        let width = LivenessPreviewGeometry.columnWidth(fittingIn: CGSize(width: 480, height: 640))
+
+        XCTAssertEqual(width, 480, accuracy: 0.0001)
+    }
+
+    /// Given: A sweep of viewports on both sides of the threshold
+    /// When: The column width and the preview rect are fitted
+    /// Then: They agree on the width, so the two screens clamp identically
+    func testGetReadyColumnWidthMatchesThePreviewRectWidth() {
+        let viewports: [CGSize] = [
+            .init(width: 393, height: 852),
+            .init(width: 640, height: 904),
+            .init(width: 700, height: 700),
+            .init(width: 904, height: 640),
+            .init(width: 1180, height: 820),
+            .init(width: 1024, height: 768)
+        ]
+
+        for viewport in viewports {
+            XCTAssertEqual(
+                LivenessPreviewGeometry.columnWidth(fittingIn: viewport),
+                LivenessPreviewGeometry.previewRect(fittingIn: viewport).width,
+                accuracy: 0.0001,
+                "\(Int(viewport.width))x\(Int(viewport.height))"
+            )
+        }
+    }
+
+    /// Given: A zero-sized viewport (SwiftUI's first layout pass can propose one)
+    /// When: The column width is fitted
+    /// Then: It is zero, not negative or undefined
+    func testGetReadyColumnWidthOfAnEmptyViewportIsZero() {
+        let width = LivenessPreviewGeometry.columnWidth(fittingIn: .zero)
+
+        XCTAssertEqual(width, 0, accuracy: 0.0001)
+    }
 }
