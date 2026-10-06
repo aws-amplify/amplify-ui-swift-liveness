@@ -11,12 +11,15 @@ struct _FaceLivenessDetectionView<VideoView: View>: View {
     let videoView: VideoView
     @ObservedObject var viewModel: FaceLivenessDetectionViewModel
     @Binding var displayResultsView: Bool
+    let cancelButtonOptions: CancelButtonOptions
 
     init(
         viewModel: FaceLivenessDetectionViewModel,
+        cancelButtonOptions: CancelButtonOptions = .init(),
         @ViewBuilder videoView: @escaping () -> VideoView
     ) {
         self.viewModel = viewModel
+        self.cancelButtonOptions = cancelButtonOptions
         self.videoView = videoView()
 
         self._displayResultsView = .init(
@@ -83,7 +86,8 @@ struct _FaceLivenessDetectionView<VideoView: View>: View {
 
                     Spacer()
 
-                    CloseButton(
+                    CancelButton(
+                        options: cancelButtonOptions,
                         action: viewModel.closeButtonAction
                     )
                 }

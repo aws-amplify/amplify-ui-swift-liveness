@@ -7,9 +7,10 @@
 
 import SwiftUI
 
-/// Shown in place of the liveness flow while the interface is not portrait. The close button
-/// is the only exit for a host that supports landscape only.
+/// Shown in place of the liveness flow while the interface is not portrait. Unless the app hides
+/// it, the close button is the only exit for a host that supports landscape only.
 struct RotateDeviceView: View {
+    var cancelButtonOptions = CancelButtonOptions()
     @Environment(\.faceLivenessDetectorTheme) private var theme
     let onClose: () -> Void
 
@@ -21,7 +22,7 @@ struct RotateDeviceView: View {
             VStack {
                 HStack {
                     Spacer()
-                    CloseButton(action: onClose)
+                    CancelButton(options: cancelButtonOptions, action: onClose)
                 }
                 .padding()
 
