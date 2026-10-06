@@ -167,7 +167,6 @@ public struct FaceLivenessDetectorView: View {
         }
         .onDisappear {
             restoreOriginalBrightness()
-            viewModel.closeSessionOnDismissal()
         }
     }
 

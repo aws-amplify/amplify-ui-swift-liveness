@@ -155,30 +155,6 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         captureSession?.stopRunning()
     }
 
-    /// Whether the view has left the screen, so a session that finishes starting afterwards
-    /// doesn't open its stream.
-    private(set) var isDismissed = false
-
-    /// Closes the session when the view leaves the screen before the check finishes, as when the
-    /// app dismisses it, rather than leaving it open until the service times it out. The app
-    /// closed the view itself, so no result is published.
-    func closeSessionOnDismissal() {
-        isDismissed = true
-
-        switch livenessState.state {
-        case .completed, .encounteredUnrecoverableError:
-            // the session has already ended and its result has been delivered
-            return
-        default:
-            break
-        }
-
-        stopRecording()
-        // the same close code as when the app leaves the foreground mid-check
-        let closeCode = LivenessStateMachine.LivenessError.viewResignation.webSocketCloseCode ?? .normalClosure
-        livenessService?.closeSocket(with: closeCode)
-    }
-
     /// Ends the check with `error` unless it has already finished, so the terminal state is
     /// published once however many exits (close, cancel, rotation, deactivation) race for it.
     func endCheck(with error: LivenessStateMachine.LivenessError) {
@@ -273,7 +249,6 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     }
 
     func initializeLivenessStream() {
-        guard !isDismissed else { return }
         do {
             if (abs(Self.attemptIdTimeStamp.timeIntervalSinceNow) > defaultAttemptCountResetInterval) {
                 Self.attemptCount = 1

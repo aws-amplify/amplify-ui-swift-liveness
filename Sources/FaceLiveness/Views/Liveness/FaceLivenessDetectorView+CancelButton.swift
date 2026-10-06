@@ -11,8 +11,8 @@ extension FaceLivenessDetectorView {
     /// Hides the close (X) button during the check and on the prompt to rotate the device.
     ///
     /// With the button hidden, your app must give users another way to leave the check, for
-    /// example by setting `isPresented` to `false` from its own close action. When your app
-    /// removes the view before the check finishes, the session is closed and `onCompletion`
+    /// example by setting `isPresented` to `false` from its own close action. Removing the view
+    /// stops the camera, and the session is left for the service to time out; `onCompletion`
     /// isn't called.
     ///
     /// Hiding the button doesn't stop users leaving the check in other ways, such as by
@@ -38,7 +38,8 @@ extension FaceLivenessDetectorView {
     ///     }
     /// ```
     ///
-    /// The view takes the default button's place in the top trailing corner. If
+    /// The view takes the default button's place in the top trailing corner. Give it a tap target
+    /// of at least 44x44 points and an accessibility label, as the default button has. If
     /// ``hidesCancelButton(_:)`` is also set to `true`, the button is hidden.
     ///
     /// Web equivalent: `components={{ CancelButton: MyButton }}`.
