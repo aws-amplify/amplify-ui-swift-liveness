@@ -208,12 +208,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     /// Recomputes and redraws the oval for the current `cameraViewRect` after a resize, without
     /// touching the state machine. Only runs while an oval is on screen.
     func redrawOvalForCurrentCameraViewRect() {
-        switch livenessState.state {
-        case .recording(ovalDisplayed: true), .awaitingFaceInOvalMatch, .faceMatched, .displayingFreshness:
-            break
-        default:
-            return
-        }
+        guard livenessState.isFaceGuideDisplayed else { return }
 
         // keep the oval that is on screen until a layout pass supplies real geometry
         guard !cameraViewRect.isEmpty,
