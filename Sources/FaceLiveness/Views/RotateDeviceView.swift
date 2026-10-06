@@ -10,11 +10,12 @@ import SwiftUI
 /// Shown in place of the liveness flow while the interface is not portrait. The close button
 /// is the only exit for a host that supports landscape only.
 struct RotateDeviceView: View {
+    @Environment(\.faceLivenessDetectorTheme) private var theme
     let onClose: () -> Void
 
     var body: some View {
         ZStack {
-            Color.livenessBackground
+            theme.colors.background
                 .edgesIgnoringSafeArea(.all)
 
             VStack {
@@ -28,17 +29,18 @@ struct RotateDeviceView: View {
 
                 VStack {
                     Text(LocalizedStrings.orientation_prompt_title)
-                        .font(.title2)
+                        .font(theme.fonts.title2)
                         .fontWeight(.medium)
                         .multilineTextAlignment(.center)
                         .accessibilityAddTraits(.isHeader)
                         .padding(8)
 
                     Text(LocalizedStrings.orientation_prompt_description)
+                        .font(theme.fonts.body)
                         .multilineTextAlignment(.center)
                         .padding(8)
                 }
-                .foregroundColor(.livenessLabel)
+                .foregroundColor(theme.colors.onBackground)
                 .padding()
 
                 Spacer()

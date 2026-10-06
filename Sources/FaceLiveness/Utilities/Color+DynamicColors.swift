@@ -21,4 +21,8 @@ extension Color {
             )
         )
     }
+
+    static func dynamicColors(light: Color, dark: Color) -> Color {
+        dynamicColors(light: UIColor(light), dark: UIColor(dark))
+    }
 }
