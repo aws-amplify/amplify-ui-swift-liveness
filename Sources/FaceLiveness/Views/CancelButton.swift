@@ -13,8 +13,8 @@ import SwiftUI
 struct CancelButtonOptions {
     var isHidden = false
 
-    /// The app's replacement for the close button, given the action that cancels the check.
-    var content: ((_ cancel: @escaping () -> Void) -> AnyView)?
+    /// The app's replacement for the close button, given its configuration.
+    var content: ((FaceLivenessDetectorView.CancelButtonConfiguration) -> AnyView)?
 
     enum Resolved: Equatable {
         case standard
@@ -42,7 +42,9 @@ struct CancelButton: View {
         case .hidden:
             EmptyView()
         case .custom:
-            options.content?(action)
+            options.content?(
+                .init(cancel: action, accessibilityLabel: LocalizedStrings.close_button_a11y)
+            )
         }
     }
 }

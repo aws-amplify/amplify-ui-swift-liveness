@@ -42,21 +42,23 @@ final class FaceLivenessDetectorCancelButtonTests: XCTestCase {
     }
 
     /// Given: A detector with a replacement close button
-    /// When: The replacement is built and calls the action it's given
-    /// Then: The action is the one that cancels the check
-    func testTheReplacementIsGivenTheCancelAction() {
-        var givenCancel: (() -> Void)?
-        let detector = makeDetector().cancelButton { cancel -> EmptyView in
-            givenCancel = cancel
+    /// When: The replacement is built and calls the cancel action in its configuration
+    /// Then: The action is the one that cancels the check, and the configuration has the
+    ///   default button's accessibility label
+    func testTheReplacementIsGivenTheCancelActionAndAccessibilityLabel() {
+        var givenConfiguration: FaceLivenessDetectorView.CancelButtonConfiguration?
+        let detector = makeDetector().cancelButton { configuration -> EmptyView in
+            givenConfiguration = configuration
             return EmptyView()
         }
         XCTAssertEqual(detector.cancelButtonOptions.resolved, .custom)
 
         var cancelled = false
-        _ = detector.cancelButtonOptions.content?({ cancelled = true })
-        givenCancel?()
+        _ = CancelButton(options: detector.cancelButtonOptions, action: { cancelled = true }).body
+        givenConfiguration?.cancel()
 
         XCTAssertTrue(cancelled)
+        XCTAssertEqual(givenConfiguration?.accessibilityLabel, LocalizedStrings.close_button_a11y)
     }
 
     /// Given: A detector with both a replacement close button and `hidesCancelButton`

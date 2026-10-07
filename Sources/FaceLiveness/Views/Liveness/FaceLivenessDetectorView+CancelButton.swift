@@ -27,14 +27,29 @@ extension FaceLivenessDetectorView {
         return view
     }
 
+    /// What a replacement close button is given, through the closure passed to
+    /// ``cancelButton(_:)``.
+    ///
+    /// The same pattern as SwiftUI's `ButtonStyle.Configuration`.
+    public struct CancelButtonConfiguration {
+        /// Ends the check the same way as the default button: `onCompletion` is called with
+        /// ``FaceLivenessDetectionError/userCancelled``.
+        public let cancel: @MainActor () -> Void
+
+        /// The localized label VoiceOver reads for the default button ("Close"), for your
+        /// button to use as its own.
+        public let accessibilityLabel: String
+    }
+
     /// Replaces the close (X) button, during the check and on the prompt to rotate the device,
     /// with your own view. For example, a button that asks the user to confirm before leaving,
     /// so the check isn't ended by an accidental tap.
     ///
     /// ```swift
     /// FaceLivenessDetectorView(...)
-    ///     .cancelButton { cancel in
-    ///         ConfirmLeaveButton(onConfirm: cancel)
+    ///     .cancelButton { configuration in
+    ///         ConfirmLeaveButton(onConfirm: configuration.cancel)
+    ///             .accessibilityLabel(configuration.accessibilityLabel)
     ///     }
     /// ```
     ///
@@ -44,14 +59,13 @@ extension FaceLivenessDetectorView {
     ///
     /// Web equivalent: `components={{ CancelButton: MyButton }}`.
     ///
-    /// - Parameter content: The view to show, given an action that cancels the check. Calling
-    ///   it ends the check the same way as the default button: `onCompletion` is called with
-    ///   ``FaceLivenessDetectionError/userCancelled``.
+    /// - Parameter content: The view to show, given a ``CancelButtonConfiguration`` with the
+    ///   action that cancels the check and the default button's accessibility label.
     public func cancelButton<Content: View>(
-        @ViewBuilder _ content: @escaping (_ cancel: @escaping () -> Void) -> Content
+        @ViewBuilder _ content: @escaping (_ configuration: CancelButtonConfiguration) -> Content
     ) -> Self {
         var view = self
-        view.cancelButtonOptions.content = { cancel in AnyView(content(cancel)) }
+        view.cancelButtonOptions.content = { configuration in AnyView(content(configuration)) }
         return view
     }
 }
