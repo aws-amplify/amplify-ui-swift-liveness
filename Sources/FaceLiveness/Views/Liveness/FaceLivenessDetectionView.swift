@@ -32,6 +32,7 @@ public struct FaceLivenessDetectorView: View {
 
     let disableStartView: Bool
     let challengeOptions: ChallengeOptions
+    var cancelButtonOptions = CancelButtonOptions()
     let onCompletion: (Result<Void, FaceLivenessDetectionError>) -> Void
 
     let sessionTask: Task<FaceLivenessSession, Error>
@@ -129,7 +130,7 @@ public struct FaceLivenessDetectorView: View {
                 .accessibilityHidden(orientationObserver.decision == .blockUntilPortrait)
 
             if orientationObserver.decision == .blockUntilPortrait {
-                RotateDeviceView(onClose: cancelFromRotatePrompt)
+                RotateDeviceView(cancelButtonOptions: cancelButtonOptions, onClose: cancelFromRotatePrompt)
             }
         }
         // one full-screen fill for every state, so the app's own background never shows, even
@@ -244,6 +245,7 @@ public struct FaceLivenessDetectorView: View {
         case .displayingLiveness:
             _FaceLivenessDetectionView(
                 viewModel: viewModel,
+                cancelButtonOptions: cancelButtonOptions,
                 videoView: {
                     CameraView(
                         faceLivenessDetectionViewModel: viewModel
