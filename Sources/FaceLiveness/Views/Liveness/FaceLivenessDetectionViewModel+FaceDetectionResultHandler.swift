@@ -54,10 +54,7 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
                 }
             case .recording(ovalDisplayed: false):
                 drawOval(onComplete: {
-                    self.sendInitialFaceDetectedEvent(
-                        initialFace: normalizedFace.boundingBox,
-                        videoStartTime: Date().timestampMilliseconds
-                    )
+                    self.sendInitialFaceDetectedEvent(initialFace: normalizedFace.boundingBox)
                 })
             case .recording(ovalDisplayed: true):
                 let instruction = faceInOvalMatching.faceMatchState(

@@ -77,10 +77,7 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
         viewModel.process(newResult: .noFace)
         XCTAssertEqual(videoChunker.state, .pending)
 
-        viewModel.sendInitialFaceDetectedEvent(
-            initialFace: .zero,
-            videoStartTime: Date().timestampMilliseconds
-        )
+        viewModel.sendInitialFaceDetectedEvent(initialFace: .zero)
         XCTAssertEqual(videoChunker.state, .writing)
 
         let initialSegment = Data([0, 1])

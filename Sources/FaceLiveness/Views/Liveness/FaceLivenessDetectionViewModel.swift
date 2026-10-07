@@ -307,14 +307,14 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         )
     }
 
-    func sendInitialFaceDetectedEvent(
-        initialFace: CGRect,
-        videoStartTime: UInt64
-    ) {
+    func sendInitialFaceDetectedEvent(initialFace: CGRect) {
         guard initialClientEvent == nil else { return }
         guard let challengeReceived else { return }
         
         videoChunker.start()
+        // after `start()`, which waits for the writer if it's still starting, so this is the time
+        // of the video's first frame
+        let videoStartTime = Date().timestampMilliseconds
 
         let initialFace = FaceDetection(
             boundingBox: boundingBox(for: initialFace, relativeTo: cameraViewRect),
@@ -392,14 +392,8 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     /// delivers the partial last segment before it finishes, so the final event follows all of
     /// the video and reports when the challenge ended as the end of the face match.
     func finishVideo() {
-        guard !hasFinishedVideo else { return }
         // a check that was cancelled or failed in the meantime has nothing more to send
-        switch livenessState.state {
-        case .completed, .encounteredUnrecoverableError:
-            return
-        default:
-            break
-        }
+        guard !hasFinishedVideo, !livenessState.hasEnded else { return }
         hasFinishedVideo = true
 
         videoChunker.finish(
@@ -418,12 +412,11 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     }
     
     func completeNoLightCheck() {
-        DispatchQueue.main.async { [weak self] in
-            self?.livenessState.completedNoLightCheck()
-        }
         // keep recording the matched face for a second, as the light challenge does before its
-        // colors start, so the face match sent to the service doesn't end the moment it begins
+        // colors start, so the face match sent to the service doesn't end the moment it begins.
+        // The face guide stays up until then, so the user holds still for it.
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            self?.livenessState.completedNoLightCheck()
             self?.finishVideo()
         }
     }

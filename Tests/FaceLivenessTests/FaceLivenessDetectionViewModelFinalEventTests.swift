@@ -85,21 +85,44 @@ final class FaceLivenessDetectionViewModelFinalEventTests: XCTestCase {
 
     /// Given: A check without the light challenge whose face has just matched the oval
     /// When: The check completes
-    /// Then: Recording goes on for a second, then the final event reports a face match of that long
+    /// Then: The face guide stays up and recording goes on for a second, then the final event
+    ///       reports a face match of that long
     func testNoLightCheckEndsASecondAfterTheFaceMatches() throws {
         try startRecording(.faceMovement)
         try recordFrames(into: viewModel.videoChunker)
-        let faceMatchStart = try XCTUnwrap(viewModel.faceMatchedTimestamp)
+        viewModel.livenessState = .init(state: .faceMatched)
+        // as `handleInstruction` does, right before completing the check
+        let faceMatchStart = Date().timestampMilliseconds
+        viewModel.faceMatchedTimestamp = faceMatchStart
 
         viewModel.completeNoLightCheck()
 
         waitForAnythingElse()
         XCTAssertEqual(sent.events, [])
+        XCTAssertEqual(viewModel.livenessState.state, .faceMatched)
         wait(until: { self.sent.events.contains(.endOfVideo) })
         XCTAssertEqual(sent.events, [.video, .final, .endOfVideo])
+        XCTAssertEqual(viewModel.livenessState.state, .completedNoLightCheck)
         XCTAssertEqual(try sentTimestamp("FaceDetectedInTargetPositionStartTimestamp"), faceMatchStart)
         let faceMatchEnd = try sentTimestamp("FaceDetectedInTargetPositionEndTimestamp")
-        XCTAssertGreaterThanOrEqual(faceMatchEnd, faceMatchStart + 990)
+        // a full second, less at most a millisecond from truncating both times
+        XCTAssertGreaterThanOrEqual(faceMatchEnd - faceMatchStart, 999)
+    }
+
+    /// Given: A check without the light challenge whose face has just matched the oval
+    /// When: The user cancels during the second that's still being recorded
+    /// Then: The cancellation stands and nothing more is sent
+    func testNoLightCheckCancelledDuringTheLastSecondSendsNothing() throws {
+        try startRecording(.faceMovement)
+        try recordFrames(into: viewModel.videoChunker)
+        viewModel.livenessState = .init(state: .faceMatched)
+
+        viewModel.completeNoLightCheck()
+        viewModel.endCheck(with: .userCancelled)
+
+        waitForAnythingElse(timeout: 1.5)
+        XCTAssertEqual(sent.events, [])
+        XCTAssertEqual(viewModel.livenessState.state, .encounteredUnrecoverableError(.userCancelled))
     }
 
     /// Given: A light challenge check the user cancelled as the colors finished
@@ -114,6 +137,7 @@ final class FaceLivenessDetectionViewModelFinalEventTests: XCTestCase {
 
         waitForAnythingElse()
         XCTAssertEqual(sent.events, [])
+        XCTAssertEqual(viewModel.livenessState.state, .encounteredUnrecoverableError(.userCancelled))
     }
 
     /// Sets up a check of `kind` that's recording, with the face matched in the oval.
@@ -139,10 +163,7 @@ final class FaceLivenessDetectionViewModelFinalEventTests: XCTestCase {
         self.finalEvents = finalEvents
         viewModel.livenessService = livenessService
 
-        viewModel.sendInitialFaceDetectedEvent(
-            initialFace: CGRect(x: 120, y: 160, width: 240, height: 320),
-            videoStartTime: Date().timestampMilliseconds
-        )
+        viewModel.sendInitialFaceDetectedEvent(initialFace: CGRect(x: 120, y: 160, width: 240, height: 320))
         XCTAssertNotNil(viewModel.initialClientEvent)
         viewModel.faceMatchedTimestamp = Date().timestampMilliseconds
     }
