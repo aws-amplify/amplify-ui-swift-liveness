@@ -60,13 +60,20 @@ final class VideoChunker {
         assetWriter.startWriting()
     }
 
-    func finish(singleFrame: @escaping (UIImage) -> Void) {
+    /// Stops recording. The writer hands the partial last segment to its delegate before it
+    /// finishes, so `onFinished` runs once all of the video has been delivered.
+    func finish(
+        singleFrame: @escaping (UIImage) -> Void,
+        onFinished: @escaping () -> Void
+    ) {
         self.provideSingleFrame = singleFrame
         state = .awaitingSingleFrame
 
         // explicitly calling `endSession` is unnecessary
-        if assetWriter.status != .completed {
-            assetWriter.finishWriting {}
+        if assetWriter.status == .writing {
+            assetWriter.finishWriting(completionHandler: onFinished)
+        } else {
+            onFinished()
         }
     }
 

@@ -32,6 +32,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     let isPreviewScreenEnabled : Bool
     var colorSequences: [ColorSequence] = []
     var hasSentFinalVideoEvent = false
+    private var hasFinishedVideo = false
     var hasSentFirstVideo = false
     var layerRectConverted: (CGRect) -> CGRect = { $0 }
     var sessionConfiguration: FaceLivenessSession.SessionConfiguration?
@@ -346,6 +347,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         faceMatchedEnd: UInt64
     ) {
         guard
+            !hasSentFinalVideoEvent,
             let sessionConfiguration,
             let initialClientEvent,
             let faceMatchedTimestamp,
@@ -381,26 +383,46 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         }
     }
 
-    func sendFinalVideoEvent() {
-        sendFinalEvent(
-            viewSize: videoSize,
-            faceMatchedEnd: Date().timestampMilliseconds
-        )
-
-        videoChunker.finish { [weak livenessViewControllerDelegate] image in
-            livenessViewControllerDelegate?.displaySingleFrame(uiImage: image)
+    /// Ends the video as soon as the challenge is over, then sends the final event. The writer
+    /// delivers the partial last segment before it finishes, so the final event follows all of
+    /// the video and reports when the challenge ended as the end of the face match.
+    func finishVideo() {
+        guard !hasFinishedVideo else { return }
+        // a check that was cancelled or failed in the meantime has nothing more to send
+        switch livenessState.state {
+        case .completed, .encounteredUnrecoverableError:
+            return
+        default:
+            break
         }
+        hasFinishedVideo = true
+
+        let challengeEnd = Date().timestampMilliseconds
+        videoChunker.finish(
+            singleFrame: { [weak livenessViewControllerDelegate] image in
+                livenessViewControllerDelegate?.displaySingleFrame(uiImage: image)
+            },
+            onFinished: { [weak self] in
+                self?.sendFinalEvent(viewSize: videoSize, faceMatchedEnd: challengeEnd)
+            }
+        )
     }
 
     func handleFreshnessComplete() {
         DispatchQueue.main.async { [weak self] in
             self?.livenessState.completedDisplayingFreshness()
         }
+        finishVideo()
     }
     
     func completeNoLightCheck() {
         DispatchQueue.main.async { [weak self] in
             self?.livenessState.completedNoLightCheck()
+        }
+        // keep recording the matched face for a second, as the light challenge does before its
+        // colors start, so the face match sent to the service doesn't end the moment it begins
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            self?.finishVideo()
         }
     }
 
