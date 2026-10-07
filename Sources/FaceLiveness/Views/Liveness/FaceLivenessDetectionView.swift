@@ -237,7 +237,8 @@ public struct FaceLivenessDetectorView: View {
                 },
                 beginCheckButtonDisabled: false,
                 challenge: challenge,
-                cameraPosition: cameraPosition
+                cameraPosition: cameraPosition,
+                sharedCaptureSession: viewModel.captureSession
             )
             .onAppear {
                 setBrightnessToMax()

@@ -40,9 +40,9 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
             case .pendingFacePreparedConfirmation:
                 if face.faceDistance <= ovalMatchChallenge.face.distanceThreshold {
                         DispatchQueue.main.async {
+                            // frames queued before the first of these ran find the state moved on
+                            guard case .pendingFacePreparedConfirmation = self.livenessState.state else { return }
                             self.livenessState.awaitingRecording()
-                        }
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                             self.livenessState.beginRecording()
                         }
                     return

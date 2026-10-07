@@ -487,6 +487,9 @@ class FaceLivenessDetectionViewModel: ObservableObject {
                 videoChunker: self.videoChunker
             )
         )
+        // the oval now comes up as soon as the face is in range, which can be sooner after the
+        // camera starts than the writer takes to start, so start it as soon as the challenge is known
+        videoChunker.prepare()
     }
 }
 
