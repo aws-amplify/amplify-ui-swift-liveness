@@ -77,10 +77,7 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
         viewModel.process(newResult: .noFace)
         XCTAssertEqual(videoChunker.state, .pending)
 
-        viewModel.sendInitialFaceDetectedEvent(
-            initialFace: .zero,
-            videoStartTime: Date().timestampMilliseconds
-        )
+        viewModel.sendInitialFaceDetectedEvent(initialFace: .zero)
         XCTAssertEqual(videoChunker.state, .writing)
 
         let initialSegment = Data([0, 1])
@@ -103,7 +100,17 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
                     "initializeLivenessStream(withSessionID:userAgent:challenges:options:)"
         ])
     }
-    
+
+    /// Given:  A `FaceLivenessDetectionViewModel` whose camera preview is up
+    /// When: The camera session starts
+    /// Then: The video writer starts ahead of recording, so the initial face doesn't wait for it
+    func testStartSessionPreparesTheVideoWriter() {
+        viewModel.startSession()
+
+        waitForWriter(of: videoChunker, toReach: .writing)
+        XCTAssertEqual(videoChunker.state, .pending)
+    }
+
     /// Given:  A `FaceLivenessDetectionViewModel`
     /// When: The viewModel is processes a single face result with a face distance less than the inital face distance
     /// Then: The end state of this flow is `.recording(ovalDisplayed: false)`
@@ -279,6 +286,33 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
                 "Expected REC indicator to be hidden for \(state)"
             )
         }
+    }
+
+    /// Given: Every state the check passes through
+    /// When: `isFaceGuideDisplayed` is read
+    /// Then: The face guide is up exactly while the REC indicator shows, and is gone once the
+    ///       check completes
+    func testFaceGuideIsDisplayedExactlyWhileRecording() {
+        let states: [LivenessStateMachine.State] = [
+            .initial,
+            .pendingFacePreparedConfirmation(.pendingCheck),
+            .waitForRecording,
+            .recording(ovalDisplayed: false),
+            .recording(ovalDisplayed: true),
+            .awaitingFaceInOvalMatch(.moveFaceCloser, 0.5),
+            .faceMatched,
+            .displayingFreshness,
+            .completedDisplayingFreshness,
+            .completedNoLightCheck,
+            .completed,
+            .encounteredUnrecoverableError(.timedOut)
+        ]
+        for state in states {
+            let stateMachine = LivenessStateMachine(state: state)
+            XCTAssertEqual(stateMachine.isFaceGuideDisplayed, stateMachine.shouldDisplayRecordingIcon, "\(state)")
+        }
+        XCTAssertFalse(LivenessStateMachine(state: .completedDisplayingFreshness).isFaceGuideDisplayed)
+        XCTAssertFalse(LivenessStateMachine(state: .completedNoLightCheck).isFaceGuideDisplayed)
     }
 
     /// Given:  The public `FaceLivenessDetectionError` values

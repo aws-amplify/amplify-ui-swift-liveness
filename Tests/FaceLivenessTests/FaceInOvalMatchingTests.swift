@@ -39,8 +39,8 @@ final class FaceInOvalMatchingTests: XCTestCase {
         XCTAssertEqual(instruction(for: oval), .match)
     }
 
-    /// The instruction must be reported on the first frame, as on Android, rather than
-    /// being held back until it repeats across several frames.
+    /// The instruction must be reported on the first frame rather than being held back
+    /// until it repeats across several frames.
     func testTooCloseIsReportedOnFirstFrame() {
         let face = CGRect(x: 70, y: 40, width: 260, height: 420)
         XCTAssertEqual(instruction(for: face), .tooClose(nearnessPercentage: 0))
@@ -71,7 +71,7 @@ final class FaceInOvalMatchingTests: XCTestCase {
         XCTAssertEqual(instruction(for: face), .tooFarRight(nearnessPercentage: 0))
     }
 
-    /// Android checks horizontal offset before closeness, so an off-center face that is
+    /// Horizontal offset is checked before closeness, so an off-center face that is
     /// also too close is reported as off to the side.
     func testTooCloseFaceShiftedLeftIsTooFarLeft() {
         let face = CGRect(x: 20, y: 40, width: 260, height: 420)

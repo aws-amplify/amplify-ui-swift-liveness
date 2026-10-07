@@ -11,7 +11,6 @@ struct ProgressBarView: View {
     let emptyColor: Color
     let borderColor: Color
     let fillColor: Color
-    let indicatorColor: Color
     let percentage: Double
 
     var body: some View {

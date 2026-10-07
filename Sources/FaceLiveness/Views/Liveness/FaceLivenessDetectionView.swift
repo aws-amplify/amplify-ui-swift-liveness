@@ -24,6 +24,7 @@ public struct FaceLivenessDetectorView: View {
     @State var displayingCameraPermissionsNeededAlert = false
     @State private var brightnessState = BrightnessState()
     @StateObject private var orientationObserver = InterfaceOrientationObserver()
+    @SwiftUI.Environment(\.faceLivenessDetectorTheme) private var theme
 
     private final class BrightnessState {
         var original: CGFloat?
@@ -31,6 +32,7 @@ public struct FaceLivenessDetectorView: View {
 
     let disableStartView: Bool
     let challengeOptions: ChallengeOptions
+    var cancelButtonOptions = CancelButtonOptions()
     let onCompletion: (Result<Void, FaceLivenessDetectionError>) -> Void
 
     let sessionTask: Task<FaceLivenessSession, Error>
@@ -128,9 +130,13 @@ public struct FaceLivenessDetectorView: View {
                 .accessibilityHidden(orientationObserver.decision == .blockUntilPortrait)
 
             if orientationObserver.decision == .blockUntilPortrait {
-                RotateDeviceView(onClose: cancelFromRotatePrompt)
+                RotateDeviceView(cancelButtonOptions: cancelButtonOptions, onClose: cancelFromRotatePrompt)
             }
         }
+        // one full-screen fill for every state, so the app's own background never shows, even
+        // around a state whose content is smaller than the screen
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(theme.colors.background.edgesIgnoringSafeArea(.all))
         .background(
             InterfaceOrientationReader(
                 onTransition: orientationObserver.beginTransition(with:),
@@ -239,6 +245,7 @@ public struct FaceLivenessDetectorView: View {
         case .displayingLiveness:
             _FaceLivenessDetectionView(
                 viewModel: viewModel,
+                cancelButtonOptions: cancelButtonOptions,
                 videoView: {
                     CameraView(
                         faceLivenessDetectionViewModel: viewModel

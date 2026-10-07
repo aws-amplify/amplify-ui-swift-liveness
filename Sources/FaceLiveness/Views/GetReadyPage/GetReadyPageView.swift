@@ -9,6 +9,7 @@ import SwiftUI
 @_spi(PredictionsFaceLiveness) import AWSPredictionsPlugin
 
 struct GetReadyPageView: View {
+    @Environment(\.faceLivenessDetectorTheme) private var theme
     let beginCheckButtonDisabled: Bool
     let onBegin: () -> Void
     let challenge: Challenge
@@ -39,7 +40,8 @@ struct GetReadyPageView: View {
                     .accessibilityElement(children: .combine)
                     .opacity(challenge == Challenge.faceMovementAndLightChallenge("2.0.0") ? 1.0 : 0.0)
                     Text(LocalizedStrings.preview_center_your_face_text)
-                        .font(.title)
+                        .font(theme.fonts.title)
+                        .foregroundColor(theme.colors.onBackground)
                         .multilineTextAlignment(.center)
                     Spacer()
                 }.padding()
@@ -53,13 +55,14 @@ struct GetReadyPageView: View {
             action: onBegin,
             label: {
                 Text(LocalizedStrings.get_ready_begin_check)
-                    .foregroundColor(.livenessPrimaryLabel)
+                    .font(theme.fonts.body)
+                    .foregroundColor(theme.colors.onPrimary)
                     .frame(maxWidth: .infinity)
             }
         )
         .disabled(beginCheckButtonDisabled)
         .frame(height: 52)
-        ._background { Color.livenessPrimaryBackground }
+        ._background { theme.colors.primary }
         .cornerRadius(14)
         .padding([.leading, .trailing])
         .padding(.bottom, 16)
@@ -68,10 +71,12 @@ struct GetReadyPageView: View {
     private var photosensitivityWarningPopoverContent: some View {
         VStack {
             Text(LocalizedStrings.get_ready_photosensitivity_dialog_title)
-                .font(.system(size: 20, weight: .medium))
+                .font(theme.fonts.title3)
+                .fontWeight(.medium)
                 .frame(alignment: .center)
                 .padding()
             Text(LocalizedStrings.get_ready_photosensitivity_dialog_description)
+                .font(theme.fonts.body)
                 .padding()
             Spacer()
         }

@@ -14,10 +14,28 @@ struct StartSessionView: View {
     @Binding var sessionID: String
     @Binding var containerViewState: ContainerViewState
     @State private var showAlert = false
+    @AppStorage(LivenessThemeOption.storageKey) private var themeOption = LivenessThemeOption.standard
+    @AppStorage(LivenessChallengeOption.storageKey) private var challengeOption = LivenessChallengeOption.light
 
     var body: some View {
         VStack {
             Spacer()
+            Picker("Liveness theme", selection: $themeOption) {
+                ForEach(LivenessThemeOption.allCases) { option in
+                    Text(option.rawValue).tag(option)
+                }
+            }
+            .pickerStyle(.segmented)
+            .padding()
+
+            Picker("Liveness challenge", selection: $challengeOption) {
+                ForEach(LivenessChallengeOption.allCases) { option in
+                    Text(option.rawValue).tag(option)
+                }
+            }
+            .pickerStyle(.segmented)
+            .padding([.leading, .trailing, .bottom])
+
             button(
                 text: viewModel.presentationState.buttonText,
                 backgroundColor: viewModel.presentationState.buttonBackgroundColor,
@@ -32,7 +50,7 @@ struct StartSessionView: View {
                     dark: .hex("#7dd6e8")
                 ),
                 action: {
-                    viewModel.createSession { sessionId, err in
+                    viewModel.createSession(challenge: challengeOption) { sessionId, err in
                         if let sessionId = sessionId {
                             sessionID = sessionId
                             // modify camera preference for `FaceMovementChallenge`
@@ -95,3 +113,22 @@ struct StartSessionView: View {
     }
 }
 
+/// The challenge the next session is created with, picked on the start screen.
+enum LivenessChallengeOption: String, CaseIterable, Identifiable {
+    case light = "Light"
+    case noLight = "No light"
+
+    static let storageKey = "livenessChallengeOption"
+
+    var id: Self { self }
+
+    /// The challenge type the backend lists as the session's only challenge preference.
+    var challengeType: String {
+        switch self {
+        case .light:
+            return "FaceMovementAndLightChallenge"
+        case .noLight:
+            return "FaceMovementChallenge"
+        }
+    }
+}
