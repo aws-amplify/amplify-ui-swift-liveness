@@ -35,6 +35,7 @@ struct GetReadyPageView: View {
                     WarningBox(
                         titleText: LocalizedStrings.get_ready_photosensitivity_title,
                         bodyText: LocalizedStrings.get_ready_photosensitivity_description,
+                        infoButtonAccessibilityLabel: LocalizedStrings.get_ready_photosensitivity_icon_a11y,
                         popoverContent: { photosensitivityWarningPopoverContent }
                     )
                     .accessibilityElement(children: .combine)

@@ -144,12 +144,7 @@ struct LivenessStateMachine {
 
     enum FaceNotPreparedReason {
         case pendingCheck
-        case notInOval
         case moveFaceCloser
-        case moveFaceRight
-        case moveFaceLeft
-        case moveToDimmerArea
-        case moveToBrighterArea
         case noFace
         case multipleFaces
         case faceTooClose
@@ -158,18 +153,8 @@ struct LivenessStateMachine {
             switch self {
             case .pendingCheck:
                 return LocalizedStrings.amplify_ui_liveness_face_not_prepared_reason_pendingCheck
-            case .notInOval:
-                return LocalizedStrings.amplify_ui_liveness_face_not_prepared_reason_not_in_oval
             case .moveFaceCloser:
                 return LocalizedStrings.amplify_ui_liveness_face_not_prepared_reason_move_face_closer
-            case .moveFaceRight:
-                return LocalizedStrings.amplify_ui_liveness_face_not_prepared_reason_move_face_right
-            case .moveFaceLeft:
-                return LocalizedStrings.amplify_ui_liveness_face_not_prepared_reason_move_face_left
-            case .moveToDimmerArea:
-                return LocalizedStrings.amplify_ui_liveness_face_not_prepared_reason_move_to_dimmer_area
-            case .moveToBrighterArea:
-                return LocalizedStrings.amplify_ui_liveness_face_not_prepared_reason_move_to_brighter_area
             case .noFace:
                 return LocalizedStrings.amplify_ui_liveness_face_not_prepared_reason_no_face
             case .multipleFaces:
