@@ -342,43 +342,48 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         }
     }
 
-    func sendFinalEvent(
-        viewSize: CGSize,
-        faceMatchedEnd: UInt64
-    ) {
+    /// Returns a closure that sends the final event, then the empty video event that closes the
+    /// stream. The event is built from the view model now, on the main actor, as recording
+    /// stops; the closure doesn't touch the view model, so the writer can call it on its own
+    /// queue straight after the last segment, rather than it waiting its turn on the main thread.
+    private func finalEventSender(challengeEnd: UInt64) -> @Sendable () -> Void {
         guard
-            !hasSentFinalVideoEvent,
+            let livenessService,
             let sessionConfiguration,
             let initialClientEvent,
             let faceMatchedTimestamp,
             let challengeReceived
-        else { return }
+        else { return {} }
 
         let finalClientEvent = FinalClientEvent(
             sessionConfiguration: sessionConfiguration,
             initialClientEvent: initialClientEvent,
             videoSize: videoSize,
             faceMatchedStart: faceMatchedTimestamp,
-            faceMatchedEnd: faceMatchedEnd,
-            videoEnd: Date().timestampMilliseconds
+            faceMatchedEnd: challengeEnd,
+            videoEnd: challengeEnd
         )
 
-        do {
-            try livenessService?.send(
-                .final(event: finalClientEvent,
-                       challenge: challengeReceived),
-                eventDate: { .init() }
-            )
+        return { [weak self] in
+            do {
+                try livenessService.send(
+                    .final(event: finalClientEvent,
+                           challenge: challengeReceived),
+                    eventDate: { .init() }
+                )
 
-            sendVideoEvent(
-                data: .init(),
-                videoEventTime: Date().timestampMilliseconds
-            )
-            hasSentFinalVideoEvent = true
-
-        } catch {
-            DispatchQueue.main.async { [weak self] in
-                self?.livenessState.unrecoverableStateEncountered(.unknown)
+                let endOfVideoDate = Date()
+                try livenessService.send(
+                    .video(event: .init(chunk: .init(), timestamp: endOfVideoDate.timestampMilliseconds)),
+                    eventDate: { endOfVideoDate }
+                )
+                DispatchQueue.main.async {
+                    self?.hasSentFinalVideoEvent = true
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    self?.livenessState.unrecoverableStateEncountered(.unknown)
+                }
             }
         }
     }
@@ -397,14 +402,11 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         }
         hasFinishedVideo = true
 
-        let challengeEnd = Date().timestampMilliseconds
         videoChunker.finish(
             singleFrame: { [weak livenessViewControllerDelegate] image in
                 livenessViewControllerDelegate?.displaySingleFrame(uiImage: image)
             },
-            onFinished: { [weak self] in
-                self?.sendFinalEvent(viewSize: videoSize, faceMatchedEnd: challengeEnd)
-            }
+            onFinished: finalEventSender(challengeEnd: Date().timestampMilliseconds)
         )
     }
 

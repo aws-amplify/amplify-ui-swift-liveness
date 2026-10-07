@@ -83,11 +83,11 @@ final class VideoChunkerTests: XCTestCase {
     /// When: It's finished
     /// Then: `onFinished` runs straight away, so the check can still end
     func testFinishBeforeRecordingCallsOnFinished() {
-        var finished = false
+        let log = EventLog<String>()
 
-        videoChunker.finish(singleFrame: { _ in }, onFinished: { finished = true })
+        videoChunker.finish(singleFrame: { _ in }, onFinished: { log.append("finished") })
 
-        XCTAssertTrue(finished)
+        XCTAssertEqual(log.events, ["finished"])
     }
 
     /// Given: A chunker whose writer was prepared, but which never recorded

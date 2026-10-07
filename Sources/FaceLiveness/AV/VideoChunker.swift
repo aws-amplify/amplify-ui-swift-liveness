@@ -61,10 +61,11 @@ final class VideoChunker {
     }
 
     /// Stops recording. The writer hands the partial last segment to its delegate before it
-    /// finishes, so `onFinished` runs once all of the video has been delivered.
+    /// finishes, so `onFinished` runs once all of the video has been delivered. It runs on the
+    /// writer's own queue (or the caller's, if the writer isn't writing), hence `@Sendable`.
     func finish(
         singleFrame: @escaping (UIImage) -> Void,
-        onFinished: @escaping () -> Void
+        onFinished: @escaping @Sendable () -> Void
     ) {
         self.provideSingleFrame = singleFrame
         state = .awaitingSingleFrame
