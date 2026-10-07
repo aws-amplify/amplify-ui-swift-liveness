@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.5.0 (2026-10-07)
+
+### Features
+
+- add options to hide or replace the close button (#262)
+- add FaceLivenessDetectorTheme for customizing colors and fonts (#260)
+
+### Bug Fixes
+
+- align the light challenge video with the timestamps sent to the service (#265)
+- match Android's liveness check layout (#259)
+
 ## 1.4.10 (2026-10-01)
 
 ### Bug Fixes
