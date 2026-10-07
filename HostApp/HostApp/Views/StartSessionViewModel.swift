@@ -32,13 +32,17 @@ class StartSessionViewModel: ObservableObject {
         }
     }
 
-    func createSession(_ completion: @escaping (String?, Error?) -> Void) {
+    func createSession(
+        challenge: LivenessChallengeOption,
+        _ completion: @escaping (String?, Error?) -> Void
+    ) {
         Task { @MainActor in
             let currentPresentationState = presentationState
             presentationState = .loading
             let request = RESTRequest(
                 apiName: "liveness",
-                path: "/liveness/create"
+                path: "/liveness/create",
+                body: try? JSONEncoder().encode(["challenge": challenge.challengeType])
             )
 
             do {

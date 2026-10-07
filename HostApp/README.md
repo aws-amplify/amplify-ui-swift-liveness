@@ -27,7 +27,7 @@ cd amplify-ui-swift-livenes/HostApp
 
 6. When the app is launch, click the Sign in button to sign up and then sign in.  
 
-7. Once signed in and authenticated, the "Create Liveness Session" is enabled.  Click the button to generate and get a session id from your backend.
+7. Once signed in and authenticated, the "Create Liveness Session" is enabled.  Choose **Light** or **No light** to pick the challenge the session is created with (`FaceMovementAndLightChallenge` or `FaceMovementChallenge`), then click the button to generate and get a session id from your backend.  The choice is kept between launches.
 
 8. Once a session id is created, the Liveness Check screen is displayed.  Follow the instructions and click on Start video check button to begin liveness verification.
 
@@ -114,4 +114,14 @@ Provide the responses shown after each of the following prompts.
 6. Set up a backend to create the liveness session and retrieve the liveness session results. The liveness sample app is set up to use API Gateway endpoints for creating and retrieving the liveness session. Follow the [Amazon Rekognition Liveness guide](https://docs.aws.amazon.com/rekognition/latest/dg/face-liveness-programming-api.html) to set up your backend.
 
     1. Edit the [StartSessionViewModel.swift](https://github.com/aws-amplify/amplify-ui-swift-liveness/blob/main/HostApp/HostApp/Views/StartSessionViewModel.swift) in your project as necessary to generate the session id from your backend.
+       The app sends `POST /liveness/create` to the `liveness` API with the challenge picked on the home screen, and expects `{"sessionId": "<id>"}` back:
+       ```
+       { "challenge": "FaceMovementAndLightChallenge" }   // Light
+       { "challenge": "FaceMovementChallenge" }           // No light
+       ```
+       To honor the choice, pass it to `CreateFaceLivenessSession` as the session's only challenge preference:
+       ```
+       Settings: { ChallengePreferences: [{ Type: challenge }] }
+       ```
+       A backend that ignores the body creates every session with its own challenge preferences, so the switch has no effect.
     2. Edit the [ExampleLivenessViewModel.swift](https://github.com/aws-amplify/amplify-ui-swift-liveness/blob/main/HostApp/HostApp/Views/ExampleLivenessViewModel.swift) in your project as necessary to get the liveness result from your backend.
