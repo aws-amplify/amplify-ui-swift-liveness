@@ -87,11 +87,24 @@ struct LivenessStateMachine {
     }
 
     mutating func completedDisplayingFreshness() {
+        guard !hasEnded else { return }
         state = .completedDisplayingFreshness
     }
     
     mutating func completedNoLightCheck() {
+        guard !hasEnded else { return }
         state = .completedNoLightCheck
+    }
+
+    /// Whether the check has completed or failed; a challenge finishing afterwards doesn't
+    /// change that.
+    var hasEnded: Bool {
+        switch state {
+        case .completed, .encounteredUnrecoverableError:
+            return true
+        default:
+            return false
+        }
     }
 
     mutating func displayingFreshness() {
