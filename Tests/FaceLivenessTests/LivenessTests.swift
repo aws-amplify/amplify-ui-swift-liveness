@@ -103,7 +103,17 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
                     "initializeLivenessStream(withSessionID:userAgent:challenges:options:)"
         ])
     }
-    
+
+    /// Given:  A `FaceLivenessDetectionViewModel` whose camera preview is up
+    /// When: The camera session starts
+    /// Then: The video writer starts ahead of recording, so the initial face doesn't wait for it
+    func testStartSessionPreparesTheVideoWriter() {
+        viewModel.startSession()
+
+        waitForWriter(of: videoChunker, toReach: .writing)
+        XCTAssertEqual(videoChunker.state, .pending)
+    }
+
     /// Given:  A `FaceLivenessDetectionViewModel`
     /// When: The viewModel is processes a single face result with a face distance less than the inital face distance
     /// Then: The end state of this flow is `.recording(ovalDisplayed: false)`

@@ -149,6 +149,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
 
     func startSession() {
         captureSession?.startSession()
+        videoChunker.prepare()
     }
 
     func stopRecording() {
