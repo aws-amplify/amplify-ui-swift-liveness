@@ -80,7 +80,15 @@ class LivenessCaptureSession {
     func startPreview(onFrame: @escaping (CVImageBuffer) -> Void) throws {
         outputSampleBufferCapturer?.previewFrameHandler.value = onFrame
         if captureSession == nil {
-            try configureCamera()
+            do {
+                try configureCamera()
+            } catch {
+                // drop the half-configured session, so the check configures the camera again
+                // and reports the error if it fails again
+                stopPreview()
+                stopRunning()
+                throw error
+            }
         }
         startSession()
     }

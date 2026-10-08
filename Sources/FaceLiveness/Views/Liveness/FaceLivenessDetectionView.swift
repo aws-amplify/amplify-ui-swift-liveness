@@ -167,6 +167,9 @@ public struct FaceLivenessDetectorView: View {
         }
         .onDisappear {
             restoreOriginalBrightness()
+            // the get ready screen leaves the camera running for the check, so stop it here
+            // in case the app removes the detector before the check starts
+            viewModel.stopRecording()
         }
     }
 

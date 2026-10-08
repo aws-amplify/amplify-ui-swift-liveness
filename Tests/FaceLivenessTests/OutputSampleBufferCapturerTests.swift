@@ -60,4 +60,20 @@ final class OutputSampleBufferCapturerTests: XCTestCase {
         XCTAssertEqual(faceDetector.interactions, ["detectFaces(from:)"])
         XCTAssertNotNil(videoChunker.startTimeSeconds, "the frame wasn't recorded")
     }
+
+    /// Given: The get ready screen starting the check's camera
+    /// When: Configuring the camera fails
+    /// Then: No session is left for the check to reuse, and frames go to the check again, so
+    ///       the check configures the camera itself and reports the error if it fails again
+    func testFailedPreviewLeavesNoSessionForTheCheck() {
+        let captureSession = LivenessCaptureSession(
+            captureDevice: .init(avCaptureDevice: nil),
+            outputDelegate: capturer
+        )
+
+        XCTAssertThrowsError(try captureSession.startPreview { _ in })
+
+        XCTAssertNil(captureSession.captureSession)
+        XCTAssertNil(capturer.previewFrameHandler.value)
+    }
 }
