@@ -22,12 +22,14 @@ public struct FaceLivenessDetectorView: View {
     @Binding var isPresented: Bool
     @State var displayState: DisplayState = .awaitingChallengeType
     @State var displayingCameraPermissionsNeededAlert = false
-    @State private var brightnessState = BrightnessState()
+    @State private var screenState = ScreenState()
     @StateObject private var orientationObserver = InterfaceOrientationObserver()
     @SwiftUI.Environment(\.faceLivenessDetectorTheme) private var theme
 
-    private final class BrightnessState {
-        var original: CGFloat?
+    /// The screen settings the check overrides, as they were before, so they can be restored.
+    private final class ScreenState {
+        var originalBrightness: CGFloat?
+        var originalIsIdleTimerDisabled: Bool?
     }
 
     let disableStartView: Bool
@@ -166,7 +168,7 @@ public struct FaceLivenessDetectorView: View {
             }
         }
         .onDisappear {
-            restoreOriginalBrightness()
+            restoreScreen()
             // the get ready screen leaves the camera running for the check, so stop it here
             // in case the app removes the detector before the check starts
             viewModel.stopRecording()
@@ -244,7 +246,7 @@ public struct FaceLivenessDetectorView: View {
                 sharedCaptureSession: viewModel.captureSession
             )
             .onAppear {
-                setBrightnessToMax()
+                setScreenForCheck()
             }
         case .displayingLiveness:
             _FaceLivenessDetectionView(
@@ -257,7 +259,7 @@ public struct FaceLivenessDetectorView: View {
                 }
             )
             .onAppear {
-                setBrightnessToMax()
+                setScreenForCheck()
             }
             .onDisappear() {
                 viewModel.stopRecording()
@@ -296,24 +298,35 @@ public struct FaceLivenessDetectorView: View {
         viewModel.endCheck(with: .userCancelled)
     }
 
-    /// Overrides the device screen brightness to maximum for the liveness check,
-    /// capturing the user's original brightness once so it can be restored on exit.
-    private func setBrightnessToMax() {
+    /// Sets the screen to maximum brightness and stops it dimming or locking while the
+    /// liveness views are shown, capturing the original settings once so they can be restored
+    /// on exit. The screen's light is part of the check, and in a dark room it's the only
+    /// light on the user's face, so the system dimming the screen would lose the face.
+    private func setScreenForCheck() {
         DispatchQueue.main.async {
-            if brightnessState.original == nil {
-                brightnessState.original = UIScreen.main.brightness
+            if screenState.originalBrightness == nil {
+                screenState.originalBrightness = UIScreen.main.brightness
+            }
+            if screenState.originalIsIdleTimerDisabled == nil {
+                screenState.originalIsIdleTimerDisabled = UIApplication.shared.isIdleTimerDisabled
             }
             UIScreen.main.brightness = 1.0
+            UIApplication.shared.isIdleTimerDisabled = true
         }
     }
 
-    /// Restores the brightness captured in `setBrightnessToMax()`. Invoked when the
-    /// view leaves the hierarchy, so it runs on every exit path (success, cancel, error).
-    private func restoreOriginalBrightness() {
+    /// Restores the settings captured in `setScreenForCheck()`. Invoked when the view leaves
+    /// the hierarchy, so it runs on every exit path (success, cancel, error).
+    private func restoreScreen() {
         DispatchQueue.main.async {
-            guard let original = brightnessState.original else { return }
-            UIScreen.main.brightness = original
-            brightnessState.original = nil
+            if let originalBrightness = screenState.originalBrightness {
+                UIScreen.main.brightness = originalBrightness
+                screenState.originalBrightness = nil
+            }
+            if let originalIsIdleTimerDisabled = screenState.originalIsIdleTimerDisabled {
+                UIApplication.shared.isIdleTimerDisabled = originalIsIdleTimerDisabled
+                screenState.originalIsIdleTimerDisabled = nil
+            }
         }
     }
 
