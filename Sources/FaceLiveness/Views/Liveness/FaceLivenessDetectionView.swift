@@ -33,6 +33,7 @@ public struct FaceLivenessDetectorView: View {
     let disableStartView: Bool
     let challengeOptions: ChallengeOptions
     var cancelButtonOptions = CancelButtonOptions()
+    var verifyingViewOptions = VerifyingViewOptions()
     let onCompletion: (Result<Void, FaceLivenessDetectionError>) -> Void
 
     let sessionTask: Task<FaceLivenessSession, Error>
@@ -250,6 +251,7 @@ public struct FaceLivenessDetectorView: View {
             _FaceLivenessDetectionView(
                 viewModel: viewModel,
                 cancelButtonOptions: cancelButtonOptions,
+                verifyingViewOptions: verifyingViewOptions,
                 videoView: {
                     CameraView(
                         faceLivenessDetectionViewModel: viewModel
