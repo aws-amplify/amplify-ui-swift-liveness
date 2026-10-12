@@ -12,8 +12,9 @@ extension FaceLivenessDetectorView {
     ///
     /// With the button hidden, your app must give users another way to leave the check, for
     /// example by setting `isPresented` to `false` from its own close action. Removing the view
-    /// stops the camera, and the session is left for the service to time out; `onCompletion`
-    /// isn't called.
+    /// stops the camera, but the session isn't closed: it stays open until the service ends it,
+    /// and `onCompletion` may still be called later, for example with a service error. Ignore
+    /// results that arrive after you've removed the view.
     ///
     /// Hiding the button doesn't stop users leaving the check in other ways, such as by
     /// backgrounding the app, so keep verifying the session's result on your backend.
