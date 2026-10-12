@@ -25,7 +25,11 @@ class LivenessCaptureSession {
     }
 
     func configureCamera(frame: CGRect) throws -> CALayer {
-        try configureCamera()
+        // keep the camera the get ready screen started, rather than restarting it
+        stopPreview()
+        if captureSession == nil {
+            try configureCamera()
+        }
 
         guard let captureSession = captureSession else {
             throw LivenessCaptureSessionError.captureSessionUnavailable
@@ -69,6 +73,29 @@ class LivenessCaptureSession {
         configurationQueue.async {
             session.startRunning()
         }
+    }
+
+    /// Starts the camera for the get ready screen, sending its frames to `onFrame`. The check
+    /// then takes over the running session in `configureCamera(frame:)`.
+    func startPreview(onFrame: @escaping (CVImageBuffer) -> Void) throws {
+        outputSampleBufferCapturer?.previewFrameHandler.value = onFrame
+        if captureSession == nil {
+            do {
+                try configureCamera()
+            } catch {
+                // drop the half-configured session, so the check configures the camera again
+                // and reports the error if it fails again
+                stopPreview()
+                stopRunning()
+                throw error
+            }
+        }
+        startSession()
+    }
+
+    /// Stops sending frames to the get ready screen; the camera keeps running for the check.
+    func stopPreview() {
+        outputSampleBufferCapturer?.previewFrameHandler.value = nil
     }
 
     func stopRunning() {

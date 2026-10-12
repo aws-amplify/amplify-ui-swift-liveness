@@ -16,13 +16,27 @@ class CameraPreviewViewModel: NSObject, ObservableObject {
     @Published var buffer: CVPixelBuffer?
     
     var previewCaptureSession: LivenessCaptureSession?
+    /// The check's session, shown here so starting the check doesn't restart the camera.
+    private var sharedCaptureSession: LivenessCaptureSession?
     let cameraPosition: LivenessCamera
     
-    init(cameraPosition: LivenessCamera) {
+    init(cameraPosition: LivenessCamera, sharedCaptureSession: LivenessCaptureSession? = nil) {
         self.cameraPosition = cameraPosition
         
         super.init()
         setupSubscriptions()
+
+        if let sharedCaptureSession {
+            self.sharedCaptureSession = sharedCaptureSession
+            do {
+                try sharedCaptureSession.startPreview { [weak self] buffer in
+                    self?.updateBuffer(buffer)
+                }
+            } catch {
+                Amplify.Logging.default.error("Error starting preview capture session with error: \(error)")
+            }
+            return
+        }
         
         let avCaptureDevice = AVCaptureDevice.DiscoverySession(
             deviceTypes: [.builtInWideAngleCamera],
@@ -57,6 +71,7 @@ class CameraPreviewViewModel: NSObject, ObservableObject {
     }
 
     func stopSession() {
+        sharedCaptureSession?.stopPreview()
         previewCaptureSession?.stopRunning()
     }
 

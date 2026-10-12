@@ -14,23 +14,26 @@ struct GetReadyPageView: View {
     let onBegin: () -> Void
     let challenge: Challenge
     let cameraPosition: LivenessCamera
+    let sharedCaptureSession: LivenessCaptureSession?
     
     init(
         onBegin: @escaping () -> Void,
         beginCheckButtonDisabled: Bool = false,
         challenge: Challenge,
-        cameraPosition: LivenessCamera
+        cameraPosition: LivenessCamera,
+        sharedCaptureSession: LivenessCaptureSession? = nil
     ) {
         self.onBegin = onBegin
         self.beginCheckButtonDisabled = beginCheckButtonDisabled
         self.challenge = challenge
         self.cameraPosition = cameraPosition
+        self.sharedCaptureSession = sharedCaptureSession
     }
 
     var body: some View {
         VStack {
             ZStack {
-                CameraPreviewView(cameraPosition: cameraPosition)
+                CameraPreviewView(cameraPosition: cameraPosition, sharedCaptureSession: sharedCaptureSession)
                 VStack {
                     WarningBox(
                         titleText: LocalizedStrings.get_ready_photosensitivity_title,
