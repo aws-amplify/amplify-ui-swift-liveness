@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.1 (2026-10-12)
+
+### Bug Fixes
+
+- keep the screen awake during the liveness check (#269)
+- start the check straight away, without restarting the camera (#267)
+
 ## 1.5.0 (2026-10-07)
 
 ### Features
