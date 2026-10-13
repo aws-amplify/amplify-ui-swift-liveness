@@ -262,16 +262,58 @@ final class FaceLivenessDetectionViewModelTestCase: XCTestCase {
     }
 
     /// Given:  A `FaceLivenessDetectionViewModel` showing the freshness (color) flash
-    /// When: The viewModel processes a `.noFace` result
-    /// Then: It falls back to oval matching so a returning face can re-match and restart freshness
-    func testNoFaceDuringFreshnessFallsBackToOvalMatch() async throws {
+    /// When: The face detector loses the face
+    /// Then: The colors carry on: the check stays in freshness and the oval-fit timer doesn't start
+    func testNoFaceDuringFreshnessDoesNotInterruptTheColors() async throws {
         viewModel.livenessService = self.livenessService
         viewModel.livenessState = .init(state: .displayingFreshness)
 
         viewModel.process(newResult: .noFace)
         try await Task.sleep(seconds: 1)
 
-        XCTAssertEqual(viewModel.livenessState.state, .awaitingFaceInOvalMatch(.noFace, 0))
+        XCTAssertEqual(viewModel.livenessState.state, .displayingFreshness)
+        XCTAssertNil(viewModel.noFitStartTime)
+    }
+
+    /// Given:  A face loss detected just before the face matched, whose update reaches the main
+    ///         thread once the colors have started
+    /// When: The update is applied
+    /// Then: The colors carry on rather than the check going back to oval matching
+    func testLateFaceLossDuringFreshnessDoesNotInterruptTheColors() {
+        var stateMachine = LivenessStateMachine(state: .displayingFreshness)
+
+        stateMachine.faceNotMatched(reason: .noFace)
+
+        XCTAssertEqual(stateMachine.state, .displayingFreshness)
+    }
+
+    /// Given:  A `FaceLivenessDetectionViewModel` whose face has just matched the oval, holding
+    ///         for a second before the colors
+    /// When: The face detector loses the face
+    /// Then: The check carries on to the colors
+    func testNoFaceWhileHoldingAfterTheMatchIsIgnored() async throws {
+        viewModel.livenessService = self.livenessService
+        viewModel.livenessState = .init(state: .faceMatched)
+
+        viewModel.process(newResult: .noFace)
+        try await Task.sleep(seconds: 1)
+
+        XCTAssertEqual(viewModel.livenessState.state, .faceMatched)
+        XCTAssertNil(viewModel.noFitStartTime)
+    }
+
+    /// Given:  A `FaceLivenessDetectionViewModel` showing the freshness (color) flash
+    /// When: The face detector reports more than one face
+    /// Then: The colors carry on, and the service judges the video
+    func testMultipleFacesDuringFreshnessDoesNotInterruptTheColors() async throws {
+        viewModel.livenessService = self.livenessService
+        viewModel.livenessState = .init(state: .displayingFreshness)
+
+        viewModel.process(newResult: .multipleFaces)
+        try await Task.sleep(seconds: 1)
+
+        XCTAssertEqual(viewModel.livenessState.state, .displayingFreshness)
+        XCTAssertNil(viewModel.noFitStartTime)
     }
 
     /// Given:  A `FaceLivenessDetectionViewModel` with the oval displayed
