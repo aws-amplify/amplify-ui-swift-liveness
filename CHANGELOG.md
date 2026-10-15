@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.2 (2026-10-15)
+
+### Bug Fixes
+
+- don't restart the light challenge colors when the face is lost (#273)
+
 ## 1.5.1 (2026-10-12)
 
 ### Bug Fixes
