@@ -46,14 +46,13 @@ struct LivenessStateMachine {
         state = .awaitingFaceInOvalMatch(reason, percentage)
     }
 
-    /// Surfaces a `.noFace` / `.multipleFaces` reason once the check is already active
-    /// (the oval is displayed, we're awaiting an oval match, or the freshness flash is
-    /// showing). This keeps the on-screen instruction in sync when the face is lost mid-check
-    /// instead of leaving a stale one, and — when it interrupts freshness — sends the flow back
-    /// to oval matching so a returning face re-matches and the freshness check restarts.
+    /// Surfaces a `.noFace` / `.multipleFaces` reason while the face is being matched to the
+    /// oval (the oval is displayed, or we're awaiting an oval match), so the on-screen
+    /// instruction stays in sync when the face is lost instead of leaving a stale one. Once the
+    /// face has matched, losing it doesn't change the state: the colors run to the end.
     mutating func faceNotMatched(reason: FaceNotPreparedReason) {
         switch state {
-        case .recording(ovalDisplayed: true), .awaitingFaceInOvalMatch, .displayingFreshness:
+        case .recording(ovalDisplayed: true), .awaitingFaceInOvalMatch:
             state = .awaitingFaceInOvalMatch(reason, 0)
         default:
             break

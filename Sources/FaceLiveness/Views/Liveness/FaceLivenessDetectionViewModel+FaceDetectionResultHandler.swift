@@ -92,10 +92,9 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
     ///   instruction ("Move face in front of camera" / multiple-faces) and keep the oval-fit
     ///   deadline advancing so the session times out client-side instead of waiting on the
     ///   service to close the socket.
-    /// - During the freshness (color) check, a face that leaves can no longer produce a valid
-    ///   color sequence, so we stop the color flash and send the flow back to oval matching
-    ///   (without forcing a failure). A returning face then re-matches and the freshness check
-    ///   restarts; if no face returns, the oval-fit timer resolves it via the normal timeout.
+    /// - During the freshness (color) check, losing the face doesn't interrupt the colors: the
+    ///   service can't pause and resume a check, so the colors run to the end and the service
+    ///   judges the video.
     private func handleFaceUnavailable(reason: LivenessStateMachine.FaceNotPreparedReason) {
         switch livenessState.state {
         case .pendingFacePreparedConfirmation:
@@ -104,12 +103,6 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
             }
         case .recording(ovalDisplayed: true), .awaitingFaceInOvalMatch:
             DispatchQueue.main.async {
-                self.livenessState.faceNotMatched(reason: reason)
-                self.handleNoFaceDetected()
-            }
-        case .displayingFreshness:
-            DispatchQueue.main.async {
-                self.livenessViewControllerDelegate?.stopFreshness()
                 self.livenessState.faceNotMatched(reason: reason)
                 self.handleNoFaceDetected()
             }
