@@ -15,14 +15,14 @@ import AVFoundation
 /// `finishWriting(...)` was in flight on the main actor, and AVFoundation raised
 /// `NSInternalInconsistencyException`, crashing the app.
 ///
-/// These tests drive the real `VideoChunker`. `_reproHookAfterGuards` is the nil-by-default
-/// test-only seam that parks a frame after every guard passed (inside the fix's critical section),
-/// so the late-frame-vs-finish ordering is deterministic rather than a probabilistic field race.
+/// These tests drive the real `VideoChunker`. `onAppendWillStart` is the nil-by-default,
+/// per-instance test-only seam that parks a frame after every guard passed (inside the fix's
+/// critical section), so the late-frame-vs-finish ordering is deterministic rather than a
+/// probabilistic field race.
 final class VideoChunkerConcurrencyTests: XCTestCase {
     private var videoChunker: VideoChunker!
 
     override func setUp() {
-        VideoChunker._reproHookAfterGuards = nil
         videoChunker = VideoChunker(
             assetWriter: LivenessAVAssetWriter(),
             assetWriterDelegate: VideoChunker.AssetWriterDelegate(),
@@ -31,19 +31,21 @@ final class VideoChunkerConcurrencyTests: XCTestCase {
     }
 
     override func tearDown() {
-        VideoChunker._reproHookAfterGuards = nil
         videoChunker = nil
     }
 
     /// Given: a frame that passed every guard and is about to append on the capture queue
     /// When: `finish(_:)` runs concurrently on another thread
-    /// Then: `finish(_:)` waits for the in-flight append (serialized), and the append never runs
-    ///       against an ended session — no `NSInternalInconsistencyException`.
+    /// Then: `finish(_:)` waits for the in-flight append (serialized by `writerLock`), the append
+    ///       runs while the writer is still `.writing`, and the append returns before `finish(_:)`
+    ///       returns.
     ///
-    /// Against unfixed 1.5.2 this fails: `finish(_:)` does not wait, so it calls `finishWriting`
-    /// while the parked append is still pending, and releasing the append crashes with the #275
-    /// signature.
-    func testFinishWaitsForInFlightAppendAndDoesNotCrash() throws {
+    /// Against unfixed 1.5.2 this fails on the serialization assertion: `finish(_:)` is not
+    /// serialized with `consume(_:)`, so it returns immediately while the parked append is still
+    /// in flight, and the "finish must wait" assertion fails deterministically. (The append then
+    /// released onto the ended session is the #275 field crash; the point proven here is the
+    /// missing serialization, not a crash.)
+    func testFinishWaitsForInFlightAppend() throws {
         videoChunker.prepare()
         videoChunker.start()
         // Prime: first append establishes the writer session.
@@ -53,11 +55,16 @@ final class VideoChunkerConcurrencyTests: XCTestCase {
 
         let reachedAppend = DispatchSemaphore(value: 0)
         let allowAppend = DispatchSemaphore(value: 0)
+        let finishReturned = DispatchSemaphore(value: 0)
+        let appendRecorded = DispatchSemaphore(value: 0)
+        let finishRecorded = DispatchSemaphore(value: 0)
+        // Order in which `consume(_:)` and `finish(_:)` returned, recorded from both threads.
+        let order = EventLog<String>()
 
         // One-shot: park the late frame after it passed every guard, before the append. On the
         // fixed code this runs inside the critical section, holding `writerLock`.
-        VideoChunker._reproHookAfterGuards = {
-            VideoChunker._reproHookAfterGuards = nil
+        videoChunker.onAppendWillStart = { [weak self] in
+            self?.videoChunker.onAppendWillStart = nil
             reachedAppend.signal()
             _ = allowAppend.wait(timeout: .now() + 5)
         }
@@ -65,6 +72,8 @@ final class VideoChunkerConcurrencyTests: XCTestCase {
         let lateFrame = try makeFrame(at: 1.0 / 30.0)
         DispatchQueue(label: "test.capture").async {
             self.videoChunker.consume(lateFrame)
+            order.append("append")
+            appendRecorded.signal()
         }
 
         XCTAssertEqual(
@@ -73,26 +82,42 @@ final class VideoChunkerConcurrencyTests: XCTestCase {
         )
 
         // Call finish() off the test thread so we can observe whether it blocks.
-        let finishReturned = DispatchSemaphore(value: 0)
         DispatchQueue.global().async {
             self.videoChunker.finish(singleFrame: { _ in }, onFinished: {})
+            order.append("finish")
+            finishRecorded.signal()
             finishReturned.signal()
         }
 
-        // Fixed: finish() blocks on `writerLock` until the in-flight append returns.
-        // Unfixed: finish() does not wait, so this fails — and the released append then crashes.
-        XCTAssertEqual(
-            finishReturned.wait(timeout: .now() + 1), .timedOut,
+        // Fixed: finish() is blocked on `writerLock` by the in-flight append, so it has NOT
+        // returned within this window. Unfixed 1.5.2: finish() is not serialized, returns
+        // immediately, and this assertion fails — the serialization is missing.
+        let finishReturnedWhileAppendInFlight = finishReturned.wait(timeout: .now() + 1) == .success
+        XCTAssertFalse(
+            finishReturnedWhileAppendInFlight,
             "finish() must wait for the in-flight append (serialization fix for #275)"
         )
 
-        // Release the parked append. On fixed code the writer is still writing (finish is blocked,
-        // has not set finishInitiated or called finishWriting), so the append succeeds; no crash.
+        // Release the parked append. On fixed code the writer is still `.writing` (finish is
+        // blocked and has not called finishWriting), so the append succeeds; no exception.
         allowAppend.signal()
 
+        // Only wait on `finishReturned` again if it had not already returned above, so we never
+        // block on a signal that the first wait already consumed.
+        if !finishReturnedWhileAppendInFlight {
+            XCTAssertEqual(
+                finishReturned.wait(timeout: .now() + 5), .success,
+                "finish() should complete once the append released the lock"
+            )
+        }
+
+        // The in-flight append returned (released `writerLock`) before finish could acquire the
+        // lock and return: the two operations were serialized, append first.
+        XCTAssertEqual(appendRecorded.wait(timeout: .now() + 5), .success, "append never returned")
+        XCTAssertEqual(finishRecorded.wait(timeout: .now() + 5), .success, "finish never returned")
         XCTAssertEqual(
-            finishReturned.wait(timeout: .now() + 5), .success,
-            "finish() should complete once the append released the lock"
+            order.events, ["append", "finish"],
+            "the in-flight append must return before finish() returns (serialized by writerLock)"
         )
     }
 

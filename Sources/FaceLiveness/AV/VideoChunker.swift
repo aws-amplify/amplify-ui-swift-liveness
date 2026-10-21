@@ -14,7 +14,8 @@ final class VideoChunker {
     /// is unchanged. A regression test installs a closure to deterministically park a frame that
     /// has already passed every guard — inside the critical section, holding `writerLock` — so it
     /// can drive `finish(_:)` against an in-flight append and prove the serialization fix for #275.
-    static var _reproHookAfterGuards: (() -> Void)?
+    /// Kept as a per-instance property (not a global) so each test drives its own chunker.
+    var onAppendWillStart: (() -> Void)?
 
     var state = State.pending
     let assetWriter: AVAssetWriter
@@ -138,7 +139,7 @@ final class VideoChunker {
 
         // Test-only seam: runs after every guard passed, inside the critical section, before any
         // append work. No-op in production (nil by default).
-        VideoChunker._reproHookAfterGuards?()
+        onAppendWillStart?()
 
         let timestamp = CMSampleBufferGetPresentationTimeStamp(buffer).seconds
         if startTimeSeconds == nil { startTimeSeconds = timestamp }
