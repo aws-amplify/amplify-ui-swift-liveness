@@ -9,16 +9,7 @@ import XCTest
 import AVFoundation
 @testable import FaceLiveness
 
-/// Regression tests for #275: `VideoChunker.consume(_:)` appended a pixel buffer guarded only by
-/// its own `state` flag and input readiness, never serialized with `finish(_:)`. A frame that
-/// passed the guards on the capture queue could reach `pixelBufferAdaptor.append(...)` while
-/// `finishWriting(...)` was in flight on the main actor, and AVFoundation raised
-/// `NSInternalInconsistencyException`, crashing the app.
-///
-/// These tests drive the real `VideoChunker`. `onAppendWillStart` is the nil-by-default,
-/// per-instance test-only seam that parks a frame after every guard passed (inside the fix's
-/// critical section), so the late-frame-vs-finish ordering is deterministic rather than a
-/// probabilistic field race.
+/// Regression tests for #275: a frame appended while `finish(...)` was running crashed the writer.
 final class VideoChunkerConcurrencyTests: XCTestCase {
     private var videoChunker: VideoChunker!
 
@@ -34,21 +25,12 @@ final class VideoChunkerConcurrencyTests: XCTestCase {
         videoChunker = nil
     }
 
-    /// Given: a frame that passed every guard and is about to append on the capture queue
-    /// When: `finish(_:)` runs concurrently on another thread
-    /// Then: `finish(_:)` waits for the in-flight append (serialized by `writerLock`), the append
-    ///       runs while the writer is still `.writing`, and the append returns before `finish(_:)`
-    ///       returns.
-    ///
-    /// Against unfixed 1.5.2 this fails on the serialization assertion: `finish(_:)` is not
-    /// serialized with `consume(_:)`, so it returns immediately while the parked append is still
-    /// in flight, and the "finish must wait" assertion fails deterministically. (The append then
-    /// released onto the ended session is the #275 field crash; the point proven here is the
-    /// missing serialization, not a crash.)
+    /// Given: A frame that passed every check and is about to be appended
+    /// When: `finish(...)` is called on another thread
+    /// Then: `finish(...)` waits until the append has returned
     func testFinishWaitsForInFlightAppend() throws {
         videoChunker.prepare()
         videoChunker.start()
-        // Prime: first append establishes the writer session.
         videoChunker.consume(try makeFrame(at: 0))
         waitForWriter(of: videoChunker, toReach: .writing)
         waitUntilInputReady()
@@ -58,11 +40,9 @@ final class VideoChunkerConcurrencyTests: XCTestCase {
         let finishReturned = DispatchSemaphore(value: 0)
         let appendRecorded = DispatchSemaphore(value: 0)
         let finishRecorded = DispatchSemaphore(value: 0)
-        // Order in which `consume(_:)` and `finish(_:)` returned, recorded from both threads.
         let order = EventLog<String>()
 
-        // One-shot: park the late frame after it passed every guard, before the append. On the
-        // fixed code this runs inside the critical section, holding `writerLock`.
+        // hold the frame right before the append until released
         videoChunker.onAppendWillStart = { [weak self] in
             self?.videoChunker.onAppendWillStart = nil
             reachedAppend.signal()
@@ -81,7 +61,6 @@ final class VideoChunkerConcurrencyTests: XCTestCase {
             "the late consume never reached the append point"
         )
 
-        // Call finish() off the test thread so we can observe whether it blocks.
         DispatchQueue.global().async {
             self.videoChunker.finish(singleFrame: { _ in }, onFinished: {})
             order.append("finish")
@@ -89,21 +68,15 @@ final class VideoChunkerConcurrencyTests: XCTestCase {
             finishReturned.signal()
         }
 
-        // Fixed: finish() is blocked on `writerLock` by the in-flight append, so it has NOT
-        // returned within this window. Unfixed 1.5.2: finish() is not serialized, returns
-        // immediately, and this assertion fails — the serialization is missing.
         let finishReturnedWhileAppendInFlight = finishReturned.wait(timeout: .now() + 1) == .success
         XCTAssertFalse(
             finishReturnedWhileAppendInFlight,
             "finish() must wait for the in-flight append (serialization fix for #275)"
         )
 
-        // Release the parked append. On fixed code the writer is still `.writing` (finish is
-        // blocked and has not called finishWriting), so the append succeeds; no exception.
         allowAppend.signal()
 
-        // Only wait on `finishReturned` again if it had not already returned above, so we never
-        // block on a signal that the first wait already consumed.
+        // the wait above already consumed the signal if `finish` returned
         if !finishReturnedWhileAppendInFlight {
             XCTAssertEqual(
                 finishReturned.wait(timeout: .now() + 5), .success,
@@ -111,8 +84,6 @@ final class VideoChunkerConcurrencyTests: XCTestCase {
             )
         }
 
-        // The in-flight append returned (released `writerLock`) before finish could acquire the
-        // lock and return: the two operations were serialized, append first.
         XCTAssertEqual(appendRecorded.wait(timeout: .now() + 5), .success, "append never returned")
         XCTAssertEqual(finishRecorded.wait(timeout: .now() + 5), .success, "finish never returned")
         XCTAssertEqual(
@@ -121,9 +92,9 @@ final class VideoChunkerConcurrencyTests: XCTestCase {
         )
     }
 
-    /// Given: a chunker that finished recording
-    /// When: more frames arrive afterwards
-    /// Then: they are dropped without appending and without crashing.
+    /// Given: A chunker that finished recording
+    /// When: More frames arrive
+    /// Then: The first becomes the single frame, the rest are dropped, and nothing is appended
     func testFramesConsumedAfterFinishAreDropped() throws {
         videoChunker.start()
         try recordFrames(into: videoChunker)
@@ -132,8 +103,6 @@ final class VideoChunkerConcurrencyTests: XCTestCase {
         videoChunker.finish(singleFrame: { _ in }, onFinished: { finished.fulfill() })
         wait(for: [finished], timeout: 5)
 
-        // First post-finish frame is taken as the single still frame; the next is dropped. Neither
-        // is appended to the finished writer, and neither crashes.
         videoChunker.consume(try makeFrame(at: 1.0))
         videoChunker.consume(try makeFrame(at: 2.0))
 
@@ -141,9 +110,9 @@ final class VideoChunkerConcurrencyTests: XCTestCase {
         XCTAssertEqual(videoChunker.state, .complete)
     }
 
-    /// Given: a chunker that recorded some video
-    /// When: it finishes and one more frame arrives
-    /// Then: that frame is delivered as the single still frame and the chunker completes.
+    /// Given: A chunker that recorded some video
+    /// When: It finishes and one more frame arrives
+    /// Then: That frame is delivered as the single frame
     func testSingleFramePathStillDeliversFrame() throws {
         videoChunker.start()
         try recordFrames(into: videoChunker)
