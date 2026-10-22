@@ -10,7 +10,7 @@ import CoreImage
 import UIKit
 
 final class VideoChunker {
-    /// Test hook, called under `writerLock` right before a frame is appended.
+    /// Test hook, called under `writerLock` before attempting to append a frame.
     var onAppendWillStart: (() -> Void)?
 
     var state = State.pending
@@ -25,12 +25,9 @@ final class VideoChunker {
     private let writerQueue = DispatchQueue(label: "com.amazonaws.faceliveness.videowriter")
     private var hasStartedWriting = false
 
-    /// Serializes `consume(_:)` (capture queue) with `finish(...)` (main actor). Appending while
-    /// `finishWriting` runs throws an uncaught exception (#275).
+    /// Guards `state` and the writer between `consume(_:)` (capture queue) and `start()` and
+    /// `finish(...)` (main actor). Appending while `finishWriting` runs crashes the app (#275).
     private let writerLock = NSLock()
-    /// `assetWriter.status` stays `.writing` until `finishWriting` completes, so it can't tell
-    /// `consume(_:)` that finishing has begun.
-    private var finishInitiated = false
 
     init(
         assetWriter: AVAssetWriter,
@@ -60,8 +57,10 @@ final class VideoChunker {
         guard state == .pending else { return }
         // immediate once `prepare()` has run; otherwise waits for it, or starts the writer here
         writerQueue.sync { startWritingIfNeeded() }
+        writerLock.lock()
         assetWriter.startSession(atSourceTime: .zero)
         state = .writing
+        writerLock.unlock()
     }
 
     private func startWritingIfNeeded() {
@@ -80,7 +79,6 @@ final class VideoChunker {
         writerLock.lock()
         self.provideSingleFrame = singleFrame
         state = .awaitingSingleFrame
-        finishInitiated = true
 
         // explicitly calling `endSession` is unnecessary
         let isWriting = assetWriter.status == .writing
@@ -107,25 +105,21 @@ final class VideoChunker {
 
         guard state == .writing else { return }
 
-        guard !finishInitiated,
-              assetWriter.status == .writing,
-              assetWriterInput.isReadyForMoreMediaData
-        else { return }
+        if assetWriterInput.isReadyForMoreMediaData {
+            onAppendWillStart?()
+            let timestamp = CMSampleBufferGetPresentationTimeStamp(buffer).seconds
+            if startTimeSeconds == nil { startTimeSeconds = timestamp }
+            guard let startTimeSeconds else {
+                return
+            }
+            let presentationTime = CMTime(seconds: timestamp - startTimeSeconds, preferredTimescale: 600)
+            guard let imageBuffer = buffer.imageBuffer else { return }
 
-        onAppendWillStart?()
-
-        let timestamp = CMSampleBufferGetPresentationTimeStamp(buffer).seconds
-        if startTimeSeconds == nil { startTimeSeconds = timestamp }
-        guard let startTimeSeconds else {
-            return
+            pixelBufferAdaptor.append(
+                imageBuffer,
+                withPresentationTime: presentationTime
+            )
         }
-        let presentationTime = CMTime(seconds: timestamp - startTimeSeconds, preferredTimescale: 600)
-        guard let imageBuffer = buffer.imageBuffer else { return }
-
-        _ = pixelBufferAdaptor.append(
-            imageBuffer,
-            withPresentationTime: presentationTime
-        )
     }
 
     private func singleFrame(from buffer: CVPixelBuffer) -> UIImage {
