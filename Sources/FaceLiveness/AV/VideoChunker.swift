@@ -10,7 +10,7 @@ import CoreImage
 import UIKit
 
 final class VideoChunker {
-    /// Test hook, called under `writerLock` before attempting to append a frame.
+    /// Test hook, called under `writerLock` for each frame consumed while recording.
     var onAppendWillStart: (() -> Void)?
 
     var state = State.pending
@@ -104,9 +104,9 @@ final class VideoChunker {
         }
 
         guard state == .writing else { return }
+        onAppendWillStart?()
 
         if assetWriterInput.isReadyForMoreMediaData {
-            onAppendWillStart?()
             let timestamp = CMSampleBufferGetPresentationTimeStamp(buffer).seconds
             if startTimeSeconds == nil { startTimeSeconds = timestamp }
             guard let startTimeSeconds else {
