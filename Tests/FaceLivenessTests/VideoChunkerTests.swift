@@ -103,6 +103,45 @@ final class VideoChunkerTests: XCTestCase {
         wait(for: [finished], timeout: 5)
     }
 
+    /// Given: A chunker that finished recording
+    /// When: More frames arrive
+    /// Then: The first becomes the single frame, and none are appended to the writer
+    func testFramesAfterFinishAreNotAppended() throws {
+        videoChunker.start()
+        try recordFrames(into: videoChunker)
+        let finished = expectation(description: "onFinished")
+        videoChunker.finish(singleFrame: { _ in }, onFinished: { finished.fulfill() })
+        wait(for: [finished], timeout: 5)
+
+        var appendAttempts = 0
+        videoChunker.onAppendWillStart = { appendAttempts += 1 }
+        videoChunker.consume(try makeFrame(at: 1.0))
+        videoChunker.consume(try makeFrame(at: 2.0))
+
+        XCTAssertEqual(appendAttempts, 0)
+        XCTAssertEqual(videoChunker.state, .complete)
+    }
+
+    /// Given: A chunker that finished recording
+    /// When: One more frame arrives
+    /// Then: That frame is delivered as the single frame
+    func testFrameAfterFinishIsDeliveredAsTheSingleFrame() throws {
+        videoChunker.start()
+        try recordFrames(into: videoChunker)
+        let delivered = expectation(description: "single frame delivered")
+        let finished = expectation(description: "onFinished")
+        videoChunker.finish(
+            singleFrame: { _ in delivered.fulfill() },
+            onFinished: { finished.fulfill() }
+        )
+        wait(for: [finished], timeout: 5)
+
+        videoChunker.consume(try makeFrame(at: 1.0))
+
+        wait(for: [delivered], timeout: 5)
+        XCTAssertEqual(videoChunker.state, .complete)
+    }
+
     // the writer's delegate holds its segment processor weakly
     private var segmentLogger: SegmentLogger?
 }

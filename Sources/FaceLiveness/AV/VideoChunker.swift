@@ -10,6 +10,9 @@ import CoreImage
 import UIKit
 
 final class VideoChunker {
+    /// Test hook, called under `writerLock` for each frame consumed while recording.
+    var onAppendWillStart: (() -> Void)?
+
     var state = State.pending
     let assetWriter: AVAssetWriter
     let assetWriterDelegate: AssetWriterDelegate
@@ -21,6 +24,10 @@ final class VideoChunker {
     /// first. `hasStartedWriting` is only touched on this queue.
     private let writerQueue = DispatchQueue(label: "com.amazonaws.faceliveness.videowriter")
     private var hasStartedWriting = false
+
+    /// Guards `state` and the writer between `consume(_:)` (capture queue) and `start()` and
+    /// `finish(...)` (main actor). Appending while `finishWriting` runs crashes the app (#275).
+    private let writerLock = NSLock()
 
     init(
         assetWriter: AVAssetWriter,
@@ -50,8 +57,10 @@ final class VideoChunker {
         guard state == .pending else { return }
         // immediate once `prepare()` has run; otherwise waits for it, or starts the writer here
         writerQueue.sync { startWritingIfNeeded() }
+        writerLock.lock()
         assetWriter.startSession(atSourceTime: .zero)
         state = .writing
+        writerLock.unlock()
     }
 
     private func startWritingIfNeeded() {
@@ -67,18 +76,26 @@ final class VideoChunker {
         singleFrame: @escaping (UIImage) -> Void,
         onFinished: @escaping @Sendable () -> Void
     ) {
+        writerLock.lock()
         self.provideSingleFrame = singleFrame
         state = .awaitingSingleFrame
 
         // explicitly calling `endSession` is unnecessary
-        if assetWriter.status == .writing {
+        let isWriting = assetWriter.status == .writing
+        if isWriting {
             assetWriter.finishWriting(completionHandler: onFinished)
-        } else {
+        }
+        writerLock.unlock()
+
+        if !isWriting {
             onFinished()
         }
     }
 
     func consume(_ buffer: CMSampleBuffer) {
+        writerLock.lock()
+        defer { writerLock.unlock() }
+
         if state == .awaitingSingleFrame {
             guard let imageBuffer = buffer.imageBuffer else { return }
             let singleFrame = singleFrame(from: imageBuffer)
@@ -87,6 +104,7 @@ final class VideoChunker {
         }
 
         guard state == .writing else { return }
+        onAppendWillStart?()
 
         if assetWriterInput.isReadyForMoreMediaData {
             let timestamp = CMSampleBufferGetPresentationTimeStamp(buffer).seconds
