@@ -10,7 +10,7 @@ import InternalAmplifyCredentials
 
 struct UserAgentValues {
     
-    static let libVersion = "1.5.2"
+    static let libVersion = "1.5.3"
     static let libName = "amplify-ui-swift-face-liveness"
     
     let amplifyVersion: String
