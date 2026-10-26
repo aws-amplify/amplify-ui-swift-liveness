@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.3 (2026-10-26)
+
+### Bug Fixes
+
+- don't crash when a frame arrives while the video is finishing (#276)
+
 ## 1.5.2 (2026-10-15)
 
 ### Bug Fixes
