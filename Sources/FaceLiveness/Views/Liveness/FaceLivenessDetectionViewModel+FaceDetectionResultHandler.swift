@@ -12,6 +12,11 @@ import SwiftUI
 fileprivate let initialFaceDistanceThreshold: CGFloat = 0.32
 
 extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
+    /// Called on the capture queue, before the frame's result.
+    nonisolated func process(frameReport: FaceDetectionFrameReport) {
+        diagnostics.onFrameReport(frameReport)
+    }
+
     func process(newResult: FaceDetectionResult) {
         switch newResult {
         case .noFace:
@@ -35,6 +40,7 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
             normalizedFace.boundingBox = normalizedFace.boundingBoxFromLandmarks(
                 ovalRect: ovalRect,
                 ovalMatchChallenge: ovalMatchChallenge)
+            recordFaceDiagnostics(face: face, normalizedFace: normalizedFace, ovalMatchChallenge: ovalMatchChallenge)
 
             switch livenessState.state {
             case .pendingFacePreparedConfirmation:

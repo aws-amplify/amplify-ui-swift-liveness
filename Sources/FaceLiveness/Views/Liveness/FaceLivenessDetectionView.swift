@@ -80,7 +80,8 @@ public struct FaceLivenessDetectorView: View {
                 closeButtonAction: { onCompletion(.failure(.userCancelled)) },
                 sessionID: sessionID,
                 isPreviewScreenEnabled: !disableStartView,
-                challengeOptions: challengeOptions
+                challengeOptions: challengeOptions,
+                diagnostics: LivenessSessionDiagnostics(sessionID: sessionID, region: region, deviceInfo: .current)
             )
         )
     }
@@ -120,7 +121,8 @@ public struct FaceLivenessDetectorView: View {
                 closeButtonAction: { onCompletion(.failure(.userCancelled)) },
                 sessionID: sessionID,
                 isPreviewScreenEnabled: !disableStartView,
-                challengeOptions: challengeOptions
+                challengeOptions: challengeOptions,
+                diagnostics: LivenessSessionDiagnostics(sessionID: sessionID, region: region, deviceInfo: .current)
             )
         )
     }
@@ -162,7 +164,7 @@ public struct FaceLivenessDetectorView: View {
                 let closeCode = error.webSocketCloseCode ?? .normalClosure
                 viewModel.livenessService?.closeSocket(with: closeCode)
                 isPresented = false
-                onCompletion(.failure(mapError(error)))
+                onCompletion(.failure(error.hostError))
             default:
                 break
             }
@@ -172,6 +174,7 @@ public struct FaceLivenessDetectorView: View {
             // the get ready screen leaves the camera running for the check, so stop it here
             // in case the app removes the detector before the check starts
             viewModel.stopRecording()
+            viewModel.diagnostics.onTeardown()
         }
     }
 
@@ -190,27 +193,33 @@ public struct FaceLivenessDetectorView: View {
                         })
                         viewModel.initializeLivenessStream()
                     } catch let error as FaceLivenessDetectionError {
+                        viewModel.logSessionStarting(attempt: nil)
+                        let livenessError: LivenessStateMachine.LivenessError
                         switch error {
                         case .unknown:
-                            viewModel.livenessState.unrecoverableStateEncountered(.unknown)
+                            livenessError = .unknown
                         case .sessionTimedOut,
                              .faceInOvalMatchExceededTimeLimitError,
                              .countdownFaceTooClose,
                              .countdownMultipleFaces,
                              .countdownNoFace:
-                            viewModel.livenessState.unrecoverableStateEncountered(.timedOut)
+                            livenessError = .timedOut
                         case .cameraPermissionDenied:
-                            viewModel.livenessState.unrecoverableStateEncountered(.missingVideoPermission)
+                            livenessError = .missingVideoPermission
                         case .userCancelled:
-                            viewModel.livenessState.unrecoverableStateEncountered(.userCancelled)
+                            livenessError = .userCancelled
                         case .socketClosed:
-                            viewModel.livenessState.unrecoverableStateEncountered(.socketClosed)
+                            livenessError = .socketClosed
                         case .cameraNotAvailable:
-                            viewModel.livenessState.unrecoverableStateEncountered(.cameraNotAvailable)
+                            livenessError = .cameraNotAvailable
                         default:
-                            viewModel.livenessState.unrecoverableStateEncountered(.couldNotOpenStream)
+                            livenessError = .couldNotOpenStream
                         }
+                        viewModel.diagnostics.noteCause(error, for: livenessError)
+                        viewModel.livenessState.unrecoverableStateEncountered(livenessError)
                     } catch {
+                        viewModel.logSessionStarting(attempt: nil)
+                        viewModel.diagnostics.noteCause(error, for: .couldNotOpenStream)
                         viewModel.livenessState.unrecoverableStateEncountered(.couldNotOpenStream)
                     }
                     
@@ -330,28 +339,15 @@ public struct FaceLivenessDetectorView: View {
         }
     }
 
-    func mapError(_ livenessError: LivenessStateMachine.LivenessError) -> FaceLivenessDetectionError {
-        switch livenessError {
-        case .userCancelled:
-            return .userCancelled
-        case .viewResignation:
-            return .sessionInterrupted
-        case .timedOut:
-            return .faceInOvalMatchExceededTimeLimitError
-        case .couldNotOpenStream, .socketClosed:
-            return .socketClosed
-        case .cameraNotAvailable:
-            return .cameraNotAvailable
-        default:
-            return .cameraPermissionDenied
-        }
-    }
-
     private func requestCameraPermission(for challenge: Challenge) {
+        let diagnostics = viewModel.diagnostics
         AVCaptureDevice.requestAccess(
             for: .video,
             completionHandler: { accessGranted in
-                guard accessGranted == true else { return }
+                guard accessGranted == true else {
+                    diagnostics.onCameraPermissionDenied(status: "declined")
+                    return
+                }
                 displayState = .awaitingLivenessSession(challenge)
             }
         )
@@ -367,6 +363,9 @@ public struct FaceLivenessDetectorView: View {
         case .notDetermined:
             requestCameraPermission(for: challenge)
         case .restricted, .denied:
+            viewModel.diagnostics.onCameraPermissionDenied(
+                status: cameraAuthorizationStatus == .restricted ? "restricted" : "denied"
+            )
             alertCameraAccessNeeded()
         case .authorized:
             displayState = .awaitingLivenessSession(challenge)
@@ -411,26 +410,8 @@ private func map(detectionCompletion: @escaping (Result<Void, FaceLivenessDetect
         switch result {
         case .success:
             detectionCompletion(.success(()))
-        case .failure(.invalidRegion):
-            detectionCompletion(.failure(.invalidRegion))
-        case .failure(.accessDenied):
-            detectionCompletion(.failure(.accessDenied))
-        case .failure(.validation):
-            detectionCompletion(.failure(.validation))
-        case .failure(.internalServer):
-            detectionCompletion(.failure(.internalServer))
-        case .failure(.throttling):
-            detectionCompletion(.failure(.throttling))
-        case .failure(.serviceQuotaExceeded):
-            detectionCompletion(.failure(.serviceQuotaExceeded))
-        case .failure(.serviceUnavailable):
-            detectionCompletion(.failure(.serviceUnavailable))
-        case .failure(.sessionNotFound):
-            detectionCompletion(.failure(.sessionNotFound))
-        case .failure(.invalidSignature):
-            detectionCompletion(.failure(.invalidSignature))
-        default:
-            detectionCompletion(.failure(.unknown))
+        case .failure(let error):
+            detectionCompletion(.failure(.hostError(for: error)))
         }
     }
 }

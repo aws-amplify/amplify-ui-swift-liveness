@@ -18,7 +18,10 @@ fileprivate let defaultAttemptCountResetInterval: TimeInterval = 300.0
 class FaceLivenessDetectionViewModel: ObservableObject {
     @Published var readyForOval = false
     @Published var isRecording = false
-    @Published var livenessState: LivenessStateMachine
+    @Published var livenessState: LivenessStateMachine {
+        // before observers see the new state, so an error is logged before the host hears of it
+        willSet { diagnostics.onCheckStateChanged(newValue.state) }
+    }
 
     weak var livenessViewControllerDelegate: FaceLivenessViewControllerPresenter?
     var captureSession: LivenessCaptureSession?
@@ -55,6 +58,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     var faceMatchedTimestamp: UInt64?
     var noFitStartTime: Date?
     let challengeOptions: ChallengeOptions
+    nonisolated let diagnostics: LivenessSessionDiagnostics
     
     static var attemptCount: Int = 0
     static var attemptIdTimeStamp: Date = Date()
@@ -74,7 +78,8 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         closeButtonAction: @escaping () -> Void,
         sessionID: String,
         isPreviewScreenEnabled: Bool,
-        challengeOptions: ChallengeOptions
+        challengeOptions: ChallengeOptions,
+        diagnostics: LivenessSessionDiagnostics? = nil
     ) {
         self.closeButtonAction = closeButtonAction
         self.videoChunker = videoChunker
@@ -84,6 +89,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         self.faceInOvalMatching = faceInOvalMatching
         self.isPreviewScreenEnabled = isPreviewScreenEnabled
         self.challengeOptions = challengeOptions
+        self.diagnostics = diagnostics ?? LivenessSessionDiagnostics(sessionID: sessionID, deviceInfo: .current)
 
         self.closeButtonAction = { [weak self] in
             DispatchQueue.main.async {
@@ -93,6 +99,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
 
         faceDetector.setResultHandler(detectionResultHandler: self)
         videoChunker.assetWriterDelegate.set(segmentProcessor: self)
+        self.diagnostics.registerGateProvider { [weak self] in self?.diagnosticsGateSnapshot() }
 
         NotificationCenter.default.addObserver(
             self,
@@ -103,9 +110,15 @@ class FaceLivenessDetectionViewModel: ObservableObject {
 
     deinit {
         NotificationCenter.default.removeObserver(self)
+        // a no-op once the detector has been removed
+        diagnostics.onTeardown()
     }
 
     func registerServiceEvents(onChallengeTypeReceived: @escaping (Challenge) -> Void) {
+        if let onServiceException = livenessService?.onServiceException {
+            livenessService?.onServiceException = diagnostics.recordingServiceExceptions(forwardingTo: onServiceException)
+        }
+
         livenessService?.register(onComplete: { [weak self] reason in
             self?.stopRecording()
 
@@ -119,6 +132,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
                     // known liveness/rekognition service exceptions set the `livenessState` and
                     // invoke onCompletion() callback directly
                     guard !error.isKnownLivenessError() else { return }
+                    self?.diagnostics.noteCause("WebSocketCloseCode: \(error.rawValue)", for: .socketClosed)
                     self?.livenessState.unrecoverableStateEncountered(.socketClosed)
                 }
             }
@@ -126,7 +140,9 @@ class FaceLivenessDetectionViewModel: ObservableObject {
 
         livenessService?.register(
             listener: { [weak self] _sessionConfiguration in
-                self?.sessionConfiguration = _sessionConfiguration
+                guard let self else { return }
+                self.diagnostics.onSessionReady(_sessionConfiguration, challengeID: self.challengeID)
+                self.sessionConfiguration = _sessionConfiguration
             },
             on: .challenge
         )
@@ -173,6 +189,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     func configureCamera(withinFrame frame: CGRect) -> CALayer? {
         do {
             let avLayer = try captureSession?.configureCamera(frame: frame)
+            diagnostics.onCheckStarted()
             DispatchQueue.main.async { [weak self] in
                 self?.livenessState.checkIsFacePrepared()
             }
@@ -180,9 +197,9 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         } catch {
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
-                self.livenessState.unrecoverableStateEncountered(
-                    self.generateLivenessError(from: error)
-                )
+                let livenessError = self.generateLivenessError(from: error)
+                self.diagnostics.noteCause(error, for: livenessError)
+                self.livenessState.unrecoverableStateEncountered(livenessError)
             }
             return nil
         }
@@ -257,6 +274,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
                 Self.attemptCount += 1
             }
             Self.attemptIdTimeStamp = Date()
+            logSessionStarting(attempt: Self.attemptCount)
             
             try livenessService?.initializeLivenessStream(
                 withSessionID: sessionID,
@@ -268,6 +286,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
                     preCheckViewEnabled: isPreviewScreenEnabled)
             )
         } catch {
+            diagnostics.noteCause(error, for: .couldNotOpenStream)
             DispatchQueue.main.async { [weak self] in
                 self?.livenessState.unrecoverableStateEncountered(.couldNotOpenStream)
             }
@@ -277,6 +296,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     func sendColorDisplayedEvent(
         _ event: Freshness.ColorEvent
     ) {
+        diagnostics.onColorDisplayed()
         let freshnessEvent = FreshnessEvent(
             challengeID: challengeID,
             color: event.currentColor.rgb._values,
@@ -291,6 +311,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
                 eventDate: { .init() }
             )
         } catch {
+            diagnostics.noteCause(error, for: .unknown)
             DispatchQueue.main.async { [weak self] in
                 self?.livenessState.unrecoverableStateEncountered(.unknown)
             }
@@ -334,7 +355,9 @@ class FaceLivenessDetectionViewModel: ObservableObject {
                                      challenge: challengeReceived),
                 eventDate: { .init() }
             )
+            diagnostics.onInitialFaceDetectedSent()
         } catch {
+            diagnostics.noteCause(error, for: .unknown)
             DispatchQueue.main.async { [weak self] in
                 self?.livenessState.unrecoverableStateEncountered(.unknown)
             }
@@ -362,6 +385,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
             faceMatchedEnd: challengeEnd,
             videoEnd: challengeEnd
         )
+        let diagnostics = self.diagnostics
 
         return { [weak self] in
             do {
@@ -380,6 +404,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
                     self?.hasSentFinalVideoEvent = true
                 }
             } catch {
+                diagnostics.noteCause(error, for: .unknown)
                 DispatchQueue.main.async {
                     self?.livenessState.unrecoverableStateEncountered(.unknown)
                 }
@@ -401,6 +426,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
             },
             onFinished: finalEventSender(challengeEnd: Date().timestampMilliseconds)
         )
+        diagnostics.onChallengeCompleted()
     }
 
     func handleFreshnessComplete() {
@@ -433,6 +459,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
                 eventDate: { eventDate }
             )
         } catch {
+            diagnostics.noteCause(error, for: .unknown)
             DispatchQueue.main.async { [weak self] in
                 self?.livenessState.unrecoverableStateEncountered(.unknown)
             }
@@ -483,7 +510,8 @@ class FaceLivenessDetectionViewModel: ObservableObject {
             captureDevice: .init(avCaptureDevice: avCaptureDevice),
             outputDelegate: OutputSampleBufferCapturer(
                 faceDetector: self.faceDetector,
-                videoChunker: self.videoChunker
+                videoChunker: self.videoChunker,
+                diagnostics: diagnostics
             )
         )
         // the oval now comes up as soon as the face is in range, which can be sooner after the
