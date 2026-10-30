@@ -70,8 +70,13 @@ class LivenessCaptureSession {
 
     func startSession() {
         guard let session = captureSession else { return }
+        let diagnostics = outputSampleBufferCapturer?.diagnostics
+        let facing = captureDevice.avCaptureDevice?.position
         configurationQueue.async {
             session.startRunning()
+            if session.isRunning {
+                diagnostics?.onCameraBound(facing: facing == .back ? "back" : "front")
+            }
         }
     }
 

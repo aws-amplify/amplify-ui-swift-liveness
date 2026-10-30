@@ -24,32 +24,57 @@ struct FaceInOvalMatching {
             return .none
         }
 
-        let intersection = intersectionOverUnion(boxA: face, boxB: oval)
+        let measurement = measure(face: face, in: oval, challengeConfig: challengeConfig)
         let thresholds = Thresholds(oval: oval, challengeConfig: challengeConfig)
 
         if storage.initialIOU == nil {
-            storage.initialIOU = intersection
+            storage.initialIOU = measurement.iou
         }
 
         let initialIOU = storage.initialIOU!
 
         let faceMatchPercentage = calculateFaceMatchPercentage(
-            intersection: intersection,
+            intersection: measurement.iou,
             initialIOU: initialIOU,
             thresholds: thresholds
         )
 
-        if isMatch(face: face, oval: oval, intersection: intersection, thresholds: thresholds) {
+        switch measurement.position {
+        case .matched:
             return .match
-        } else if oval.minX > face.minX && oval.maxX > face.maxX {
+        case .tooFarLeft:
             return .tooFarLeft(nearnessPercentage: faceMatchPercentage)
-        } else if face.minX > oval.minX && face.maxX > oval.maxX {
+        case .tooFarRight:
             return .tooFarRight(nearnessPercentage: faceMatchPercentage)
-        } else if isTooClose(face: face, oval: oval, intersection: intersection, thresholds: thresholds) {
+        case .tooClose:
             return .tooClose(nearnessPercentage: faceMatchPercentage)
-        } else {
+        case .tooFar:
             return .tooFar(nearnessPercentage: faceMatchPercentage)
         }
+    }
+
+    /// The face's position and overlap with the oval, without `faceMatchState`'s side effects.
+    func measure(
+        face: CGRect,
+        in oval: CGRect,
+        challengeConfig: FaceLivenessSession.OvalMatchChallenge
+    ) -> OvalMeasurement {
+        let intersection = intersectionOverUnion(boxA: face, boxB: oval)
+        let thresholds = Thresholds(oval: oval, challengeConfig: challengeConfig)
+
+        let position: FaceOvalPosition
+        if isMatch(face: face, oval: oval, intersection: intersection, thresholds: thresholds) {
+            position = .matched
+        } else if oval.minX > face.minX && oval.maxX > face.maxX {
+            position = .tooFarLeft
+        } else if face.minX > oval.minX && face.maxX > oval.maxX {
+            position = .tooFarRight
+        } else if isTooClose(face: face, oval: oval, intersection: intersection, thresholds: thresholds) {
+            position = .tooClose
+        } else {
+            position = .tooFar
+        }
+        return OvalMeasurement(position: position, iou: intersection)
     }
 
     private func isTooClose(face: CGRect, oval: CGRect, intersection: Double, thresholds: Thresholds) -> Bool {
@@ -85,6 +110,20 @@ struct FaceInOvalMatching {
 
         return intersectionArea / (boxAArea + boxBArea - intersectionArea)
     }
+}
+
+/// Where the face is relative to the oval. The raw values are the names both platforms log.
+enum FaceOvalPosition: String {
+    case matched = "MATCHED"
+    case tooFarLeft = "TOO_FAR_LEFT"
+    case tooFarRight = "TOO_FAR_RIGHT"
+    case tooClose = "TOO_CLOSE"
+    case tooFar = "TOO_FAR"
+}
+
+struct OvalMeasurement: Equatable {
+    let position: FaceOvalPosition
+    let iou: Double
 }
 
 extension FaceInOvalMatching {

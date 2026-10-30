@@ -10,9 +10,10 @@ import XCTest
 @testable import FaceLiveness
 @_spi(PredictionsFaceLiveness) import AWSPredictionsPlugin
 
-/// Records the oval rects the view model asks to have drawn.
+/// Records the oval rects the view model asks to have drawn, and the no-light checks it completes.
 final class MockLivenessViewControllerPresenter: FaceLivenessViewControllerPresenter {
     var drawnOvalRects: [CGRect] = []
+    var completeNoLightCheckCount = 0
 
     func drawOvalInCanvas(_ ovalRect: CGRect) {
         drawnOvalRects.append(ovalRect)
@@ -20,7 +21,10 @@ final class MockLivenessViewControllerPresenter: FaceLivenessViewControllerPrese
 
     func displayFreshness(colorSequences: [FaceLivenessSession.DisplayColor]) {}
     func displaySingleFrame(uiImage: UIImage) {}
-    func completeNoLightCheck() {}
+
+    func completeNoLightCheck() {
+        completeNoLightCheckCount += 1
+    }
 }
 
 /// Fixtures shared by the geometry tests.
@@ -46,7 +50,9 @@ enum LivenessGeometryFixture {
     @MainActor
     static func makeViewModel(
         presenter: MockLivenessViewControllerPresenter,
-        kind: ChallengeKind = .faceMovement
+        kind: ChallengeKind = .faceMovement,
+        ovalFitTimeout: Int = 1,
+        diagnostics: LivenessSessionDiagnostics? = nil
     ) -> FaceLivenessDetectionViewModel {
         let viewModel = FaceLivenessDetectionViewModel(
             faceDetector: MockFaceDetector(),
@@ -62,7 +68,8 @@ enum LivenessGeometryFixture {
             challengeOptions: .init(
                 faceMovementChallengeOption: .init(camera: .front),
                 faceMovementAndLightChallengeOption: .init()
-            )
+            ),
+            diagnostics: diagnostics
         )
         viewModel.livenessViewControllerDelegate = presenter
         viewModel.challengeReceived = kind.challenge
@@ -87,7 +94,7 @@ enum LivenessGeometryFixture {
                 iouThreshold: 0.1,
                 iouWidthThreshold: 0.1,
                 iouHeightThreshold: 0.1,
-                ovalFitTimeout: 1
+                ovalFitTimeout: ovalFitTimeout
             )
         )
         switch kind {
