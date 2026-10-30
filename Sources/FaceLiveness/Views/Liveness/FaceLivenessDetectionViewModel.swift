@@ -132,8 +132,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
                     // known liveness/rekognition service exceptions set the `livenessState` and
                     // invoke onCompletion() callback directly
                     guard !error.isKnownLivenessError() else { return }
-                    self?.diagnostics.noteCause("WebSocketCloseCode: \(error.rawValue)", for: .socketClosed)
-                    self?.livenessState.unrecoverableStateEncountered(.socketClosed)
+                    self?.fail(.socketClosed, cause: "WebSocketCloseCode: \(error.rawValue)")
                 }
             }
         })
@@ -197,9 +196,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
         } catch {
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
-                let livenessError = self.generateLivenessError(from: error)
-                self.diagnostics.noteCause(error, for: livenessError)
-                self.livenessState.unrecoverableStateEncountered(livenessError)
+                self.fail(self.generateLivenessError(from: error), cause: error)
             }
             return nil
         }
@@ -256,14 +253,7 @@ class FaceLivenessDetectionViewModel: ObservableObject {
     }
 
     private var ovalMatchChallenge: FaceLivenessSession.OvalMatchChallenge? {
-        guard let sessionConfiguration = sessionConfiguration else { return nil }
-
-        switch sessionConfiguration {
-        case .faceMovement(let challenge):
-            return challenge
-        case .faceMovementAndLight(_, let challenge):
-            return challenge
-        }
+        sessionConfiguration?.ovalMatchChallenge
     }
 
     func initializeLivenessStream() {
@@ -286,9 +276,8 @@ class FaceLivenessDetectionViewModel: ObservableObject {
                     preCheckViewEnabled: isPreviewScreenEnabled)
             )
         } catch {
-            diagnostics.noteCause(error, for: .couldNotOpenStream)
             DispatchQueue.main.async { [weak self] in
-                self?.livenessState.unrecoverableStateEncountered(.couldNotOpenStream)
+                self?.fail(.couldNotOpenStream, cause: error)
             }
         }
     }
@@ -311,9 +300,8 @@ class FaceLivenessDetectionViewModel: ObservableObject {
                 eventDate: { .init() }
             )
         } catch {
-            diagnostics.noteCause(error, for: .unknown)
             DispatchQueue.main.async { [weak self] in
-                self?.livenessState.unrecoverableStateEncountered(.unknown)
+                self?.fail(.unknown, cause: error)
             }
         }
     }
@@ -357,9 +345,8 @@ class FaceLivenessDetectionViewModel: ObservableObject {
             )
             diagnostics.onInitialFaceDetectedSent()
         } catch {
-            diagnostics.noteCause(error, for: .unknown)
             DispatchQueue.main.async { [weak self] in
-                self?.livenessState.unrecoverableStateEncountered(.unknown)
+                self?.fail(.unknown, cause: error)
             }
         }
     }
@@ -385,7 +372,6 @@ class FaceLivenessDetectionViewModel: ObservableObject {
             faceMatchedEnd: challengeEnd,
             videoEnd: challengeEnd
         )
-        let diagnostics = self.diagnostics
 
         return { [weak self] in
             do {
@@ -404,9 +390,8 @@ class FaceLivenessDetectionViewModel: ObservableObject {
                     self?.hasSentFinalVideoEvent = true
                 }
             } catch {
-                diagnostics.noteCause(error, for: .unknown)
                 DispatchQueue.main.async {
-                    self?.livenessState.unrecoverableStateEncountered(.unknown)
+                    self?.fail(.unknown, cause: error)
                 }
             }
         }
@@ -459,9 +444,8 @@ class FaceLivenessDetectionViewModel: ObservableObject {
                 eventDate: { eventDate }
             )
         } catch {
-            diagnostics.noteCause(error, for: .unknown)
             DispatchQueue.main.async { [weak self] in
-                self?.livenessState.unrecoverableStateEncountered(.unknown)
+                self?.fail(.unknown, cause: error)
             }
         }
     }

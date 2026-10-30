@@ -148,6 +148,30 @@ public struct FaceLivenessDetectionError: Error, Equatable {
 }
 
 extension LivenessStateMachine.LivenessError {
+    /// The error the check ends with when its session can't be started because of `error`.
+    init(sessionStartFailure error: FaceLivenessDetectionError) {
+        switch error {
+        case .unknown:
+            self = .unknown
+        case .sessionTimedOut,
+             .faceInOvalMatchExceededTimeLimitError,
+             .countdownFaceTooClose,
+             .countdownMultipleFaces,
+             .countdownNoFace:
+            self = .timedOut
+        case .cameraPermissionDenied:
+            self = .missingVideoPermission
+        case .userCancelled:
+            self = .userCancelled
+        case .socketClosed:
+            self = .socketClosed
+        case .cameraNotAvailable:
+            self = .cameraNotAvailable
+        default:
+            self = .couldNotOpenStream
+        }
+    }
+
     /// The error the host's completion handler receives when the check ends with this one.
     var hostError: FaceLivenessDetectionError {
         switch self {

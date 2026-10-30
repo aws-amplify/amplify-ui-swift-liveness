@@ -38,9 +38,9 @@ extension LivenessSessionDiagnostics {
         return entries.isEmpty ? nil : entries.joined(separator: " <- ")
     }
 
-    // a Cognito identity ID, region:uuid, which service messages can quote
+    // a Cognito identity ID, region:uuid, which service messages can quote, also URL-encoded or prefixed
     private static let identityID = try? NSRegularExpression(
-        pattern: "\\b([a-z]{2}(?:-[a-z]+)+-[0-9]+):[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\\b"
+        pattern: "([a-z]{2}(?:-[a-z]+)+-[0-9]+)(?::|%3[aA])[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
     )
 
     static func maskingIdentityIDs(in text: String) -> String {
@@ -105,14 +105,13 @@ extension LivenessStateMachine.LivenessError {
         }
     }
 
-    /// Named as Android names it, plus the codes only iOS sends.
+    /// The names both platforms log, plus those for codes only iOS sends.
     var diagnosticCloseCode: String {
         // the server already closed the socket, so the normal closure sent afterwards isn't why it ended
         guard self != .socketClosed, let closeCode = webSocketCloseCode else { return "RUNTIME_ERROR" }
         switch closeCode.rawValue {
         case 1000: return "NORMAL"
         case 4001: return "TIMEOUT"
-        case 4002: return "TIMEOUT_NO_FACE"
         case 4003: return "CANCELED"
         case 4004: return "VIEW_CLOSURE"
         case 4005: return "RUNTIME_ERROR"

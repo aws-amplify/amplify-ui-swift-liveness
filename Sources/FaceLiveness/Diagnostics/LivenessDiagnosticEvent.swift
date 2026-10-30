@@ -8,7 +8,7 @@
 import Foundation
 import Amplify
 
-/// One diagnostic line, `Name(key=value, ...)`. Names match Amplify UI for Android; iOS-only fields come last.
+/// One diagnostic line, `Name(key=value, ...)`. Event names and most field names are shared with Amplify UI for Android.
 struct LivenessDiagnosticEvent: CustomStringConvertible {
     let name: String
     let level: LogLevel
@@ -64,10 +64,9 @@ enum ChallengePhase: Comparable {
     }
 }
 
-/// The conditions the check needs to find a face, read when the face detection watchdog fires.
+/// The view model's conditions for the check to find a face, read when the face detection watchdog fires.
 struct GateSnapshot: Equatable {
     let readyForOval: Bool
-    let faceTargetChallengePresent: Bool
     let initialFaceDistanceCheckPassed: Bool
     let checkState: String
     let captureRunning: Bool
@@ -96,10 +95,11 @@ extension LivenessDiagnosticEvent {
             ("sessionId", .string(sessionID)),
             ("attempt", .optional(attempt)),
             ("device", .string(deviceInfo.device)),
-            ("api", .string(deviceInfo.osVersion)),
             ("livenessVersion", .string(deviceInfo.livenessVersion)),
             ("codec", .string(codec)),
             ("preCheckEnabled", .bool(preCheckEnabled)),
+            // a version string, so it doesn't reuse Android's integer `api`
+            ("osVersion", .string(deviceInfo.osVersion)),
             ("amplifyVersion", .string(deviceInfo.amplifyVersion)),
             ("region", .optional(region))
         ])
@@ -225,9 +225,10 @@ extension LivenessDiagnosticEvent {
             ("sessionId", .string(sessionID)),
             ("type", .string(type)),
             ("message", .string(message)),
-            ("cause", .optional(cause)),
             ("closeCode", .string(closeCode)),
-            ("reason", .string(reason))
+            ("reason", .string(reason)),
+            // last, since it can be long and a cut-off line should keep the rest
+            ("cause", .optional(cause))
         ])
     }
 
@@ -238,11 +239,13 @@ extension LivenessDiagnosticEvent {
         maxDetectionScore: Float,
         faceDetectionThreshold: Float,
         analyzeErrors: Int,
+        detectorHasSessionThreshold: Bool?,
         gates: GateSnapshot?,
         framesDelivered: Int
     ) -> Self {
+        // whether the detector scored frames with the session's threshold, unknown before any frame
         let faceTargetChallenge: String
-        switch gates?.faceTargetChallengePresent {
+        switch detectorHasSessionThreshold {
         case .none: faceTargetChallenge = "unknown"
         case .some(true): faceTargetChallenge = "present"
         case .some(false): faceTargetChallenge = "absent"
@@ -314,8 +317,8 @@ extension LivenessDiagnosticEvent {
         ])
     }
 
-    /// The inter-eye distance in normalized frame coordinates against the pre-check threshold; not
-    /// Android's measure, so the keys differ.
+    /// The inter-eye distance in normalized frame coordinates against the pre-check threshold. Android
+    /// logs a different measure, so these keys aren't shared.
     static func faceDistanceChanged(
         sessionID: String,
         distance: Float,

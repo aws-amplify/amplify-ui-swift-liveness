@@ -9,6 +9,16 @@ import AVFoundation
 @_spi(PredictionsFaceLiveness) import AWSPredictionsPlugin
 
 extension FaceLivenessDetectionViewModel {
+    /// Ends the check with `error`, recording `cause` for the error's SessionError line.
+    func fail(_ error: LivenessStateMachine.LivenessError, cause: Error) {
+        fail(error, cause: LivenessSessionDiagnostics.describeCauses(cause))
+    }
+
+    func fail(_ error: LivenessStateMachine.LivenessError, cause: String?) {
+        diagnostics.noteCause(cause, for: error)
+        livenessState.unrecoverableStateEncountered(error)
+    }
+
     /// `attempt` is nil when the session couldn't be started, so no attempt was counted.
     func logSessionStarting(attempt: Int?) {
         diagnostics.onSessionStartRequested(
@@ -41,8 +51,6 @@ extension FaceLivenessDetectionViewModel {
     func diagnosticsGateSnapshot() -> GateSnapshot {
         GateSnapshot(
             readyForOval: sessionConfiguration != nil,
-            faceTargetChallengePresent: (faceDetector as? FaceDetectorShortRange.Model)?
-                .faceDetectionSessionConfiguration?.sessionConfiguration != nil,
             initialFaceDistanceCheckPassed: livenessState.state.hasPassedPreCheck,
             checkState: livenessState.state.diagnosticName,
             captureRunning: captureSession?.captureSession?.isRunning ?? false

@@ -52,13 +52,13 @@ final class LivenessSessionDiagnosticsLifecycleTests: XCTestCase {
         XCTAssertEqual(logger.entries, [])
     }
 
-    /// Given: A session that already found a face, and one that already failed
+    /// Given: A session that already found a face, and one the service already failed, which doesn't end it
     /// When: The check takes over the camera
     /// Then: Neither arms the watchdog, since it could no longer fire
-    func testCheckStartDoesNotArmTheWatchdogAfterAFaceOrAnError() {
+    func testCheckStartDoesNotArmTheWatchdogAfterAFaceOrAServiceException() {
         let rows: [(name: String, before: Hook)] = [
             ("a face", { $0.onFrameAnalyzed(faceCount: 1, topScore: 0.9) }),
-            ("an error", { $0.onCheckStateChanged(.encounteredUnrecoverableError(.userCancelled)) })
+            ("a service exception", { $0.onServiceException(.internalServer) })
         ]
         for row in rows {
             startSession()
@@ -120,13 +120,13 @@ final class LivenessSessionDiagnosticsLifecycleTests: XCTestCase {
 
     /// Given: A session ready with a 0.85 threshold, whose check started at 2.5 s, with a gate provider
     /// When: Frames arrive, unanalyzed and analyzed without a face, and the timer fires at 12.345 s
-    /// Then: The line has the time since it was armed, the analyzed frames and best score, the errors and the gates
+    /// Then: The line has the time since it was armed, the analyzed frames and best score, the errors, the detector's threshold and the gates
     func testTheWatchdogReportsWhatTheCheckSaw() {
         let configuration = LivenessDiagnosticsFixture.movementConfiguration(faceDetectionThreshold: 0.85)
         diagnostics.onSessionReady(configuration, challengeID: "challenge-1")
         diagnostics.registerGateProvider {
-            GateSnapshot(readyForOval: true, faceTargetChallengePresent: true, initialFaceDistanceCheckPassed: true,
-                         checkState: "recording.ovalDisplayed", captureRunning: true)
+            GateSnapshot(readyForOval: true, initialFaceDistanceCheckPassed: true, checkState: "recording.ovalDisplayed",
+                         captureRunning: true)
         }
         clock.now = 2_500
         diagnostics.onCheckStarted()
@@ -151,7 +151,7 @@ final class LivenessSessionDiagnosticsLifecycleTests: XCTestCase {
 
     /// Given: No gate provider, or one with no snapshot, as once the view model is gone
     /// When: The check starts, no frame arrives, and the timer fires 10 s later
-    /// Then: The silent camera is reported at warn, with every gate unknown
+    /// Then: The silent camera is reported at warn, with every gate and the detector's threshold unknown
     func testTheWatchdogReportsASilentCameraWithUnknownGates() {
         for registersProvider in [false, true] {
             startSession()
@@ -169,6 +169,31 @@ final class LivenessSessionDiagnosticsLifecycleTests: XCTestCase {
                     + "faceTargetChallenge=unknown, initialFaceDistanceCheckPassed=false, checkState=unknown, "
                     + "framesDelivered=0, captureRunning=false)"
             )], registersProvider ? "a provider with no snapshot" : "no provider")
+        }
+    }
+
+    /// Given: A started check whose detector scored no frame, or frames with its fallback threshold or the session's
+    /// When: The watchdog fires
+    /// Then: faceTargetChallenge follows the last scored frame: unknown before one, absent for the fallback, present for the session's
+    func testTheWatchdogReportsWhetherTheLastScoredFrameUsedTheSessionsThreshold() throws {
+        let fallback = FaceDetectionFrameReport(faceCount: 1, topScore: 0.9, usedSessionThreshold: false)
+        let session = FaceDetectionFrameReport(faceCount: 0, topScore: 0.2, usedSessionThreshold: true)
+        let failed = FaceDetectionFrameReport(failure: FrameAnalysisFailure(stage: .prediction, cause: nil))
+        let rows: [(name: String, frames: [FaceDetectionFrameReport], faceTargetChallenge: String)] = [
+            ("failed frames only", [failed, failed], "unknown"),
+            ("fallback threshold frames only", [fallback, fallback], "absent"),
+            ("a session threshold frame, then a failed one", [fallback, session, failed], "present"),
+            ("a session threshold frame, then a fallback one", [session, fallback], "absent")
+        ]
+
+        for row in rows {
+            startSession()
+            diagnostics.onCheckStarted()
+            row.frames.forEach { diagnostics.onFrameReport($0) }
+            scheduler.runPending()
+
+            let watchdog = try XCTUnwrap(logger.lines(named: "FaceDetectionWatchdog").first, row.name)
+            XCTAssertEqual(fields(of: watchdog)["faceTargetChallenge"], row.faceTargetChallenge, row.name)
         }
     }
 
@@ -234,7 +259,7 @@ final class LivenessSessionDiagnosticsLifecycleTests: XCTestCase {
     /// When: 100 more frames measure it there
     /// Then: None of them logs a line, though each is sampled
     func testAHeldMatchLogsNothingPerFrame() throws {
-        let debounce = LivenessSessionDiagnostics.ovalPositionDebounceFrames
+        let debounce = LivenessSessionDiagnostics.debounceFrames
         diagnostics.onInitialFaceDetectedSent()
         for _ in 0..<debounce {
             analyzeFace(.matched, iou: 0.5)
@@ -252,13 +277,12 @@ final class LivenessSessionDiagnosticsLifecycleTests: XCTestCase {
 
     // MARK: - Freezing
 
-    /// Given: A matched session closed by ChallengeCompleted, a check error or a service exception
-    /// When: Every per-frame hook is called again
-    /// Then: Nothing more is logged, and SessionEnded reports the session as it was when it closed
+    /// Given: A matched session closed by ChallengeCompleted or a service exception, neither of which ends it
+    /// When: Every per-frame hook is called again, as often as a line needs, and the detector is removed
+    /// Then: Nothing more is logged but the removal's SessionEnded, which reports the session as it was when it closed
     func testPerFrameAccountingFreezesWhenTheChallengeEndsOrFails() {
         let closers: [(name: String, close: Hook, closeCode: String)] = [
             ("ChallengeCompleted", { $0.onChallengeCompleted() }, "DISPOSED"),
-            ("a check error", { $0.onCheckStateChanged(.encounteredUnrecoverableError(.timedOut)) }, "TIMEOUT"),
             ("a service exception", { $0.onServiceException(.serviceUnavailable) }, "RUNTIME_ERROR")
         ]
         for (name, close, closeCode) in closers {
@@ -273,49 +297,43 @@ final class LivenessSessionDiagnosticsLifecycleTests: XCTestCase {
             diagnostics.onFrameDropped()
             diagnostics.onFrameReport(FaceDetectionFrameReport(faceCount: 0, topScore: 0.99, usedSessionThreshold: false))
             diagnostics.onFrameReport(FaceDetectionFrameReport(failure: FrameAnalysisFailure(stage: .prediction, cause: nil)))
-            diagnostics.onFrameReport(FaceDetectionFrameReport(faceCount: 2, topScore: 0.97, usedSessionThreshold: true))
             diagnostics.onFaceDistance(0.9)
-            for _ in 0..<3 {
+            for _ in 0..<LivenessSessionDiagnostics.debounceFrames {
+                diagnostics.onFrameReport(FaceDetectionFrameReport(faceCount: 2, topScore: 0.97, usedSessionThreshold: true))
                 diagnostics.onOvalMeasurement(OvalMeasurement(position: .tooFar, iou: 0.05))
             }
-
-            XCTAssertEqual(logger.messages, linesAtClose, name)
             diagnostics.onTeardown()
+
             let ended = "Liveness SessionEnded(sessionId=session-1, framesAnalyzed=2, faceEverDetected=true, "
                 + "ovalEverMatched=true, ovalPositionChanges=0, challengeFrames=2, challengeFramesWithFace=2, challengeMinIou=0.6, "
                 + "challengeMeanIou=0.7, analyzeErrors=0, closeCode=\(closeCode), framesDropped=1)"
-            XCTAssertEqual(logger.messages.last, ended, name)
+            XCTAssertEqual(logger.messages, linesAtClose + [ended], name)
         }
     }
 
     // MARK: - Outcomes
 
-    /// Given: Sessions with no outcome, a completion, or errors in either order on either channel
-    /// When: The detector is removed
-    /// Then: SessionEnded has the first error's close code, else NORMAL or DISPOSED; completion logs nothing itself
+    /// Given: A check in progress, or one the service has already failed, which doesn't end the session
+    /// When: The check completes or the user cancels it, or the detector is removed without either
+    /// Then: SessionEnded is logged right away, after any SessionError, with the first error's close code, else NORMAL or DISPOSED
     func testSessionEndedReportsTheFirstErrorElseCompletionElseDisposal() {
+        let remove: Hook = { $0.onTeardown() }
         let complete: Hook = { $0.onCheckStateChanged(.completed) }
         let cancel: Hook = { $0.onCheckStateChanged(.encounteredUnrecoverableError(.userCancelled)) }
-        let timeOut: Hook = { $0.onCheckStateChanged(.encounteredUnrecoverableError(.timedOut)) }
-        let loseStream: Hook = { $0.onCheckStateChanged(.encounteredUnrecoverableError(.couldNotOpenStream)) }
-        let failService: Hook = { $0.onServiceException(.internalServer) }
-        let rows: [(name: String, steps: [Hook], closeCode: String)] = [
-            ("no outcome", [], "DISPOSED"),
-            ("a completion", [complete], "NORMAL"),
-            ("a cancellation", [cancel], "CANCELED"),
-            ("a timeout, then a completion", [timeOut, complete], "TIMEOUT"),
-            ("a timeout, then a runtime error", [timeOut, loseStream], "TIMEOUT"),
-            ("a cancellation, then a service exception", [cancel, failService], "CANCELED"),
-            ("a service exception, then a cancellation", [failService, cancel], "RUNTIME_ERROR")
+        let throttle: Hook = { $0.onServiceException(.throttling) }
+        let rows: [(name: String, steps: [Hook], lines: [String])] = [
+            ("a removal", [remove], [sessionEndedLine()]),
+            ("a completion", [complete], [sessionEndedLine(closeCode: "NORMAL")]),
+            ("a cancellation", [cancel], [cancelledLine, sessionEndedLine(closeCode: "CANCELED")]),
+            ("a service exception, then a completion", [throttle, complete], [throttledLine, sessionEndedLine(closeCode: "RUNTIME_ERROR")]),
+            ("a service exception, then a cancellation", [throttle, cancel],
+             [throttledLine, cancelledLine, sessionEndedLine(closeCode: "RUNTIME_ERROR")])
         ]
 
         for row in rows {
             startSession()
             row.steps.forEach { $0(diagnostics) }
-            diagnostics.onTeardown()
-
-            let lines = logger.messages.filter { !$0.hasPrefix("Liveness SessionError(") }
-            XCTAssertEqual(lines, [sessionEndedLine(closeCode: row.closeCode)], row.name)
+            XCTAssertEqual(logger.messages, row.lines, row.name)
         }
     }
 
@@ -343,59 +361,63 @@ final class LivenessSessionDiagnosticsLifecycleTests: XCTestCase {
     // MARK: - Session errors
 
     /// Given: A check in progress
-    /// When: It times out, and the service then reports that the session wasn't found
-    /// Then: Each logs a SessionError at warn with the host's error, no cause, its close code and what failed
+    /// When: The service reports that the session wasn't found, and the check then times out
+    /// Then: Each logs a SessionError at warn with the host's error, its close code, what failed and no cause, before SessionEnded
     func testEachErrorLogsTheHostsErrorItsCloseCodeAndWhatFailed() {
-        diagnostics.onCheckStateChanged(.encounteredUnrecoverableError(.timedOut))
         diagnostics.onServiceException(.sessionNotFound)
+        diagnostics.onCheckStateChanged(.encounteredUnrecoverableError(.timedOut))
 
         XCTAssertEqual(logger.entries, [
+            MockLogger.Entry(level: .warn, message: "Liveness SessionError(sessionId=session-1, type=sessionNotFound, "
+                + "message=Session not found., closeCode=RUNTIME_ERROR, reason=service.sessionNotFound, cause=null)"),
             MockLogger.Entry(level: .warn, message: "Liveness SessionError(sessionId=session-1, "
                 + "type=faceInOvalMatchExceededTimeLimitError, message=Face did not match oval within time limit., "
-                + "cause=null, closeCode=TIMEOUT, reason=timedOut)"),
-            MockLogger.Entry(level: .warn, message: "Liveness SessionError(sessionId=session-1, type=sessionNotFound, "
-                + "message=Session not found., cause=null, closeCode=RUNTIME_ERROR, reason=service.sessionNotFound)")
+                + "closeCode=TIMEOUT, reason=timedOut, cause=null)"),
+            MockLogger.Entry(level: .info, message: sessionEndedLine(closeCode: "RUNTIME_ERROR"))
         ])
     }
 
     /// Given: A check in progress
-    /// When: A check error, which every later state change republishes, and a service exception each repeat
+    /// When: Service exceptions repeat, then the check fails with an error that every later state change republishes
     /// Then: Each distinct error logs one SessionError, in order
     func testEachDistinctErrorLogsOneSessionError() {
-        diagnostics.onCheckStateChanged(.encounteredUnrecoverableError(.timedOut))
-        diagnostics.onCheckStateChanged(.encounteredUnrecoverableError(.timedOut))
         diagnostics.onServiceException(.throttling)
         diagnostics.onServiceException(.throttling)
-        diagnostics.onCheckStateChanged(.encounteredUnrecoverableError(.couldNotOpenStream))
         diagnostics.onServiceException(.internalServer)
+        diagnostics.onServiceException(.throttling)
+        diagnostics.onCheckStateChanged(.encounteredUnrecoverableError(.timedOut))
+        diagnostics.onCheckStateChanged(.encounteredUnrecoverableError(.timedOut))
 
         XCTAssertEqual(
             logger.lines(named: "SessionError").map { fields(of: $0)["reason"] },
-            ["timedOut", "service.throttling", "couldNotOpenStream", "service.internalServer"]
+            ["service.throttling", "service.internalServer", "timedOut"]
         )
     }
 
     /// Given: Causes noted for the unknown error: none, then an error, then a string
-    /// When: The check is cancelled, then ends with the unknown error
+    /// When: The check ends with the unknown error, or the user cancels it instead
     /// Then: Noting logs nothing, and only the unknown error has a cause: the first real one, described
     func testANotedCauseIsTheFirstForItsErrorDescribed() {
-        diagnostics.noteCause(nil as String?, for: .unknown)
-        diagnostics.noteCause(NSError(domain: "AVFoundationErrorDomain", code: -11852, userInfo: [
-            NSLocalizedDescriptionKey: "Cannot Use Camera"
-        ]), for: .unknown)
-        diagnostics.noteCause("WebSocketCloseCode: 1006", for: .unknown)
-        XCTAssertEqual(logger.entries, [])
+        let rows: [(name: String, error: LivenessStateMachine.LivenessError, line: String)] = [
+            ("the unknown error", .unknown, "Liveness SessionError(sessionId=session-1, type=cameraPermissionDenied, "
+                + "message=Camera permissions have not been granted., closeCode=RUNTIME_ERROR, reason=unknown, "
+                + "cause=AVFoundationErrorDomain(-11852): Cannot Use Camera)"),
+            ("a cancellation", .userCancelled, cancelledLine)
+        ]
 
-        diagnostics.onCheckStateChanged(.encounteredUnrecoverableError(.userCancelled))
-        diagnostics.onCheckStateChanged(.encounteredUnrecoverableError(.unknown))
+        for row in rows {
+            startSession()
+            diagnostics.noteCause(nil as String?, for: .unknown)
+            diagnostics.noteCause(NSError(domain: "AVFoundationErrorDomain", code: -11852, userInfo: [
+                NSLocalizedDescriptionKey: "Cannot Use Camera"
+            ]), for: .unknown)
+            diagnostics.noteCause("WebSocketCloseCode: 1006", for: .unknown)
+            XCTAssertEqual(logger.entries, [], row.name)
 
-        XCTAssertEqual(logger.messages, [
-            "Liveness SessionError(sessionId=session-1, type=userCancelled, message=User cancelled the face liveness check., "
-                + "cause=null, closeCode=CANCELED, reason=userCancelled)",
-            "Liveness SessionError(sessionId=session-1, type=cameraPermissionDenied, "
-                + "message=Camera permissions have not been granted., cause=AVFoundationErrorDomain(-11852): Cannot Use Camera, "
-                + "closeCode=RUNTIME_ERROR, reason=unknown)"
-        ])
+            diagnostics.onCheckStateChanged(.encounteredUnrecoverableError(row.error))
+
+            XCTAssertEqual(logger.lines(named: "SessionError"), [row.line], row.name)
+        }
     }
 
     // MARK: - Service exception wrapper
@@ -413,10 +435,7 @@ final class LivenessSessionDiagnosticsLifecycleTests: XCTestCase {
         forward(.throttling)
 
         XCTAssertEqual(heard.events.map { $0.error }, [.throttling])
-        XCTAssertEqual(heard.events.map { $0.logged }, [[
-            "Liveness SessionError(sessionId=session-1, type=throttling, message=A request was denied due to request throttling., "
-                + "cause=null, closeCode=RUNTIME_ERROR, reason=service.throttling)"
-        ]])
+        XCTAssertEqual(heard.events.map { $0.logged }, [[throttledLine]])
     }
 
     /// Given: The service's exception handler wrapped by diagnostics that have since been released
@@ -436,57 +455,79 @@ final class LivenessSessionDiagnosticsLifecycleTests: XCTestCase {
         XCTAssertEqual(logger.entries, [])
     }
 
-    // MARK: - After teardown
+    // MARK: - After the session ends
 
-    /// Given: A session past its initial face whose detector has been removed
-    /// When: Every hook that would log or arm the watchdog is called again, including another removal
+    /// Given: A session past its initial face, ended by its removal, its completion or a check error
+    /// When: Every hook that would log or arm the watchdog is called again, as often as a line needs, including every end
     /// Then: Nothing more is logged or scheduled, and the host still hears of service exceptions
-    func testNothingIsRecordedAfterTeardown() throws {
+    func testNothingIsRecordedOnceTheSessionHasEnded() throws {
         var buffer: CVPixelBuffer?
         CVPixelBufferCreate(kCFAllocatorDefault, 480, 640, kCVPixelFormatType_32BGRA, nil, &buffer)
-        let received = EventLog<FaceLivenessSessionError>()
-        let forward = diagnostics.recordingServiceExceptions { received.append($0) }
-        diagnostics.onInitialFaceDetectedSent()
-        diagnostics.onTeardown()
-        let linesAtTeardown = logger.messages
+        let ends: [(name: String, end: Hook, closeCode: String)] = [
+            ("a removal", { $0.onTeardown() }, "DISPOSED"),
+            ("a completion", { $0.onCheckStateChanged(.completed) }, "NORMAL"),
+            ("a check error", { $0.onCheckStateChanged(.encounteredUnrecoverableError(.timedOut)) }, "TIMEOUT")
+        ]
 
-        diagnostics.onSessionStartRequested(attempt: 2, codec: "H264", preCheckEnabled: true)
-        diagnostics.onSessionReady(LivenessDiagnosticsFixture.movementAndLightConfiguration(), challengeID: "challenge-1")
-        diagnostics.onCameraBound(facing: "front")
-        diagnostics.onCameraPermissionDenied(status: "denied")
-        diagnostics.onCheckStarted()
-        diagnostics.onCameraFrame(try XCTUnwrap(buffer))
-        diagnostics.onFrameReport(FaceDetectionFrameReport(faceCount: 0, topScore: 0.2, usedSessionThreshold: true))
-        diagnostics.onFrameReport(FaceDetectionFrameReport(faceCount: 1, topScore: 0.9, usedSessionThreshold: true))
-        diagnostics.onFrameReport(FaceDetectionFrameReport(faceCount: 1, topScore: 0.9, usedSessionThreshold: false))
-        diagnostics.onFrameReport(FaceDetectionFrameReport(failure: FrameAnalysisFailure(stage: .prediction, cause: nil)))
-        diagnostics.onFaceDistance(0.4)
-        diagnostics.onOvalMeasurement(OvalMeasurement(position: .matched, iou: 0.7))
-        diagnostics.onColorDisplayed()
-        diagnostics.onChallengeCompleted()
-        diagnostics.onCheckStateChanged(.encounteredUnrecoverableError(.socketClosed))
-        forward(.validation)
-        diagnostics.emitWatchdogSnapshot()
-        diagnostics.onTeardown()
+        for (name, end, closeCode) in ends {
+            startSession()
+            let received = EventLog<FaceLivenessSessionError>()
+            let forward = diagnostics.recordingServiceExceptions { received.append($0) }
+            diagnostics.onInitialFaceDetectedSent()
+            end(diagnostics)
+            let linesAtEnd = logger.messages
 
-        XCTAssertEqual(logger.messages, linesAtTeardown)
-        XCTAssertEqual(linesAtTeardown.last, sessionEndedLine())
-        XCTAssertEqual(scheduler.items.count, 0, "a watchdog was armed after the session ended")
-        XCTAssertEqual(received.events, [.validation])
+            diagnostics.onSessionStartRequested(attempt: 2, codec: "H264", preCheckEnabled: true)
+            diagnostics.onSessionReady(LivenessDiagnosticsFixture.movementAndLightConfiguration(), challengeID: "challenge-1")
+            diagnostics.onCameraBound(facing: "front")
+            diagnostics.onCameraPermissionDenied(status: "denied")
+            diagnostics.onCheckStarted()
+            diagnostics.onCameraFrame(try XCTUnwrap(buffer))
+            diagnostics.onFrameReport(FaceDetectionFrameReport(faceCount: 0, topScore: 0.2, usedSessionThreshold: true))
+            for _ in 0..<LivenessSessionDiagnostics.debounceFrames {
+                diagnostics.onFrameReport(FaceDetectionFrameReport(faceCount: 1, topScore: 0.9, usedSessionThreshold: true))
+                diagnostics.onOvalMeasurement(OvalMeasurement(position: .matched, iou: 0.7))
+            }
+            diagnostics.onFrameReport(FaceDetectionFrameReport(faceCount: 1, topScore: 0.9, usedSessionThreshold: false))
+            diagnostics.onFrameReport(FaceDetectionFrameReport(failure: FrameAnalysisFailure(stage: .prediction, cause: nil)))
+            diagnostics.onFaceDistance(0.4)
+            diagnostics.onColorDisplayed()
+            diagnostics.onChallengeCompleted()
+            diagnostics.onCheckStateChanged(.completed)
+            diagnostics.onCheckStateChanged(.encounteredUnrecoverableError(.socketClosed))
+            forward(.validation)
+            diagnostics.emitWatchdogSnapshot()
+            diagnostics.onTeardown()
+
+            XCTAssertEqual(logger.messages, linesAtEnd, name)
+            XCTAssertEqual(linesAtEnd.last, sessionEndedLine(closeCode: closeCode), name)
+            XCTAssertEqual(scheduler.items.count, 0, "\(name): a watchdog was armed after the session ended")
+            XCTAssertEqual(received.events, [.validation], name)
+        }
     }
 
     /// Given: A session with an armed watchdog
-    /// When: The detector is removed from 64 threads at once
-    /// Then: One SessionEnded is logged and the watchdog is cancelled
-    func testConcurrentTeardownLogsOneSessionEnded() {
+    /// When: From 64 threads at once, the detector is removed, the check completes and the user cancels it
+    /// Then: Whichever comes first alone ends the session, logging one SessionEnded, and the watchdog is cancelled
+    func testConcurrentEndsLogOneSessionEnded() {
         let diagnostics = self.diagnostics!
         analyzeFrameWithoutFace()
+        let ends: [Hook] = [
+            { $0.onTeardown() },
+            { $0.onCheckStateChanged(.completed) },
+            { $0.onCheckStateChanged(.encounteredUnrecoverableError(.userCancelled)) }
+        ]
 
-        DispatchQueue.concurrentPerform(iterations: 64) { _ in
-            diagnostics.onTeardown()
+        DispatchQueue.concurrentPerform(iterations: 64) { index in
+            ends[index % ends.count](diagnostics)
         }
 
-        XCTAssertEqual(logger.messages, [sessionEndedLine(framesAnalyzed: 1)])
+        let outcomes = [
+            [sessionEndedLine(framesAnalyzed: 1)],
+            [sessionEndedLine(framesAnalyzed: 1, closeCode: "NORMAL")],
+            [cancelledLine, sessionEndedLine(framesAnalyzed: 1, closeCode: "CANCELED")]
+        ]
+        XCTAssertTrue(outcomes.contains(logger.messages), "\(logger.messages)")
         XCTAssertEqual(scheduler.items.map(\.cancelled), [true])
     }
 
@@ -494,7 +535,8 @@ final class LivenessSessionDiagnosticsLifecycleTests: XCTestCase {
 
     /// Given: Hooks arriving at once from the capture queue, main and the service's queue
     /// When: 500 frames are analyzed, colors show, a service exception arrives half way, and the detector is removed
-    /// Then: One SessionEnded is logged, last, with counts consistent with the frames analyzed before the exception
+    /// Then: The removal, not the exception, logs the one SessionEnded, last, with counts consistent with the frames analyzed
+    ///       before the exception
     func testHooksFromSeveralQueuesStayConsistent() throws {
         let diagnostics = self.diagnostics!
         let frameCount = 500
@@ -541,6 +583,7 @@ final class LivenessSessionDiagnosticsLifecycleTests: XCTestCase {
         wait(for: [framesAnalyzed, colorsShown, exceptionReported], timeout: 10)
         // a timer firing after the faces were seen stays silent
         scheduler.runAll()
+        XCTAssertEqual(logger.lines(named: "SessionEnded"), [], "the service exception ended the session")
         diagnostics.onTeardown()
 
         let ended = logger.lines(named: "SessionEnded")
@@ -583,6 +626,14 @@ final class LivenessSessionDiagnosticsLifecycleTests: XCTestCase {
 // MARK: - Support
 
 private typealias Hook = (LivenessSessionDiagnostics) -> Void
+
+/// The SessionError line of a cancellation with no cause noted.
+private let cancelledLine = "Liveness SessionError(sessionId=session-1, type=userCancelled, "
+    + "message=User cancelled the face liveness check., closeCode=CANCELED, reason=userCancelled, cause=null)"
+
+/// The SessionError line of the service throttling the session.
+private let throttledLine = "Liveness SessionError(sessionId=session-1, type=throttling, "
+    + "message=A request was denied due to request throttling., closeCode=RUNTIME_ERROR, reason=service.throttling, cause=null)"
 
 /// One analyzed frame: a face measured against the oval, with its overlap, or no face.
 private enum Frame {

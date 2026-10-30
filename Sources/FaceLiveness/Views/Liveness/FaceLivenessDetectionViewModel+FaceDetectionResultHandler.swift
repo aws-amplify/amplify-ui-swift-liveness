@@ -26,15 +26,8 @@ extension FaceLivenessDetectionViewModel: FaceDetectionResultHandler {
         case .singleFace(let face):
             guard let sessionConfiguration = sessionConfiguration else { return }
             
-            let ovalMatchChallenge: FaceLivenessSession.OvalMatchChallenge
-            var colorChallenge: FaceLivenessSession.ColorChallenge?
-            switch sessionConfiguration {
-            case .faceMovement(let ovalChallenge):
-                ovalMatchChallenge = ovalChallenge
-            case .faceMovementAndLight(let colorSeqChallenge, let ovalChallenge):
-                colorChallenge = colorSeqChallenge
-                ovalMatchChallenge = ovalChallenge
-            }
+            let ovalMatchChallenge = sessionConfiguration.ovalMatchChallenge
+            let colorChallenge = sessionConfiguration.colorChallenge
             
             var normalizedFace = normalizeFace(face)
             normalizedFace.boundingBox = normalizedFace.boundingBoxFromLandmarks(

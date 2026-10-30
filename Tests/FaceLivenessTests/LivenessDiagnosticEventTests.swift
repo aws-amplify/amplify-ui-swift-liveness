@@ -35,24 +35,35 @@ final class LivenessDiagnosticEventTests: XCTestCase {
 
     /// Given: One of each event, and Amplify UI for Android's events
     /// When: Their category, names and keys are compared
-    /// Then: Android's category and events are kept, with the shared keys first, in Android's order
+    /// Then: Android's category and events are kept, with the shared keys first in Android's order, except those moved to
+    ///       the end, and only the listed keys are one platform's own
     func testEventsKeepAndroidsNamesAndKeyOrder() {
         XCTAssertEqual(LivenessSessionDiagnostics.logCategory, "Liveness")
         XCTAssertEqual(Set(renderings.map { $0.event.name }), Set(Self.androidKeys.keys).union(["CameraPermissionDenied"]))
 
         var androidOnly: [String] = []
+        var iOSOnly: [String] = []
         for (event, _, _) in renderings {
             let keys = event.fields.map { $0.key }
             // CameraPermissionDenied is iOS only, so it shares only the session ID
             let android = (Self.androidKeys[event.name] ?? ["sessionId"]).map { Self.renamedKeys["\(event.name).\($0)"] ?? $0 }
-            let shared = android.filter(keys.contains)
+            let movedToEnd = android.filter { Self.keysMovedToEnd.contains("\(event.name).\($0)") }
+            let shared = android.filter { keys.contains($0) && !movedToEnd.contains($0) }
             XCTAssertEqual(Array(keys.prefix(shared.count)), shared, event.name)
+            XCTAssertEqual(Array(keys.suffix(movedToEnd.count)), movedToEnd, event.name)
             androidOnly += android.filter { !keys.contains($0) }.map { "\(event.name).\($0)" }
+            iOSOnly += keys.filter { !android.contains($0) }.map { "\(event.name).\($0)" }
         }
-        XCTAssertEqual(
-            androidOnly,
-            ["FirstFrame.pixelStride", "FirstFrame.rotation", "SessionError.stopSession", "FaceDetectionWatchdog.showingStartView"]
-        )
+        XCTAssertEqual(androidOnly, [
+            "SessionStarting.api", "FirstFrame.pixelStride", "FirstFrame.rotation", "SessionError.stopSession",
+            "FaceDetectionWatchdog.showingStartView"
+        ])
+        XCTAssertEqual(iOSOnly, [
+            "SessionStarting.osVersion", "SessionStarting.amplifyVersion", "SessionStarting.region",
+            "InitialFaceDetected.elapsedSinceCheckStartMs", "SessionEnded.framesDropped", "SessionError.reason",
+            "FaceDetectionWatchdog.framesDelivered", "FaceDetectionWatchdog.captureRunning", "AnalyzeFailed.stage", "AnalyzeFailed.cause",
+            "CameraPermissionDenied.status"
+        ])
     }
 
     /// Given: Events missing an optional value, such as the attempt of a session that couldn't start
@@ -103,24 +114,30 @@ final class LivenessDiagnosticEventTests: XCTestCase {
         XCTAssertEqual(exceeds, ["false", "false", "true"])
     }
 
-    /// Given: A watchdog that read no gates, and one whose detector has no session configuration
+    /// Given: Watchdogs whose detector scored its last frame with the session's threshold, with its fallback, or none yet,
+    ///        and one that read no gates
     /// When: They're rendered
-    /// Then: The unread gates render their defaults, and the missing configuration renders absent
-    func testFaceDetectionWatchdogRendersMissingGates() {
-        func watchdog(_ gates: GateSnapshot?) -> LivenessDiagnosticEvent {
+    /// Then: The face target challenge is present, absent or unknown whatever the gates, and unread gates render their defaults
+    func testFaceDetectionWatchdogRendersTheDetectorsThresholdAndMissingGates() {
+        func watchdog(detectorHasSessionThreshold: Bool?, gates: GateSnapshot?) -> LivenessDiagnosticEvent {
             .faceDetectionWatchdog(
                 sessionID: id, elapsedMs: 10_000, framesAnalyzed: 0, maxDetectionScore: 0, faceDetectionThreshold: 0.7,
-                analyzeErrors: 0, gates: gates, framesDelivered: 0
+                analyzeErrors: 0, detectorHasSessionThreshold: detectorHasSessionThreshold, gates: gates, framesDelivered: 0
             )
         }
-        let gates = ["readyForOval", "faceTargetChallenge", "initialFaceDistanceCheckPassed", "checkState", "captureRunning"]
-        XCTAssertEqual(gates.map { field($0, of: watchdog(nil)) }, ["false", "unknown", "false", "unknown", "false"])
+        // the view model is ready for the oval in every row, so only the detector tells them apart
+        let ready = GateSnapshot(readyForOval: true, initialFaceDistanceCheckPassed: false, checkState: "initial", captureRunning: true)
+        let rows: [(detectorHasSessionThreshold: Bool?, faceTargetChallenge: String)] = [
+            (true, "present"), (false, "absent"), (nil, "unknown")
+        ]
+        for (detectorHasSessionThreshold, faceTargetChallenge) in rows {
+            let event = watchdog(detectorHasSessionThreshold: detectorHasSessionThreshold, gates: ready)
+            XCTAssertEqual(field("faceTargetChallenge", of: event), faceTargetChallenge, String(describing: detectorHasSessionThreshold))
+        }
 
-        let noConfiguration = GateSnapshot(
-            readyForOval: true, faceTargetChallengePresent: false, initialFaceDistanceCheckPassed: false,
-            checkState: "initial", captureRunning: true
-        )
-        XCTAssertEqual(field("faceTargetChallenge", of: watchdog(noConfiguration)), "absent")
+        let keys = ["readyForOval", "faceTargetChallenge", "initialFaceDistanceCheckPassed", "checkState", "captureRunning"]
+        let unread = watchdog(detectorHasSessionThreshold: true, gates: nil)
+        XCTAssertEqual(keys.map { field($0, of: unread) }, ["false", "present", "false", "unknown", "false"])
     }
 
     // MARK: - Values
@@ -140,7 +157,7 @@ final class LivenessDiagnosticEventTests: XCTestCase {
         }
     }
 
-    // MARK: - Names, close codes and host errors
+    // MARK: - Names, close codes and error mappings
 
     /// Given: Every liveness error, and a code none has
     /// When: Each is named and mapped to the error the host receives
@@ -198,22 +215,23 @@ final class LivenessDiagnosticEventTests: XCTestCase {
         XCTAssertEqual(received.events.map(\.diagnosticName), Self.serviceErrors.map { $0.hostError.diagnosticName })
     }
 
+    /// Given: Every error the host can receive
+    /// When: The detector view can't start its session because of it
+    /// Then: The check ends with the liveness error it ended with before diagnostics
+    func testSessionStartFailuresEndTheCheckAsBefore() {
+        XCTAssertEqual(Self.detectionErrors.map { $0.error.code }, Array(UInt8(0)...19))
+        for (error, name, livenessError) in Self.detectionErrors {
+            // by name, as the errors themselves print only their codes
+            XCTAssertEqual(LivenessError(sessionStartFailure: error).diagnosticName, livenessError.diagnosticName, name)
+        }
+    }
+
     /// Given: Every error the host can receive and every capture session error, and codes none has
     /// When: They're named
     /// Then: Each is named as declared, and the other codes by their number
     func testDetectionAndCaptureErrorsAreNamedAsDeclared() {
-        let detectionErrors: [(error: FaceLivenessDetectionError, name: String)] = [
-            (.unknown, "unknown"), (.sessionNotFound, "sessionNotFound"), (.sessionTimedOut, "sessionTimedOut"),
-            (.faceInOvalMatchExceededTimeLimitError, "faceInOvalMatchExceededTimeLimitError"), (.accessDenied, "accessDenied"),
-            (.cameraPermissionDenied, "cameraPermissionDenied"), (.userCancelled, "userCancelled"), (.socketClosed, "socketClosed"),
-            (.countdownFaceTooClose, "countdownFaceTooClose"), (.countdownMultipleFaces, "countdownMultipleFaces"),
-            (.countdownNoFace, "countdownNoFace"), (.invalidRegion, "invalidRegion"), (.validation, "validation"),
-            (.internalServer, "internalServer"), (.throttling, "throttling"), (.serviceQuotaExceeded, "serviceQuotaExceeded"),
-            (.serviceUnavailable, "serviceUnavailable"), (.invalidSignature, "invalidSignature"),
-            (.cameraNotAvailable, "cameraNotAvailable"), (.sessionInterrupted, "sessionInterrupted")
-        ]
-        XCTAssertEqual(detectionErrors.map { $0.error.code }, Array(UInt8(0)...19))
-        for (error, name) in detectionErrors {
+        XCTAssertEqual(Self.detectionErrors.map { $0.error.code }, Array(UInt8(0)...19))
+        for (error, name, _) in Self.detectionErrors {
             XCTAssertEqual(error.diagnosticName, name, "code \(error.code)")
         }
         XCTAssertEqual(FaceLivenessDetectionError(code: 20, message: "", recoverySuggestion: "").diagnosticName, "code20")
@@ -266,16 +284,17 @@ final class LivenessDiagnosticEventTests: XCTestCase {
         XCTAssertEqual(names, ["MATCHED", "TOO_FAR_LEFT", "TOO_FAR_RIGHT", "TOO_CLOSE", "TOO_FAR"])
     }
 
-    /// Given: Errors with each close code the check defines, an unlisted code and none
+    /// Given: Errors with each close code the check defines, an undefined code and none
     /// When: Their close codes are named
-    /// Then: Android's names where it has the code, iOS's own for 4002, 4004 and 4006, the unlisted one's number,
-    ///       and none, or a closed socket, a runtime error
+    /// Then: Android's names where it has the code, iOS's own for 4004 and 4006, and the rest by number, 4002 included as
+    ///       no error sends it; none, or a closed socket, is a runtime error
     func testCloseCodesUseAndroidsNamesWhereItHasThem() {
         let rows = [
             (1000, "NORMAL"), (4001, "TIMEOUT"), (4003, "CANCELED"), (4005, "RUNTIME_ERROR"),
             // iOS only
-            (4002, "TIMEOUT_NO_FACE"), (4004, "VIEW_CLOSURE"), (4006, "MISSING_VIDEO_PERMISSION"),
-            (4010, "CODE_4010")
+            (4004, "VIEW_CLOSURE"), (4006, "MISSING_VIDEO_PERMISSION"),
+            // by number: 4002, which no error sends, and an undefined code
+            (4002, "CODE_4002"), (4010, "CODE_4010")
         ]
         for (rawValue, name) in rows {
             let error = LivenessError(code: 7, webSocketCloseCode: URLSessionWebSocketTask.CloseCode(rawValue: rawValue))
@@ -337,12 +356,13 @@ final class LivenessDiagnosticEventTests: XCTestCase {
         XCTAssertEqual(LivenessSessionDiagnostics.describeCauses(outer), "Outer(1): \(kept) <- Inner(2): \(kept)")
     }
 
-    /// Given: An Amplify error quoting a Cognito identity ID, and a description that would be cut inside one
-    /// When: Their causes are described
-    /// Then: Each ID's UUID is masked and the rest is left alone
+    /// Given: An Amplify error quoting a Cognito identity ID, a description that would be cut inside one, and text quoting
+    ///        one URL-encoded or after a prefix, or other IDs
+    /// When: The causes are described and the text masked
+    /// Then: Each identity ID's UUID is masked, before any cut, and the rest, other IDs included, is left alone
     func testCausesMaskCognitoIdentityIDs() {
-        let identityID = "us-east-1:0f7c1a2b-3c4d-5e6f-7a8b-9c0d1e2f3a4b"
-        let notAuthorized = AuthError.notAuthorized("Access to Identity '\(identityID)' is forbidden.", "Check the role")
+        let uuid = "0f7c1a2b-3c4d-5e6f-7a8b-9c0d1e2f3a4b"
+        let notAuthorized = AuthError.notAuthorized("Access to Identity 'us-east-1:\(uuid)' is forbidden.", "Check the role")
         XCTAssertEqual(
             LivenessSessionDiagnostics.describeCauses(notAuthorized),
             "AuthError: Access to Identity 'us-east-1:<masked>' is forbidden."
@@ -350,8 +370,20 @@ final class LivenessDiagnosticEventTests: XCTestCase {
 
         // masked before the entry is cut to 200 characters, which would otherwise keep part of the UUID
         let padding = String(repeating: "x", count: 159)
-        let long = NSError(domain: "Outer", code: 1, userInfo: [NSLocalizedDescriptionKey: "\(padding) \(identityID)"])
+        let long = NSError(domain: "Outer", code: 1, userInfo: [NSLocalizedDescriptionKey: "\(padding) us-east-1:\(uuid)"])
         XCTAssertEqual(LivenessSessionDiagnostics.describeCauses(long), "Outer(1): \(padding) us-east-1:<masked>")
+
+        let rows: [(text: String, masked: String)] = [
+            ("identityId=us-east-1%3A\(uuid)&next=1", "identityId=us-east-1:<masked>&next=1"),
+            ("identityId=us-east-1%3a\(uuid)", "identityId=us-east-1:<masked>"),
+            ("id_us-east-1:\(uuid)", "id_us-east-1:<masked>"),
+            ("us-east-1:\(uuid)_role", "us-east-1:<masked>_role"),
+            // not identity IDs
+            ("\(uuid), sessionId=\(uuid), attempt-1:\(uuid)", "\(uuid), sessionId=\(uuid), attempt-1:\(uuid)")
+        ]
+        for (text, masked) in rows {
+            XCTAssertEqual(LivenessSessionDiagnostics.maskingIdentityIDs(in: text), masked, text)
+        }
     }
 
     // MARK: - Formats, codecs and device
@@ -404,14 +436,14 @@ final class LivenessDiagnosticEventTests: XCTestCase {
     /// One of each event with every optional value set, its line, and its level, which is Android's.
     private var renderings: [(event: LivenessDiagnosticEvent, line: String, level: LogLevel)] {
         let gates = GateSnapshot(
-            readyForOval: true, faceTargetChallengePresent: true, initialFaceDistanceCheckPassed: false,
-            checkState: "pendingFacePreparedConfirmation.noFace", captureRunning: true
+            readyForOval: true, initialFaceDistanceCheckPassed: false, checkState: "pendingFacePreparedConfirmation.noFace",
+            captureRunning: true
         )
         let modelError = NSError(domain: "com.apple.CoreML", code: 0, userInfo: [NSLocalizedDescriptionKey: "Failed to evaluate model"])
         return [
             (.sessionStarting(sessionID: id, attempt: 2, deviceInfo: .test, codec: "H264", preCheckEnabled: true, region: "us-east-1"),
-             "SessionStarting(sessionId=session-1, attempt=2, device=Apple/iPhone16,2, api=18.5, livenessVersion=1.5.3, codec=H264, "
-                 + "preCheckEnabled=true, amplifyVersion=2.63.0, region=us-east-1)", .info),
+             "SessionStarting(sessionId=session-1, attempt=2, device=Apple/iPhone16,2, livenessVersion=1.5.3, codec=H264, "
+                 + "preCheckEnabled=true, osVersion=18.5, amplifyVersion=2.63.0, region=us-east-1)", .info),
             (.firstFrame(sessionID: id, width: 480, height: 640, targetWidth: 480, targetHeight: 640,
                          rowStride: 1920, expectedRowStride: 1920, format: "BGRA"),
              "FirstFrame(sessionId=session-1, frame=480x640, targetFrame=480x640, resolutionMatchesTarget=true, rowStride=1920, "
@@ -435,9 +467,10 @@ final class LivenessDiagnosticEventTests: XCTestCase {
             (.sessionError(sessionID: id, type: "socketClosed", message: "Websocket connection unexpectedly closed",
                            cause: "NSURLErrorDomain(-1009): offline", closeCode: "RUNTIME_ERROR", reason: "couldNotOpenStream"),
              "SessionError(sessionId=session-1, type=socketClosed, message=Websocket connection unexpectedly closed, "
-                 + "cause=NSURLErrorDomain(-1009): offline, closeCode=RUNTIME_ERROR, reason=couldNotOpenStream)", .warn),
+                 + "closeCode=RUNTIME_ERROR, reason=couldNotOpenStream, cause=NSURLErrorDomain(-1009): offline)", .warn),
             (.faceDetectionWatchdog(sessionID: id, elapsedMs: 10_012, framesAnalyzed: 300, maxDetectionScore: 0.68,
-                                    faceDetectionThreshold: 0.7, analyzeErrors: 3, gates: gates, framesDelivered: 303),
+                                    faceDetectionThreshold: 0.7, analyzeErrors: 3, detectorHasSessionThreshold: true, gates: gates,
+                                    framesDelivered: 303),
              "FaceDetectionWatchdog(sessionId=session-1, elapsedMs=10012, framesAnalyzed=300, maxDetectionScore=0.68, "
                  + "faceDetectionThreshold=0.7, analyzeErrors=3, readyForOval=true, faceTargetChallenge=present, "
                  + "initialFaceDistanceCheckPassed=false, checkState=pendingFacePreparedConfirmation.noFace, framesDelivered=303, "
@@ -493,6 +526,36 @@ final class LivenessDiagnosticEventTests: XCTestCase {
         "FaceDistanceChanged.faceDistanceThresholdMin": "faceDistanceThreshold",
         "FaceDistanceChanged.exceedsThresholdMin": "exceedsThreshold"
     ]
+
+    /// Shared keys iOS logs last rather than in Android's order, since a long cause would leave a cut-off line without the rest.
+    private static let keysMovedToEnd: Set = ["SessionError.cause"]
+
+    /// Each error the host can receive, its name, and the liveness error the check ended with before diagnostics when the
+    /// session couldn't start because of it.
+    private static var detectionErrors: [(error: FaceLivenessDetectionError, name: String, sessionStartFailure: LivenessError)] {
+        [
+            (.unknown, "unknown", .unknown),
+            (.sessionNotFound, "sessionNotFound", .couldNotOpenStream),
+            (.sessionTimedOut, "sessionTimedOut", .timedOut),
+            (.faceInOvalMatchExceededTimeLimitError, "faceInOvalMatchExceededTimeLimitError", .timedOut),
+            (.accessDenied, "accessDenied", .couldNotOpenStream),
+            (.cameraPermissionDenied, "cameraPermissionDenied", .missingVideoPermission),
+            (.userCancelled, "userCancelled", .userCancelled),
+            (.socketClosed, "socketClosed", .socketClosed),
+            (.countdownFaceTooClose, "countdownFaceTooClose", .timedOut),
+            (.countdownMultipleFaces, "countdownMultipleFaces", .timedOut),
+            (.countdownNoFace, "countdownNoFace", .timedOut),
+            (.invalidRegion, "invalidRegion", .couldNotOpenStream),
+            (.validation, "validation", .couldNotOpenStream),
+            (.internalServer, "internalServer", .couldNotOpenStream),
+            (.throttling, "throttling", .couldNotOpenStream),
+            (.serviceQuotaExceeded, "serviceQuotaExceeded", .couldNotOpenStream),
+            (.serviceUnavailable, "serviceUnavailable", .couldNotOpenStream),
+            (.invalidSignature, "invalidSignature", .couldNotOpenStream),
+            (.cameraNotAvailable, "cameraNotAvailable", .cameraNotAvailable),
+            (.sessionInterrupted, "sessionInterrupted", .couldNotOpenStream)
+        ]
+    }
 
     /// Each service error, its name, and the error the host received for it before diagnostics.
     private static var serviceErrors: [(error: FaceLivenessSessionError, name: String, hostError: FaceLivenessDetectionError)] {

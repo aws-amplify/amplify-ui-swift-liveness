@@ -112,7 +112,7 @@ struct FaceInOvalMatching {
     }
 }
 
-/// Where the face is relative to the oval, named as Android names it.
+/// Where the face is relative to the oval. The raw values are the names both platforms log.
 enum FaceOvalPosition: String {
     case matched = "MATCHED"
     case tooFarLeft = "TOO_FAR_LEFT"

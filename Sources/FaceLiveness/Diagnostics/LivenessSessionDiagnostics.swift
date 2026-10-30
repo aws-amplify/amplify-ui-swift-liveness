@@ -18,7 +18,8 @@ final class LivenessSessionDiagnostics: @unchecked Sendable {
 
     static let logCategory = "Liveness"
     static let faceDetectionWatchdogTimeout: TimeInterval = 10
-    static let ovalPositionDebounceFrames = 3
+    /// How many frames a new face count or oval position must hold before it is logged.
+    static let debounceFrames = 3
     static let distanceReportDelta: Float = 0.05
     static let targetFrameWidth = 480
     static let targetFrameHeight = 640
@@ -72,16 +73,8 @@ final class LivenessSessionDiagnostics: @unchecked Sendable {
     }
 
     func onSessionReady(_ configuration: FaceLivenessSession.SessionConfiguration, challengeID: String) {
-        let challengeType: String
-        let ovalMatchChallenge: FaceLivenessSession.OvalMatchChallenge
-        switch configuration {
-        case .faceMovement(let challenge):
-            challengeType = "FaceMovementChallenge"
-            ovalMatchChallenge = challenge
-        case .faceMovementAndLight(_, let challenge):
-            challengeType = "FaceMovementAndLightChallenge"
-            ovalMatchChallenge = challenge
-        }
+        let challengeType = configuration.colorChallenge == nil ? "FaceMovementChallenge" : "FaceMovementAndLightChallenge"
+        let ovalMatchChallenge = configuration.ovalMatchChallenge
 
         record { state in
             state.faceDetectionThreshold = Float(ovalMatchChallenge.faceDetectionThreshold)
@@ -149,7 +142,7 @@ final class LivenessSessionDiagnostics: @unchecked Sendable {
         }
     }
 
-    /// Frames analyzed after the challenge no longer count, as on Android.
+    /// Frames analyzed after the challenge no longer count.
     func onChallengeCompleted() {
         record { state in
             guard !state.challengeCompletedLogged else { return [] }
@@ -158,29 +151,33 @@ final class LivenessSessionDiagnostics: @unchecked Sendable {
         }
     }
 
-    /// The detector was removed. Logs the session summary once; nothing is recorded after it.
+    /// The detector was removed. Ends a session the check didn't finish; covering the detector with
+    /// another screen counts as removal, since that stops its camera.
     func onTeardown() {
-        record { state in
-            state.destroyed = true
-            cancelWatchdog(&state)
-            let iouSamples = state.iouSamples
-            return [.sessionEnded(
-                sessionID: sessionID,
-                framesAnalyzed: state.framesAnalyzed,
-                faceEverDetected: state.faceEverDetected,
-                ovalEverMatched: state.ovalEverMatched,
-                ovalPositionChanges: state.ovalPositionChanges,
-                // derived rather than counted, so it can't drift from the sample count
-                challengeFrames: state.ovalEverMatched ? state.framesAnalyzed - state.framesAnalyzedAtFirstMatch + 1 : 0,
-                challengeFramesWithFace: iouSamples,
-                challengeMinIou: iouSamples == 0 ? 0 : Float(state.lowestIou),
-                challengeMeanIou: iouSamples == 0 ? 0 : Float(state.iouSum / Double(iouSamples)),
-                analyzeErrors: state.analyzeErrors,
-                // the first error says why the session ended; the removal that follows it doesn't
-                closeCode: state.terminalCloseCode ?? (state.completed ? "NORMAL" : "DISPOSED"),
-                framesDropped: state.framesDropped
-            )]
-        }
+        record { state in endSession(&state) }
+    }
+
+    /// Logs the session summary once; nothing is recorded after it.
+    private func endSession(_ state: inout State) -> [LivenessDiagnosticEvent] {
+        state.destroyed = true
+        cancelWatchdog(&state)
+        let iouSamples = state.iouSamples
+        return [.sessionEnded(
+            sessionID: sessionID,
+            framesAnalyzed: state.framesAnalyzed,
+            faceEverDetected: state.faceEverDetected,
+            ovalEverMatched: state.ovalEverMatched,
+            ovalPositionChanges: state.ovalPositionChanges,
+            // derived rather than counted, so it can't drift from the sample count
+            challengeFrames: state.ovalEverMatched ? state.framesAnalyzed - state.framesAnalyzedAtFirstMatch + 1 : 0,
+            challengeFramesWithFace: iouSamples,
+            challengeMinIou: iouSamples == 0 ? 0 : Float(state.lowestIou),
+            challengeMeanIou: iouSamples == 0 ? 0 : Float(state.iouSum / Double(iouSamples)),
+            analyzeErrors: state.analyzeErrors,
+            // the first error says why the session ended
+            closeCode: state.terminalCloseCode ?? (state.completed ? "NORMAL" : "DISPOSED"),
+            framesDropped: state.framesDropped
+        )]
     }
 
     // MARK: - Errors
@@ -201,27 +198,25 @@ final class LivenessSessionDiagnostics: @unchecked Sendable {
     }
 
     /// Called with every check state before observers see it, so an error is logged before the
-    /// host's completion handler runs.
+    /// host's completion handler runs. A final state ends the session.
     func onCheckStateChanged(_ checkState: LivenessStateMachine.State) {
         switch checkState {
         case .completed:
             record { state in
                 state.completed = true
-                cancelWatchdog(&state)
-                return []
+                return endSession(&state)
             }
         case .encounteredUnrecoverableError(let error):
             record { state in
-                // every mutation republishes the terminal state, so report each error once
-                guard state.reportedErrors.insert(error.diagnosticName).inserted else { return [] }
                 let cause = state.pendingCauses[error.code]
-                return sessionError(
+                let events = sessionError(
                     &state,
                     hostError: error.hostError,
                     cause: cause,
                     closeCode: error.diagnosticCloseCode,
                     reason: error.diagnosticName
                 )
+                return events + endSession(&state)
             }
         default:
             return
@@ -308,15 +303,20 @@ final class LivenessSessionDiagnostics: @unchecked Sendable {
     /// start the watchdog.
     func onFrameBeforeSessionReady() {
         record { state in
-            guard !state.perFrameClosed, !state.frameBeforeSessionReadyLogged else { return [] }
+            guard !state.perFrameClosed else { return [] }
+            state.detectorHasSessionThreshold = false
+            guard !state.frameBeforeSessionReadyLogged else { return [] }
             state.frameBeforeSessionReadyLogged = true
             return [.frameBeforeSessionReady]
         }
     }
 
+    /// A face count change is logged once the new count holds for `debounceFrames` frames, so a
+    /// score hovering at the threshold doesn't log every frame.
     func onFrameAnalyzed(faceCount: Int, topScore: Float) {
         record { state in
             guard !state.perFrameClosed else { return [] }
+            state.detectorHasSessionThreshold = true
             state.framesAnalyzed += 1
             if topScore > state.maxDetectionScore {
                 state.maxDetectionScore = topScore
@@ -328,10 +328,27 @@ final class LivenessSessionDiagnostics: @unchecked Sendable {
                 startWatchdogIfNeeded(&state)
             }
 
-            let previous = state.lastFaceCount
-            guard previous != faceCount else { return [] }
+            // the first frame is the baseline
+            guard let previous = state.lastFaceCount else {
+                state.lastFaceCount = faceCount
+                return []
+            }
+            guard faceCount != previous else {
+                state.candidateFaceCount = nil
+                state.candidateFaceCountFrames = 0
+                return []
+            }
+            if faceCount == state.candidateFaceCount {
+                state.candidateFaceCountFrames += 1
+            } else {
+                state.candidateFaceCount = faceCount
+                state.candidateFaceCountFrames = 1
+            }
+            guard state.candidateFaceCountFrames >= Self.debounceFrames else { return [] }
+
             state.lastFaceCount = faceCount
-            guard let previous else { return [] }
+            state.candidateFaceCount = nil
+            state.candidateFaceCountFrames = 0
             return [.faceCountChanged(
                 sessionID: sessionID,
                 from: previous,
@@ -376,7 +393,7 @@ final class LivenessSessionDiagnostics: @unchecked Sendable {
     }
 
     /// The face measured against the oval on this frame, which can differ from the instruction
-    /// shown. Ignored until the initial face is sent, as on Android.
+    /// shown. Ignored until the initial face is sent, when the oval fit starts.
     func onOvalMeasurement(_ measurement: OvalMeasurement) {
         record { state in
             guard state.phase >= .ovalFit else { return [] }
@@ -386,7 +403,7 @@ final class LivenessSessionDiagnostics: @unchecked Sendable {
         }
     }
 
-    /// Logs a position once it holds for `ovalPositionDebounceFrames` frames, since a face on the
+    /// Logs a position once it holds for `debounceFrames` frames, since a face on the
     /// match boundary flips on frame-to-frame noise; every change is still counted.
     private func ovalPositionChanged(_ position: FaceOvalPosition, _ state: inout State) -> [LivenessDiagnosticEvent] {
         guard !state.perFrameClosed else { return [] }
@@ -419,7 +436,7 @@ final class LivenessSessionDiagnostics: @unchecked Sendable {
             state.candidateOvalPosition = position
             state.candidateOvalPositionFrames = 1
         }
-        guard state.candidateOvalPositionFrames >= Self.ovalPositionDebounceFrames else { return events }
+        guard state.candidateOvalPositionFrames >= Self.debounceFrames else { return events }
 
         let previous = state.lastOvalPosition
         state.lastOvalPosition = position
@@ -462,6 +479,7 @@ final class LivenessSessionDiagnostics: @unchecked Sendable {
                 maxDetectionScore: state.maxDetectionScore,
                 faceDetectionThreshold: state.faceDetectionThreshold,
                 analyzeErrors: state.analyzeErrors,
+                detectorHasSessionThreshold: state.detectorHasSessionThreshold,
                 gates: gates,
                 framesDelivered: state.framesDelivered
             )]
@@ -562,6 +580,10 @@ final class LivenessSessionDiagnostics: @unchecked Sendable {
         var maxDetectionScore: Float = 0
         var faceEverDetected = false
         var lastFaceCount: Int?
+        var candidateFaceCount: Int?
+        var candidateFaceCountFrames = 0
+        /// Whether the last frame the detector scored used the session's threshold; nil before any.
+        var detectorHasSessionThreshold: Bool?
         var lastEmittedDistance: Float?
 
         var lastOvalPosition: FaceOvalPosition?

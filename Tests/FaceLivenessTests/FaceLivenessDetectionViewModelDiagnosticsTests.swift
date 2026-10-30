@@ -53,8 +53,8 @@ final class FaceLivenessDetectionViewModelDiagnosticsTests: XCTestCase {
     func testSessionStartingReportsTheAttemptTheServiceIsSent() {
         let line = { (attempt: String, preCheck: Bool) in
             "Liveness SessionStarting(sessionId=session-1, attempt=\(attempt), "
-                + "device=Apple/iPhone16,2, api=18.5, livenessVersion=1.5.3, codec=H264, "
-                + "preCheckEnabled=\(preCheck), amplifyVersion=2.63.0, region=us-east-1)"
+                + "device=Apple/iPhone16,2, livenessVersion=1.5.3, codec=H264, "
+                + "preCheckEnabled=\(preCheck), osVersion=18.5, amplifyVersion=2.63.0, region=us-east-1)"
         }
         let rows: [(previous: Int, secondsAgo: TimeInterval, preCheck: Bool, attempt: Int)] = [(2, 0, false, 3), (4, 305, true, 1)]
         for row in rows {
@@ -107,7 +107,7 @@ final class FaceLivenessDetectionViewModelDiagnosticsTests: XCTestCase {
 
     /// Given: A view model that registered for the service's events twice, wrapping its exception handler twice
     /// When: The service reports from its own queue that the session wasn't found
-    /// Then: One SessionError is logged before the host's handler runs, and the host is told once
+    /// Then: One SessionError is logged before the host's handler runs, without ending the session, and the host is told once
     func testServiceExceptionIsLoggedOnceBeforeTheHostHearsOfIt() {
         let viewModel = makeViewModel()
         let service = MockLivenessService()
@@ -126,8 +126,8 @@ final class FaceLivenessDetectionViewModelDiagnosticsTests: XCTestCase {
         wait(for: [reported], timeout: 2)
 
         let notFound = "Liveness SessionError(sessionId=session-1, type=sessionNotFound, "
-            + "message=Session not found., cause=null, closeCode=RUNTIME_ERROR, "
-            + "reason=service.sessionNotFound)"
+            + "message=Session not found., closeCode=RUNTIME_ERROR, reason=service.sessionNotFound, "
+            + "cause=null)"
         XCTAssertEqual(hostCalls.events.map { $0.error }, [.sessionNotFound])
         XCTAssertEqual(hostCalls.events.map { $0.logged }, [[notFound]])
         XCTAssertEqual(logger.messages, [notFound])
@@ -135,19 +135,20 @@ final class FaceLivenessDetectionViewModelDiagnosticsTests: XCTestCase {
 
     /// Given: A view model registered for the service's events
     /// When: The socket completes, then the host removes the detector
-    /// Then: A disconnection ends it normally, 1011 fails the check with the code as cause, and 4003, the check's own code, logs nothing
+    /// Then: A disconnection ends the session normally and 1011 fails the check with the code as cause, ending it, so the
+    ///   removal adds nothing; 4003, the check's own code, logs nothing, and the removal ends the session as disposed
     func testSocketCompletionReportsHowTheSessionEnded() throws {
-        let rows: [(label: String, reason: ServerDisconnection, state: LivenessStateMachine.State, lines: [String])] = [
-            ("disconnection event", .disconnectionEvent, .completed, [sessionEndedLine(closeCode: "NORMAL")]),
+        let rows: [(label: String, reason: ServerDisconnection, state: LivenessStateMachine.State, lines: [String], teardown: [String])] = [
+            ("disconnection event", .disconnectionEvent, .completed, [sessionEndedLine(closeCode: "NORMAL")], []),
             ("1011", .unexpectedClosure(.internalServerError), .encounteredUnrecoverableError(.socketClosed), [
                 "Liveness SessionError(sessionId=session-1, type=socketClosed, "
-                    + "message=Websocket connection unexpectedly closed, cause=WebSocketCloseCode: 1011, "
-                    + "closeCode=RUNTIME_ERROR, reason=socketClosed)",
+                    + "message=Websocket connection unexpectedly closed, closeCode=RUNTIME_ERROR, "
+                    + "reason=socketClosed, cause=WebSocketCloseCode: 1011)",
                 sessionEndedLine(closeCode: "RUNTIME_ERROR")
-            ]),
+            ], []),
             (
                 "4003", .unexpectedClosure(try XCTUnwrap(URLSessionWebSocketTask.CloseCode(rawValue: 4003))), .initial,
-                [sessionEndedLine(closeCode: "DISPOSED")]
+                [], [sessionEndedLine(closeCode: "DISPOSED")]
             )
         ]
         for row in rows {
@@ -159,18 +160,20 @@ final class FaceLivenessDetectionViewModelDiagnosticsTests: XCTestCase {
 
             try XCTUnwrap(service.registeredOnComplete)(row.reason)
             drainMainQueue()
-            viewModel.diagnostics.onTeardown()
 
             XCTAssertEqual(viewModel.livenessState.state, row.state, row.label)
             XCTAssertEqual(logger.messages, row.lines, row.label)
+            viewModel.diagnostics.onTeardown()
+            XCTAssertEqual(logger.messages, row.lines + row.teardown, "\(row.label), after the removal")
         }
     }
 
     // MARK: - Errors
 
     /// Given: A check whose stream, camera or initial face event fails
-    /// When: The failure reaches the check
-    /// Then: SessionError cites the failure as its cause and the error the check ended with as its reason
+    /// When: The failure reaches the check, then the host removes the detector
+    /// Then: SessionError cites the error the check ended with as its reason and the failure as its cause, then SessionEnded
+    ///   ends the session with that error's close code, and the removal adds nothing
     func testFailuresAreLoggedWithTheirCause() {
         let cameraError: LivenessStateMachine.LivenessError =
             AVCaptureDevice.authorizationStatus(for: .video) == .authorized ? .cameraNotAvailable : .missingVideoPermission
@@ -198,22 +201,28 @@ final class FaceLivenessDetectionViewModelDiagnosticsTests: XCTestCase {
             let viewModel = makeViewModel()
             row.fail(viewModel)
             drainMainQueue()
+            viewModel.diagnostics.onTeardown()
 
             XCTAssertEqual(viewModel.livenessState.state, .encounteredUnrecoverableError(row.error), row.label)
+            let lines = logger.messages
+            XCTAssertEqual(lines.last, sessionEndedLine(closeCode: row.error.diagnosticCloseCode), "\(row.label): \(lines)")
             let errors = logger.lines(named: "SessionError")
-            XCTAssertEqual(errors.count, 1, row.label)
-            XCTAssertTrue(errors.allSatisfy { $0.contains(", cause=\(row.cause)") }, "\(row.label): \(errors)")
-            XCTAssertTrue(errors.allSatisfy { $0.hasSuffix(", reason=\(row.error.diagnosticName))") }, "\(row.label): \(errors)")
+            XCTAssertEqual(errors, Array(lines.dropLast().suffix(1)), "\(row.label): once, right before SessionEnded")
+            let reasonAndCause = ", reason=\(row.error.diagnosticName), cause=\(row.cause)"
+            XCTAssertTrue(errors.allSatisfy { $0.contains(reasonAndCause) }, "\(row.label): \(errors)")
         }
     }
 
     /// Given: A movement check holding its matched face for its last second, observed as the detector view does
     /// When: The user cancels during that second, and the terminal state is published again
-    /// Then: SessionError is logged before the observer sees the cancellation, once, and ChallengeCompleted never is
+    /// Then: SessionError, then SessionEnded, is logged before the observer sees the cancellation, once, and ChallengeCompleted never is
     func testCancellationIsLoggedOnceBeforeObserversSeeItAndSuppressesChallengeCompleted() {
-        let cancelled = "Liveness SessionError(sessionId=session-1, type=userCancelled, "
-            + "message=User cancelled the face liveness check., cause=null, closeCode=CANCELED, "
-            + "reason=userCancelled)"
+        let cancelled = [
+            "Liveness SessionError(sessionId=session-1, type=userCancelled, "
+                + "message=User cancelled the face liveness check., closeCode=CANCELED, reason=userCancelled, "
+                + "cause=null)",
+            sessionEndedLine(closeCode: "CANCELED")
+        ]
         let viewModel = makeViewModel()
         viewModel.livenessState = .init(state: .faceMatched)
         let logger = self.logger!
@@ -235,14 +244,15 @@ final class FaceLivenessDetectionViewModelDiagnosticsTests: XCTestCase {
         drainMainQueue()
 
         XCTAssertEqual(viewModel.livenessState.state, .encounteredUnrecoverableError(.userCancelled))
-        XCTAssertEqual(loggedWhenObserved.events.first, [cancelled])
-        XCTAssertEqual(logger.messages, [cancelled])
+        XCTAssertEqual(loggedWhenObserved.events.first, cancelled)
+        XCTAssertEqual(logger.messages, cancelled)
     }
 
     // MARK: - Frames and faces
 
     /// Given: The view model as the detector holds it, confirming the face
-    /// When: From the capture queue it reports frames before session ready, failed (then delivered as no face), without and with a face
+    /// When: From the capture queue it reports frames before session ready, failed (then delivered as no face), without a face,
+    ///   and with one for as long as a new face count must hold
     /// Then: Each report reaches diagnostics rather than the protocol's no-op, and the check sees the failed frame as no face
     func testFrameReportsFromTheCaptureQueueReachDiagnostics() throws {
         let viewModel = makeViewModel()
@@ -256,7 +266,9 @@ final class FaceLivenessDetectionViewModelDiagnosticsTests: XCTestCase {
             handler.process(frameReport: .init(failure: .init(stage: .prediction, cause: nil)))
             handler.process(newResult: .noFace)
             handler.process(frameReport: .init(faceCount: 0, topScore: 0.25, usedSessionThreshold: true))
-            handler.process(frameReport: .init(faceCount: 1, topScore: 0.875, usedSessionThreshold: true))
+            for _ in 0..<LivenessSessionDiagnostics.debounceFrames {
+                handler.process(frameReport: .init(faceCount: 1, topScore: 0.875, usedSessionThreshold: true))
+            }
             reported.fulfill()
         }
         wait(for: [reported], timeout: 2)
@@ -266,7 +278,8 @@ final class FaceLivenessDetectionViewModelDiagnosticsTests: XCTestCase {
         XCTAssertEqual(logger.messages, [
             "Liveness FrameBeforeSessionReady",
             "Liveness AnalyzeFailed(sessionId=session-1, stage=prediction, cause=null)",
-            "Liveness FaceCountChanged(sessionId=session-1, from=0, to=1, framesAnalyzed=2, topScore=0.875, phase=PRE_CHECK)"
+            "Liveness FaceCountChanged(sessionId=session-1, from=0, to=1, "
+                + "framesAnalyzed=\(1 + LivenessSessionDiagnostics.debounceFrames), topScore=0.875, phase=PRE_CHECK)"
         ])
     }
 
@@ -297,6 +310,32 @@ final class FaceLivenessDetectionViewModelDiagnosticsTests: XCTestCase {
             XCTAssertEqual(viewModel.livenessState.state, row.expected, label)
             XCTAssertEqual(logger.messages, [row.line], label)
         }
+    }
+
+    /// Given: A movement check whose first face drew the oval, and one that also measures a matching face before the oval is displayed
+    /// When: A far face arrives once the check matches faces to the oval
+    /// Then: Both show a first face's nearness, since measuring for diagnostics doesn't set the matcher's initial overlap
+    func testFaceMeasuredBeforeTheOvalIsDisplayedLeavesTheOvalMatcherAlone() {
+        func nearness(measuringBeforeDisplay face: DetectedFace?) -> LivenessStateMachine.State {
+            resetFixture()
+            let viewModel = makeViewModel()
+            layOut(viewModel)
+            viewModel.livenessState.beginRecording()
+            viewModel.process(newResult: .singleFace(Self.farFace))
+            XCTAssertFalse(viewModel.ovalRect.isEmpty, "drawn")
+            XCTAssertEqual(viewModel.livenessState.state, .recording(ovalDisplayed: false), "not yet displayed")
+            if let face {
+                viewModel.process(newResult: .singleFace(face))
+            }
+            drainMainQueue()
+            viewModel.process(newResult: .singleFace(Self.farFace))
+            drainMainQueue()
+            return viewModel.livenessState.state
+        }
+
+        let control = nearness(measuringBeforeDisplay: nil)
+        XCTAssertEqual(control, .awaitingFaceInOvalMatch(.moveFaceCloser, 0.25), "a first face's nearness")
+        XCTAssertEqual(nearness(measuringBeforeDisplay: Self.matchedFace), control, "after measuring a matching face")
     }
 
     // MARK: - Challenge progress
@@ -411,32 +450,45 @@ final class FaceLivenessDetectionViewModelDiagnosticsTests: XCTestCase {
 
     // MARK: - Watchdog and teardown
 
-    /// Given: A check with its session configuration, on the mock detector
+    /// Given: A check with its session configuration, on the mock detector, which has scored no frame, one without the
+    ///   session's threshold, or one without and then one with it
     /// When: It configures its camera and the watchdog's 10 s pass, then its configuration and state change
-    /// Then: The watchdog the camera armed reports the view model's gates, which follow its configuration and state
-    func testConfigureCameraArmsTheWatchdogThatReportsTheViewModelsGates() {
-        let viewModel = makeViewModel()
-        layOut(viewModel)
-        XCTAssertNil(viewModel.configureCamera(withinFrame: previewRect))
-        drainMainQueue()
-        XCTAssertEqual(scheduler.items.count, 1, "configuring the camera arms the watchdog")
+    /// Then: The watchdog the camera armed reports the view model's gates, which follow its configuration and state, and
+    ///   whether the detector's last frame had the session's threshold
+    func testConfigureCameraArmsTheWatchdogThatReportsTheGatesAndTheDetectorsThreshold() throws {
+        let line = { (framesAnalyzed: Int, maxDetectionScore: String, faceTargetChallenge: String) in
+            "Liveness FaceDetectionWatchdog(sessionId=session-1, elapsedMs=10000, framesAnalyzed=\(framesAnalyzed), "
+                + "maxDetectionScore=\(maxDetectionScore), faceDetectionThreshold=0.7, analyzeErrors=0, readyForOval=true, "
+                + "faceTargetChallenge=\(faceTargetChallenge), initialFaceDistanceCheckPassed=false, "
+                + "checkState=pendingFacePreparedConfirmation.pendingCheck, framesDelivered=0, captureRunning=false)"
+        }
+        let fallback = FaceDetectionFrameReport(topScore: 0.5, usedSessionThreshold: false)
+        let session = FaceDetectionFrameReport(faceCount: 0, topScore: 0.25, usedSessionThreshold: true)
+        let rows: [(label: String, reports: [FaceDetectionFrameReport], line: String)] = [
+            ("no frame scored", [], line(0, "0.0", "unknown")),
+            ("fallback threshold", [fallback], line(0, "0.0", "absent")),
+            ("fallback, then session threshold", [fallback, session], line(1, "0.25", "present"))
+        ]
+        for row in rows {
+            resetFixture()
+            let viewModel = makeViewModel()
+            layOut(viewModel)
+            XCTAssertNil(viewModel.configureCamera(withinFrame: previewRect), row.label)
+            drainMainQueue()
+            XCTAssertEqual(scheduler.items.count, 1, "\(row.label): configuring the camera arms the watchdog")
+            let handler = try resultHandler(of: viewModel)
+            row.reports.forEach { handler.process(frameReport: $0) }
 
-        clock.now += 10_000
-        scheduler.runPending()
+            clock.now += 10_000
+            scheduler.runPending()
 
-        XCTAssertEqual(logger.lines(named: "FaceDetectionWatchdog"), [
-            "Liveness FaceDetectionWatchdog(sessionId=session-1, elapsedMs=10000, framesAnalyzed=0, "
-                + "maxDetectionScore=0.0, faceDetectionThreshold=0.7, analyzeErrors=0, readyForOval=true, "
-                + "faceTargetChallenge=absent, initialFaceDistanceCheckPassed=false, "
-                + "checkState=pendingFacePreparedConfirmation.pendingCheck, framesDelivered=0, "
-                + "captureRunning=false)"
-        ])
-        viewModel.sessionConfiguration = nil
-        viewModel.livenessState = .init(state: .recording(ovalDisplayed: true))
-        let gates = viewModel.diagnosticsGateSnapshot()
-        XCTAssertFalse(gates.readyForOval, "without a session configuration")
-        XCTAssertTrue(gates.initialFaceDistanceCheckPassed, "once recording")
-        XCTAssertEqual(gates.checkState, "recording.ovalDisplayed")
+            XCTAssertEqual(logger.lines(named: "FaceDetectionWatchdog"), [row.line], row.label)
+            viewModel.sessionConfiguration = nil
+            viewModel.livenessState = .init(state: .recording(ovalDisplayed: true))
+            XCTAssertEqual(viewModel.diagnosticsGateSnapshot(), GateSnapshot(
+                readyForOval: false, initialFaceDistanceCheckPassed: true, checkState: "recording.ovalDisplayed", captureRunning: false
+            ), row.label)
+        }
     }
 
     /// Given: A view model on the real detector, which doesn't keep it alive

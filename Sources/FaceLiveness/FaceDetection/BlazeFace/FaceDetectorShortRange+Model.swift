@@ -133,21 +133,26 @@ extension FaceDetectorShortRange {
             let blazeFaceDetectionThreshold: Float
             let usedSessionThreshold: Bool
             if let sessionConfiguration = faceDetectionSessionConfiguration?.sessionConfiguration {
-                switch sessionConfiguration {
-                case .faceMovement(let ovalMatchChallenge):
-                    blazeFaceDetectionThreshold = Float(ovalMatchChallenge.faceDetectionThreshold)
-                case .faceMovementAndLight(_, let ovalMatchChallenge):
-                    blazeFaceDetectionThreshold = Float(ovalMatchChallenge.faceDetectionThreshold)
-                }
+                blazeFaceDetectionThreshold = Float(sessionConfiguration.ovalMatchChallenge.faceDetectionThreshold)
                 usedSessionThreshold = true
             } else {
                 blazeFaceDetectionThreshold = confidenceScoreThreshold
                 usedSessionThreshold = false
             }
 
-            var passingConfidenceScoresIndices = confidenceScores
-                .enumerated()
-                .filter { $0.element >= blazeFaceDetectionThreshold}
+            // the top score includes scores below the threshold, telling a model that saw nothing from
+            // one that nearly matched
+            var topScore: Float = 0
+            var passingConfidenceScores: [(offset: Int, element: Float32)] = []
+            for (index, score) in confidenceScores.enumerated() {
+                if score > topScore {
+                    topScore = score
+                }
+                if score >= blazeFaceDetectionThreshold {
+                    passingConfidenceScores.append((index, score))
+                }
+            }
+            var passingConfidenceScoresIndices = passingConfidenceScores
                 .sorted(by: {
                     $0.element > $1.element
                 })
@@ -224,19 +229,10 @@ extension FaceDetectorShortRange {
 
             let report = FaceDetectionFrameReport(
                 faceCount: faces.count,
-                topScore: Self.topScore(of: confidenceScores),
+                topScore: topScore,
                 usedSessionThreshold: usedSessionThreshold
             )
             return (faces, report)
-        }
-
-        /// Includes scores below the threshold, telling a model that saw nothing from one that nearly matched.
-        static func topScore(of scores: [Float32]) -> Float {
-            var top: Float = 0
-            for score in scores where score > top {
-                top = score
-            }
-            return top
         }
 
         func intersectionOverUnion(_ b1: SIMD16<Float32>, _ b2: SIMD16<Float32>) -> Float {

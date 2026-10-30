@@ -194,33 +194,10 @@ public struct FaceLivenessDetectorView: View {
                         viewModel.initializeLivenessStream()
                     } catch let error as FaceLivenessDetectionError {
                         viewModel.logSessionStarting(attempt: nil)
-                        let livenessError: LivenessStateMachine.LivenessError
-                        switch error {
-                        case .unknown:
-                            livenessError = .unknown
-                        case .sessionTimedOut,
-                             .faceInOvalMatchExceededTimeLimitError,
-                             .countdownFaceTooClose,
-                             .countdownMultipleFaces,
-                             .countdownNoFace:
-                            livenessError = .timedOut
-                        case .cameraPermissionDenied:
-                            livenessError = .missingVideoPermission
-                        case .userCancelled:
-                            livenessError = .userCancelled
-                        case .socketClosed:
-                            livenessError = .socketClosed
-                        case .cameraNotAvailable:
-                            livenessError = .cameraNotAvailable
-                        default:
-                            livenessError = .couldNotOpenStream
-                        }
-                        viewModel.diagnostics.noteCause(error, for: livenessError)
-                        viewModel.livenessState.unrecoverableStateEncountered(livenessError)
+                        viewModel.fail(.init(sessionStartFailure: error), cause: error)
                     } catch {
                         viewModel.logSessionStarting(attempt: nil)
-                        viewModel.diagnostics.noteCause(error, for: .couldNotOpenStream)
-                        viewModel.livenessState.unrecoverableStateEncountered(.couldNotOpenStream)
+                        viewModel.fail(.couldNotOpenStream, cause: error)
                     }
                     
                     DispatchQueue.main.async {

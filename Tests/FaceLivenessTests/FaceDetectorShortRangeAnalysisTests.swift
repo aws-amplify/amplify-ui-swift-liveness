@@ -84,25 +84,6 @@ final class FaceDetectorShortRangeAnalysisTests: XCTestCase {
         return withExtendedLifetime(stub, body)
     }
 
-    /// Given: Scores with the highest first or last, with NaN, only NaN, none, or only negative ones
-    /// When: The top score is taken
-    /// Then: It's the highest real score, unchanged, or 0 if there's none
-    func testTopScoreIsTheHighestRealScore() {
-        let rows: [(name: String, scores: [Float], top: Float)] = [
-            ("highest first", [0.9, 0.1, 0.2], 0.9),
-            ("highest last", [0.1, 0.2, 0.9], 0.9),
-            ("NaN first", [.nan, 0.3, 0.1], 0.3),
-            ("NaN last", [0.3, .nan], 0.3),
-            ("only NaN", [.nan, .nan], 0),
-            ("no scores", [], 0),
-            ("only negative", [-0.5, -.infinity], 0)
-        ]
-
-        for row in rows {
-            XCTAssertEqual(FaceDetectorShortRange.Model.topScore(of: row.scores), row.top, row.name)
-        }
-    }
-
     /// Given: The real model on a blank frame and no configuration, a movement one, then a movement and light one
     /// When: Faces are detected at the fallback threshold, the frame's top score, then 0
     /// Then: Reports precede results, count the faces, say if the session threshold applied and keep the top score
@@ -169,20 +150,33 @@ final class FaceDetectorShortRangeAnalysisTests: XCTestCase {
         }
     }
 
-    /// Given: A model scoring every anchor 4.54e-5 but one at 0.1192, and a 0.9 threshold, as in Android's test
-    /// When: A frame is analyzed
-    /// Then: No face passes, and the report's top score is still 0.1192
-    func testTheTopScoreIncludesScoresBelowTheThreshold() throws {
-        var scores = [Float](repeating: 4.54e-5, count: 896)
-        scores[1] = 0.1192
-        let model = FaceDetectorShortRange.Model(ScriptedModel(outputs: try scriptedOutputs(scores: scores)))
+    /// Given: A 0.9 threshold and scores below it, as in Android's test (4.54e-5 on every anchor but 0.1192 on one), or with
+    ///        the highest first or last, with NaN, only NaN, or only negative ones
+    /// When: A frame is analyzed with each
+    /// Then: No face passes, and the report's top score is the highest real score, unchanged, or 0 if there's none
+    func testTheTopScoreIsTheHighestRealScoreEvenBelowTheThreshold() throws {
+        var android = [Float](repeating: 4.54e-5, count: 896)
+        android[1] = 0.1192
+        let rows: [(name: String, scores: [Float], top: Float)] = [
+            ("as in Android's test", android, 0.1192),
+            ("highest first", [0.6, 0.1, 0.2], 0.6),
+            ("highest last", [0.1, 0.2, 0.6], 0.6),
+            ("NaN first", [.nan, 0.3, 0.1], 0.3),
+            ("NaN last", [0.3, .nan], 0.3),
+            ("only NaN", [.nan, .nan], 0),
+            ("only negative", [-0.5, -.infinity], 0)
+        ]
         let frame = try makeBlankFrame()
         let configuration = LivenessDiagnosticsFixture.movementConfiguration(faceDetectionThreshold: 0.9)
 
-        let report = withConfiguration(configuration, on: model) { model.analyze(frame).report }
+        for row in rows {
+            let model = FaceDetectorShortRange.Model(ScriptedModel(outputs: try scriptedOutputs(scores: row.scores)))
 
-        XCTAssertNil(report.failure)
-        XCTAssertEqual(report.faceCount, 0)
-        XCTAssertEqual(report.topScore, 0.1192)
+            let report = withConfiguration(configuration, on: model) { model.analyze(frame).report }
+
+            XCTAssertNil(report.failure, row.name)
+            XCTAssertEqual(report.faceCount, 0, row.name)
+            XCTAssertEqual(report.topScore, row.top, row.name)
+        }
     }
 }

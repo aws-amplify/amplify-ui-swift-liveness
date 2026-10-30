@@ -85,7 +85,7 @@ final class LivenessSessionDiagnosticsTests: XCTestCase {
             self.diagnostics.onOvalMeasurement(OvalMeasurement(position: .matched, iou: 0.8))
         }
         diagnostics.onInitialFaceDetectedSent()
-        for _ in 0..<3 {
+        for _ in 0..<LivenessSessionDiagnostics.debounceFrames {
             frame(0.3)
         }
         logger.clear()
@@ -183,10 +183,10 @@ final class LivenessSessionDiagnosticsTests: XCTestCase {
         diagnostics.onSessionStartRequested(attempt: nil, codec: "HEVC", preCheckEnabled: false)
 
         XCTAssertEqual(logger.messages, [
-            "Liveness SessionStarting(sessionId=session-1, attempt=1, device=Apple/iPhone16,2, api=18.5, "
-                + "livenessVersion=1.5.3, codec=H264, preCheckEnabled=true, amplifyVersion=2.63.0, region=us-east-1)",
-            "Liveness SessionStarting(sessionId=session-1, attempt=null, device=Apple/iPhone16,2, api=18.5, "
-                + "livenessVersion=1.5.3, codec=HEVC, preCheckEnabled=false, amplifyVersion=2.63.0, region=us-east-1)"
+            "Liveness SessionStarting(sessionId=session-1, attempt=1, device=Apple/iPhone16,2, livenessVersion=1.5.3, codec=H264, "
+                + "preCheckEnabled=true, osVersion=18.5, amplifyVersion=2.63.0, region=us-east-1)",
+            "Liveness SessionStarting(sessionId=session-1, attempt=null, device=Apple/iPhone16,2, livenessVersion=1.5.3, codec=HEVC, "
+                + "preCheckEnabled=false, osVersion=18.5, amplifyVersion=2.63.0, region=us-east-1)"
         ])
     }
 
@@ -213,18 +213,45 @@ final class LivenessSessionDiagnosticsTests: XCTestCase {
 
     // MARK: - Face count
 
-    /// Given: Frames analyzed with 1, 1, 0, 0, 0 and 2 faces, the first scoring the session's highest
+    /// Given: Sequences of face counts, one a frame
+    /// When: Each frame is analyzed
+    /// Then: The first is a baseline, and a new count is logged, from the last one logged, once it holds for three
+    ///       frames in a row, so a count that flickers or holds for fewer frames logs nothing
+    func testAFaceCountChangeIsLoggedOnceItHoldsForThreeFrames() {
+        let flickering = Array(repeating: [1, 0], count: 10).flatMap { $0 }
+        let rows: [(name: String, counts: [Int], logged: [String])] = [
+            ("a held count", [2, 2, 2, 2], []),
+            ("a change held for one frame", [1, 0, 1], []),
+            ("a change held for two frames", [1, 0, 0, 1], []),
+            ("a change held for three frames", [1, 0, 0, 0], ["1->0 at 4"]),
+            ("flickering", flickering, []),
+            ("a change and back", [0, 0, 0, 1, 1, 1, 0, 0, 0], ["0->1 at 6", "1->0 at 9"]),
+            ("a change interrupted by the logged count", [1, 0, 0, 1, 0, 0, 0], ["1->0 at 7"]),
+            ("a change interrupted by another", [1, 0, 0, 2, 2, 2], ["1->2 at 6"])
+        ]
+        for row in rows {
+            let logger = MockLogger()
+            let session = LivenessDiagnosticsFixture.makeDiagnostics(logger: logger)
+            row.counts.forEach { session.onFrameAnalyzed(faceCount: $0, topScore: 0.9) }
+
+            let logged = logger.lines(named: "FaceCountChanged").map(fields(of:))
+                .map { "\($0["from"] ?? "?")->\($0["to"] ?? "?") at \($0["framesAnalyzed"] ?? "?")" }
+            XCTAssertEqual(logged, row.logged, row.name)
+        }
+    }
+
+    /// Given: Frames analyzed with 1, 0, 0, 0, 2, 2 and 2 faces, each scoring differently and the first highest
     /// When: Their reports arrive
-    /// Then: The first is a baseline, and each change is logged on its frame, with that frame's score
-    func testFaceCountChangesAreLoggedOnTheFrameTheyHappen() {
-        let frames: [(faces: Int, score: Float)] = [(1, 0.98), (1, 0.91), (0, 0.2), (0, 0.1), (0, 0.1), (2, 0.95)]
+    /// Then: Each change is logged on the frame that confirmed it, with that frame's count of frames analyzed and score
+    func testAFaceCountChangeIsLoggedWithTheFrameThatConfirmedIt() {
+        let frames: [(faces: Int, score: Float)] = [(1, 0.98), (0, 0.4), (0, 0.3), (0, 0.2), (2, 0.91), (2, 0.93), (2, 0.95)]
         for frame in frames {
             diagnostics.onFrameReport(FaceDetectionFrameReport(faceCount: frame.faces, topScore: frame.score, usedSessionThreshold: true))
         }
 
         XCTAssertEqual(logger.messages, [
-            "Liveness FaceCountChanged(sessionId=session-1, from=1, to=0, framesAnalyzed=3, topScore=0.2, phase=PRE_CHECK)",
-            "Liveness FaceCountChanged(sessionId=session-1, from=0, to=2, framesAnalyzed=6, topScore=0.95, phase=PRE_CHECK)"
+            "Liveness FaceCountChanged(sessionId=session-1, from=1, to=0, framesAnalyzed=4, topScore=0.2, phase=PRE_CHECK)",
+            "Liveness FaceCountChanged(sessionId=session-1, from=0, to=2, framesAnalyzed=7, topScore=0.95, phase=PRE_CHECK)"
         ])
     }
 
@@ -336,18 +363,24 @@ final class LivenessSessionDiagnosticsTests: XCTestCase {
     // MARK: - Phase
 
     /// Given: A light challenge
-    /// When: A face appears, the initial face is sent, the face fits the oval, a color shows and it completes
+    /// When: A face appears, the initial face is sent, the face fits the oval, a color shows, a second face
+    ///       appears and the challenge completes
     /// Then: Each line carries the phase it was logged in: PRE_CHECK, then OVAL_FIT, then COLOR_SEQUENCE
     func testEachLineCarriesThePhaseItWasLoggedIn() {
+        let debounce = LivenessSessionDiagnostics.debounceFrames
         diagnostics.onFrameAnalyzed(faceCount: 0, topScore: 0.1)
-        diagnostics.onFrameAnalyzed(faceCount: 1, topScore: 0.9)
+        for _ in 0..<debounce {
+            diagnostics.onFrameAnalyzed(faceCount: 1, topScore: 0.9)
+        }
         diagnostics.onInitialFaceDetectedSent()
         diagnostics.onFaceDistance(0.3)
-        for _ in 0..<3 {
+        for _ in 0..<debounce {
             diagnostics.onOvalMeasurement(OvalMeasurement(position: .matched, iou: 0.5))
         }
         diagnostics.onColorDisplayed()
-        diagnostics.onFrameAnalyzed(faceCount: 2, topScore: 0.9)
+        for _ in 0..<debounce {
+            diagnostics.onFrameAnalyzed(faceCount: 2, topScore: 0.9)
+        }
         diagnostics.onChallengeCompleted()
 
         let phases = logger.messages.compactMap { line in fields(of: line)["phase"].map { "\(eventName(of: line)) \($0)" } }
@@ -361,7 +394,7 @@ final class LivenessSessionDiagnosticsTests: XCTestCase {
         ])
         XCTAssertEqual(
             logger.lines(named: "ChallengeCompleted"),
-            ["Liveness ChallengeCompleted(sessionId=session-1, framesAnalyzed=3, phase=COLOR_SEQUENCE)"]
+            ["Liveness ChallengeCompleted(sessionId=session-1, framesAnalyzed=\(1 + 2 * debounce), phase=COLOR_SEQUENCE)"]
         )
     }
 
@@ -446,7 +479,7 @@ final class LivenessSessionDiagnosticsTests: XCTestCase {
     // MARK: - Frame reports
 
     /// Given: Failed frames, one before SessionReady, and frames with a face scored before SessionReady
-    /// When: Their reports arrive, then an analyzed frame without a face
+    /// When: Their reports arrive, then three analyzed frames without a face
     /// Then: Failures count only as analyze errors and early frames only log FrameBeforeSessionReady:
     ///       none starts the watchdog, sets the face count or counts as analyzed
     func testOnlyAnalyzedFrameReportsCountAsAnalyzedFrames() {
@@ -457,7 +490,11 @@ final class LivenessSessionDiagnosticsTests: XCTestCase {
         diagnostics.onFrameReport(FaceDetectionFrameReport(faceCount: 1, topScore: 0.8, usedSessionThreshold: false))
         XCTAssertTrue(scheduler.items.isEmpty, "an unanalyzed frame started the watchdog")
 
-        diagnostics.onFrameReport(FaceDetectionFrameReport(faceCount: 0, topScore: 0.1, usedSessionThreshold: true))
+        // enough to log a change, had an early frame set the face count
+        let debounce = LivenessSessionDiagnostics.debounceFrames
+        for _ in 0..<debounce {
+            diagnostics.onFrameReport(FaceDetectionFrameReport(faceCount: 0, topScore: 0.1, usedSessionThreshold: true))
+        }
 
         XCTAssertEqual(logger.messages, [
             "Liveness AnalyzeFailed(sessionId=session-1, stage=prediction, cause=null)",
@@ -465,7 +502,7 @@ final class LivenessSessionDiagnosticsTests: XCTestCase {
         ])
         diagnostics.onTeardown()
         let summary = sessionEnded(in: logger)
-        XCTAssertEqual(summary["framesAnalyzed"], "1")
+        XCTAssertEqual(summary["framesAnalyzed"], String(debounce))
         XCTAssertEqual(summary["faceEverDetected"], "false")
         XCTAssertEqual(summary["analyzeErrors"], "2")
     }
