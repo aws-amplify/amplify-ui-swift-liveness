@@ -92,4 +92,61 @@ final class FaceInOvalMatchingTests: XCTestCase {
         stateMachine.awaitingFaceMatch(with: .tooClose(nearnessPercentage: 0.3), nearnessPercentage: 0.3)
         XCTAssertEqual(stateMachine.state, .awaitingFaceInOvalMatch(.faceTooClose, 0.3))
     }
+
+    // MARK: - measure(face:in:challengeConfig:)
+
+    private func measurement(of face: CGRect, using matching: FaceInOvalMatching) -> OvalMeasurement {
+        matching.measure(face: face, in: oval, challengeConfig: challenge)
+    }
+
+    /// The position a correction names, and its nearness, which its `==` ignores; nil for `.match` and `.none`.
+    private func correction(_ instruction: Instructor.Instruction) -> (position: FaceOvalPosition, nearness: Double)? {
+        switch instruction {
+        case .tooFarLeft(_, let nearness): return (.tooFarLeft, nearness)
+        case .tooFarRight(_, let nearness): return (.tooFarRight, nearness)
+        case .tooClose(_, let nearness): return (.tooClose, nearness)
+        case .tooFar(_, let nearness): return (.tooFar, nearness)
+        case .match, .none: return nil
+        }
+    }
+
+    /// Given: A matcher whose first face covered a quarter of the oval
+    /// When: Faces in every position are measured and matched
+    /// Then: Each is measured in its instruction's position, with its overlap, and keeps its pre-`measure` nearness
+    func testMeasureAgreesWithFaceMatchState() throws {
+        let matching = FaceInOvalMatching()
+        let quarter = CGRect(x: 150, y: 200, width: 100, height: 150)
+        XCTAssertEqual(correction(instruction(for: quarter, using: matching))?.nearness, 0.25)
+        XCTAssertEqual(measurement(of: oval, using: matching), OvalMeasurement(position: .matched, iou: 1))
+        let rows: [(name: String, face: CGRect, position: FaceOvalPosition, iou: Double, nearness: Double)] = [
+            ("small and centered", CGRect(x: 175, y: 250, width: 50, height: 75), .tooFar, 0.0625, 0),
+            ("the oval's left half", CGRect(x: 100, y: 100, width: 100, height: 300), .tooFar, 0.5, 0.6667),
+            ("around the oval", CGRect(x: 70, y: 40, width: 260, height: 420), .tooClose, 0.5495, 0.7491),
+            ("shifted left", CGRect(x: 40, y: 100, width: 200, height: 300), .tooFarLeft, 0.5385, 0.7308),
+            ("around it, shifted left", CGRect(x: 20, y: 40, width: 260, height: 420), .tooFarLeft, 0.4688, 0.6146),
+            ("shifted right", CGRect(x: 125, y: 100, width: 200, height: 300), .tooFarRight, 0.7778, 1),
+            ("apart from the oval", CGRect(x: 400, y: 500, width: 50, height: 50), .tooFarRight, 0, 0)
+        ]
+
+        for row in rows {
+            let measured = measurement(of: row.face, using: matching)
+            let corrected = try XCTUnwrap(correction(instruction(for: row.face, using: matching)), row.name)
+
+            XCTAssertEqual(measured.position, row.position, row.name)
+            XCTAssertEqual(corrected.position, row.position, row.name)
+            XCTAssertEqual(measured.iou, row.iou, accuracy: 1e-4, row.name)
+            XCTAssertEqual(corrected.nearness, row.nearness, accuracy: 1e-4, row.name)
+        }
+    }
+
+    /// Given: A matcher that has only measured a face
+    /// When: It matches another
+    /// Then: The nearness is a first face's, 0.25, so measuring didn't set the initial overlap
+    func testMeasuringDoesNotSetTheInitialOverlap() {
+        let matching = FaceInOvalMatching()
+        _ = measurement(of: CGRect(x: 175, y: 250, width: 50, height: 75), using: matching)
+
+        let face = CGRect(x: 125, y: 150, width: 150, height: 225)
+        XCTAssertEqual(correction(instruction(for: face, using: matching))?.nearness, 0.25)
+    }
 }

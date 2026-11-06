@@ -17,14 +17,7 @@ extension FinalClientEvent {
         faceMatchedEnd: UInt64,
         videoEnd: UInt64
     ) {
-        let ovalMatchChallenge: FaceLivenessSession.OvalMatchChallenge
-        switch sessionConfiguration {
-        case .faceMovement(let challenge):
-            ovalMatchChallenge = challenge
-        case .faceMovementAndLight(_, let challenge):
-            ovalMatchChallenge = challenge
-        }
-        let normalizedBoundingBox = ovalMatchChallenge
+        let normalizedBoundingBox = sessionConfiguration.ovalMatchChallenge
             .oval.boundingBox
             .normalize(within: videoSize)
 

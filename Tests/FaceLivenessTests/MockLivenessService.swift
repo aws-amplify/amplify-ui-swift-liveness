@@ -21,6 +21,11 @@ class MockLivenessService {
     var onInitializeLivenessStream: (String, String,[Challenge]?,FaceLivenessSession.Options) -> Void = { _, _, _, _ in }
     var onServiceException: (FaceLivenessSessionError) -> Void = { _ in }
     var onCloseSocket: (URLSessionWebSocketTask.CloseCode) -> Void = { _ in }
+
+    /// The handlers the view model registered, so a test can play the service's part.
+    var registeredOnComplete: ((ServerDisconnection) -> Void)?
+    var registeredSessionConfigurationListener: ((FaceLivenessSession.SessionConfiguration) -> Void)?
+    var registeredChallengeListener: ((Challenge) -> Void)?
 }
 
 extension MockLivenessService: LivenessService {
@@ -57,6 +62,7 @@ extension MockLivenessService: LivenessService {
         onComplete: @escaping (ServerDisconnection) -> Void
     ) {
         interactions.append(#function)
+        registeredOnComplete = onComplete
     }
 
     func register(
@@ -64,10 +70,12 @@ extension MockLivenessService: LivenessService {
         on event: LivenessEventKind.Server
     ) {
         interactions.append(#function)
+        registeredSessionConfigurationListener = listener
     }
     
     func register(listener: @escaping (Challenge) -> Void, on event: LivenessEventKind.Server) {
         interactions.append(#function)
+        registeredChallengeListener = listener
     }
 
     func closeSocket(with code: URLSessionWebSocketTask.CloseCode) {
