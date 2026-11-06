@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.0 (2026-11-06)
+
+### Features
+
+- add session and face tracking diagnostics (#279)
+
 ## 1.5.3 (2026-10-26)
 
 ### Bug Fixes
