@@ -8,18 +8,22 @@
 import SwiftUI
 
 struct _FaceLivenessDetectionView<VideoView: View>: View {
+    @Environment(\.faceLivenessDetectorTheme) private var theme
     let videoView: VideoView
     @ObservedObject var viewModel: FaceLivenessDetectionViewModel
     @Binding var displayResultsView: Bool
     let cancelButtonOptions: CancelButtonOptions
+    let verifyingViewOptions: VerifyingViewOptions
 
     init(
         viewModel: FaceLivenessDetectionViewModel,
         cancelButtonOptions: CancelButtonOptions = .init(),
+        verifyingViewOptions: VerifyingViewOptions = .init(),
         @ViewBuilder videoView: @escaping () -> VideoView
     ) {
         self.viewModel = viewModel
         self.cancelButtonOptions = cancelButtonOptions
+        self.verifyingViewOptions = verifyingViewOptions
         self.videoView = videoView()
 
         self._displayResultsView = .init(
@@ -48,15 +52,20 @@ struct _FaceLivenessDetectionView<VideoView: View>: View {
     }
 
     var body: some View {
+        let verifyingView = verifyingViewOptions.content(for: viewModel.livenessState.state)
+
         ZStack {
             ZStack {
                 Color.black
                 videoView
 
                 VStack(spacing: 5) {
-                    InstructionContainerView(
-                        viewModel: viewModel
-                    )
+                    // the app's verifying view replaces the "Verifying" instruction too
+                    if verifyingView == nil {
+                        InstructionContainerView(
+                            viewModel: viewModel
+                        )
+                    }
 
                     Spacer()
                 }
@@ -74,6 +83,16 @@ struct _FaceLivenessDetectionView<VideoView: View>: View {
                 .frame(maxWidth: .infinity)
             }
             .edgesIgnoringSafeArea(.all)
+            .accessibilityHidden(verifyingView != nil)
+
+            // The camera view stays underneath, because it's still finishing the check while the
+            // app's verifying view covers it.
+            if let verifyingView {
+                ZStack {
+                    theme.colors.background.edgesIgnoringSafeArea(.all)
+                    verifyingView
+                }
+            }
 
             // The REC indicator and close button sit in the screen's top corners rather than
             // above the instruction, so they don't push it onto the oval.
