@@ -46,7 +46,7 @@ extension FaceDetectorShortRange {
         }
 
         func detectFaces(from buffer: CVPixelBuffer) {
-            let faces = prediction(for: buffer)
+            let (faces, report) = analyze(buffer)
             let observationResult: FaceDetectionResult
             switch faces.count {
             case 1:
@@ -57,13 +57,21 @@ extension FaceDetectorShortRange {
                 observationResult = .noFace
             }
 
+            detectionResultHandler?.process(frameReport: report)
             detectionResultHandler?.process(newResult: observationResult)
         }
 
-        func prediction(for buffer: CVPixelBuffer) -> [DetectedFace] {
+        /// The faces on a frame, and what diagnostics needs to know about it.
+        func analyze(_ buffer: CVPixelBuffer) -> (faces: [DetectedFace], report: FaceDetectionFrameReport) {
+            func failed(_ stage: FrameAnalysisFailure.Stage, _ cause: Error? = nil) -> ([DetectedFace], FaceDetectionFrameReport) {
+                ([], FaceDetectionFrameReport(failure: FrameAnalysisFailure(stage: stage, cause: cause)))
+            }
+
             var image: CGImage?
-            VTCreateCGImageFromCVPixelBuffer(buffer, options: nil, imageOut: &image)
-            guard let image = image else { return [] }
+            let status = VTCreateCGImageFromCVPixelBuffer(buffer, options: nil, imageOut: &image)
+            guard let image = image else {
+                return failed(.imageConversion, NSError(domain: NSOSStatusErrorDomain, code: Int(status)))
+            }
             let imageHeight = Float32(image.height)
             let imageWidth = Float32(image.width)
 
@@ -72,15 +80,23 @@ extension FaceDetectorShortRange {
             let simdScale = SIMD2(Double(widthScale), Double(heightScale))
             let simdShift = SIMD2(Double(widthScale - 1) / 2, Double(heightScale - 1) / 2)
 
-            guard let input = try? face_detection_short_rangeInput(imageWith: image) else {
-                return []
+            let input: face_detection_short_rangeInput
+            do {
+                input = try face_detection_short_rangeInput(imageWith: image)
+            } catch {
+                return failed(.inputCreation, error)
             }
 
-            guard let output = try? model.prediction(from: input) else {
-                return []
+            let output: MLFeatureProvider
+            do {
+                output = try model.prediction(from: input)
+            } catch {
+                return failed(.prediction, error)
             }
 
-            guard let landmarksMultiArray = output.featureValue(for: "1477")?.multiArrayValue else { return [] }
+            guard let landmarksMultiArray = output.featureValue(for: "1477")?.multiArrayValue else {
+                return failed(.missingLandmarks)
+            }
 
             let landmarksCapacity = landmarksMultiArray.count / 16
 
@@ -96,7 +112,9 @@ extension FaceDetectorShortRange {
                 )
             )
 
-            guard let confidenceScoresMultiArray = output.featureValue(for: "1011")?.multiArrayValue else { return [] }
+            guard let confidenceScoresMultiArray = output.featureValue(for: "1011")?.multiArrayValue else {
+                return failed(.missingScores)
+            }
 
             let confidenceScoresCapacity = confidenceScoresMultiArray.count
 
@@ -113,20 +131,28 @@ extension FaceDetectorShortRange {
             )
             
             let blazeFaceDetectionThreshold: Float
+            let usedSessionThreshold: Bool
             if let sessionConfiguration = faceDetectionSessionConfiguration?.sessionConfiguration {
-                switch sessionConfiguration {
-                case .faceMovement(let ovalMatchChallenge):
-                    blazeFaceDetectionThreshold = Float(ovalMatchChallenge.faceDetectionThreshold)
-                case .faceMovementAndLight(_, let ovalMatchChallenge):
-                    blazeFaceDetectionThreshold = Float(ovalMatchChallenge.faceDetectionThreshold)
-                }
+                blazeFaceDetectionThreshold = Float(sessionConfiguration.ovalMatchChallenge.faceDetectionThreshold)
+                usedSessionThreshold = true
             } else {
                 blazeFaceDetectionThreshold = confidenceScoreThreshold
+                usedSessionThreshold = false
             }
 
-            var passingConfidenceScoresIndices = confidenceScores
-                .enumerated()
-                .filter { $0.element >= blazeFaceDetectionThreshold}
+            // the top score includes scores below the threshold, telling a model that saw nothing from
+            // one that nearly matched
+            var topScore: Float = 0
+            var passingConfidenceScores: [(offset: Int, element: Float32)] = []
+            for (index, score) in confidenceScores.enumerated() {
+                if score > topScore {
+                    topScore = score
+                }
+                if score >= blazeFaceDetectionThreshold {
+                    passingConfidenceScores.append((index, score))
+                }
+            }
+            var passingConfidenceScoresIndices = passingConfidenceScores
                 .sorted(by: {
                     $0.element > $1.element
                 })
@@ -201,7 +227,12 @@ extension FaceDetectorShortRange {
                 faces.append(face)
             }
 
-            return faces
+            let report = FaceDetectionFrameReport(
+                faceCount: faces.count,
+                topScore: topScore,
+                usedSessionThreshold: usedSessionThreshold
+            )
+            return (faces, report)
         }
 
         func intersectionOverUnion(_ b1: SIMD16<Float32>, _ b2: SIMD16<Float32>) -> Float {

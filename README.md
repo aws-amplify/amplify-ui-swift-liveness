@@ -13,6 +13,10 @@ Amplify UI FaceLivenessDetector provides a UI component for Amazon Rekognition F
 
 More information on setting up and using the FaceLivenessDetector is in the [Amplify UI Face Liveness documentation](https://ui.docs.amplify.aws/swift/connected-components/liveness).
 
+## Diagnostics
+
+The detector logs each session's events through Amplify Logging, which helps find out why a check failed on a particular device. See [DIAGNOSTICS.md](DIAGNOSTICS.md) for how to turn the lines on and what they contain.
+
 ## Contributing
 
 - [CONTRIBUTING.md](/CONTRIBUTING.md)

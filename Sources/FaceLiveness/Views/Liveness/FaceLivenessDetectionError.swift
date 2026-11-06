@@ -6,6 +6,7 @@
 //
 
 import Foundation
+@_spi(PredictionsFaceLiveness) import AWSPredictionsPlugin
 
 public struct FaceLivenessDetectionError: Error, Equatable {
     let code: UInt8
@@ -143,5 +144,77 @@ public struct FaceLivenessDetectionError: Error, Equatable {
 
     public static func == (lhs: FaceLivenessDetectionError, rhs: FaceLivenessDetectionError) -> Bool {
         lhs.code == rhs.code
+    }
+}
+
+extension LivenessStateMachine.LivenessError {
+    /// The error the check ends with when its session can't be started because of `error`.
+    init(sessionStartFailure error: FaceLivenessDetectionError) {
+        switch error {
+        case .unknown:
+            self = .unknown
+        case .sessionTimedOut,
+             .faceInOvalMatchExceededTimeLimitError,
+             .countdownFaceTooClose,
+             .countdownMultipleFaces,
+             .countdownNoFace:
+            self = .timedOut
+        case .cameraPermissionDenied:
+            self = .missingVideoPermission
+        case .userCancelled:
+            self = .userCancelled
+        case .socketClosed:
+            self = .socketClosed
+        case .cameraNotAvailable:
+            self = .cameraNotAvailable
+        default:
+            self = .couldNotOpenStream
+        }
+    }
+
+    /// The error the host's completion handler receives when the check ends with this one.
+    var hostError: FaceLivenessDetectionError {
+        switch self {
+        case .userCancelled:
+            return .userCancelled
+        case .viewResignation:
+            return .sessionInterrupted
+        case .timedOut:
+            return .faceInOvalMatchExceededTimeLimitError
+        case .couldNotOpenStream, .socketClosed:
+            return .socketClosed
+        case .cameraNotAvailable:
+            return .cameraNotAvailable
+        default:
+            return .cameraPermissionDenied
+        }
+    }
+}
+
+extension FaceLivenessDetectionError {
+    /// The error the host's completion handler receives for a service exception.
+    static func hostError(for error: FaceLivenessSessionError) -> FaceLivenessDetectionError {
+        switch error {
+        case .invalidRegion:
+            return .invalidRegion
+        case .accessDenied:
+            return .accessDenied
+        case .validation:
+            return .validation
+        case .internalServer:
+            return .internalServer
+        case .throttling:
+            return .throttling
+        case .serviceQuotaExceeded:
+            return .serviceQuotaExceeded
+        case .serviceUnavailable:
+            return .serviceUnavailable
+        case .sessionNotFound:
+            return .sessionNotFound
+        case .invalidSignature:
+            return .invalidSignature
+        default:
+            return .unknown
+        }
     }
 }
