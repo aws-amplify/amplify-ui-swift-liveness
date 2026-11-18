@@ -12,15 +12,18 @@ struct WarningBox<PopoverView: View>: View {
     @State var isPresentingPopover = false
     let titleText: String
     let bodyText: String
+    let infoButtonAccessibilityLabel: String
     let popoverContent: PopoverView
 
     init(
         titleText: String,
         bodyText: String,
+        infoButtonAccessibilityLabel: String,
         @ViewBuilder popoverContent: () -> PopoverView
     ) {
         self.titleText = titleText
         self.bodyText = bodyText
+        self.infoButtonAccessibilityLabel = infoButtonAccessibilityLabel
         self.popoverContent = popoverContent()
     }
 
@@ -45,6 +48,7 @@ struct WarningBox<PopoverView: View>: View {
                 }
             )
             .frame(width: 44, height: 44)
+            .accessibilityLabel(Text(infoButtonAccessibilityLabel))
             .popover(
                 isPresented: $isPresentingPopover,
                 attachmentAnchor: .point(.top),
